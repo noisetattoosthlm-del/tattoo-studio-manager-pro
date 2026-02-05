@@ -120,6 +120,33 @@
         </div>
     </div>
 
+    <div class="main" id="troskovi-section" style="display:none;">
+        <h1>Troškovi Studija</h1>
+        
+        <div style="background: var(--card); padding: 30px; border-radius: 24px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.05);">
+            <h3 style="margin-top:0; font-size: 1rem; color: var(--accent);">DODAJ NOVI TROŠAK</h3>
+            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <input type="text" id="exp-title" placeholder="Opis (npr. Kirija)" style="margin:0; flex:2;">
+                <input type="number" id="exp-amount" placeholder="Iznos (€)" style="margin:0; flex:1;">
+                <button class="btn-add" style="margin:0;" onclick="dodajTrosak()">DODAJ TROŠAK</button>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Opis</th>
+                        <th>Iznos</th>
+                        <th>Datum</th>
+                        <th style="text-align:right;">Akcije</th>
+                    </tr>
+                </thead>
+                <tbody id="expenses-list-body"></tbody>
+            </table>
+        </div>
+    </div>
+
     <div id="bookingModal" class="modal">
         <div class="modal-content">
             <h2 style="margin-top:0; font-size: 1.8rem; margin-bottom: 25px;">Novi Termin</h2>
@@ -179,6 +206,7 @@
         function prikaziSekciju(sekcija) {
             document.getElementById('dashboard-section').style.display = 'none';
             document.getElementById('artists-section').style.display = 'none';
+            document.getElementById('troskovi-section').style.display = 'none';
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
 
             if (sekcija === 'dashboard') {
@@ -189,6 +217,10 @@
                 document.getElementById('artists-section').style.display = 'block';
                 document.getElementById('nav-artisti').classList.add('active');
                 ucitajArtiste();
+            } else if (sekcija === 'troskovi') {
+                document.getElementById('troskovi-section').style.display = 'block';
+                document.getElementById('nav-troskovi').classList.add('active');
+                ucitajTroskove();
             }
         }
 
@@ -220,7 +252,7 @@
                 if (profileError) {
                     alert("Greška pri profilu: " + profileError.message);
                 } else {
-                    alert("Artist dodat! (Proverite email za potvrdu ako je uključena)");
+                    alert("Artist dodat!");
                     document.getElementById('new-artist-email').value = '';
                     document.getElementById('new-artist-pass').value = '';
                     document.getElementById('new-artist-name').value = '';
@@ -247,23 +279,83 @@
             }
         }
 
+        async function dodajTrosak() {
+            const title = document.getElementById('exp-title').value;
+            const amount = parseFloat(document.getElementById('exp-amount').value) || 0;
+
+            if(!title || amount <= 0) { alert("Unesi opis i iznos!"); return; }
+
+            const { error } = await supabaseClient.from('expenses').insert([{
+                studio_id: userProfile.studio_id,
+                title: title,
+                amount: amount
+            }]);
+
+            if (error) {
+                alert("Greška: " + error.message);
+            } else {
+                document.getElementById('exp-title').value = '';
+                document.getElementById('exp-amount').value = '';
+                ucitajTroskove();
+            }
+        }
+
+        async function ucitajTroskove() {
+            const { data: troskovi } = await supabaseClient.from('expenses')
+                .select('*')
+                .eq('studio_id', userProfile.studio_id)
+                .order('created_at', { ascending: false });
+
+            if (troskovi) {
+                let html = '';
+                troskovi.forEach(t => {
+                    const datum = new Date(t.created_at).toLocaleDateString('sr-RS');
+                    html += `<tr>
+                        <td><strong>${t.title}</strong></td>
+                        <td style="color: #ef4444; font-weight:800;">-€${t.amount}</td>
+                        <td>${datum}</td>
+                        <td style="text-align:right;"><button class="btn-action-delete" onclick="obrisiTrosak('${t.id}')">Ukloni</button></td>
+                    </tr>`;
+                });
+                document.getElementById('expenses-list-body').innerHTML = html;
+            }
+        }
+
+        async function obrisiTrosak(id) {
+            if(confirm("Obriši ovaj trošak?")) {
+                await supabaseClient.from('expenses').delete().eq('id', id);
+                ucitajTroskove();
+            }
+        }
+
         async function osveziPodatke() {
             try {
                 const { data: { user } } = await supabaseClient.auth.getUser();
+                
+                // Povlačenje termina
                 let query = supabaseClient.from('appointments').select('*').eq('studio_id', userProfile.studio_id);
                 if (userProfile.role !== 'owner') { query = query.eq('artist_id', user.id); }
+                const { data: apps } = await query.order('appointment_time', {ascending: true});
 
-                const { data: apps, error } = await query.order('appointment_time', {ascending: true});
+                // Povlačenje troškova
+                const { data: troskovi } = await supabaseClient.from('expenses').select('amount').eq('studio_id', userProfile.studio_id);
+                const ukupniTroskovi = troskovi ? troskovi.reduce((s, t) => s + (Number(t.amount) || 0), 0) : 0;
+
                 if (apps) {
                     const totalUgovoreno = apps.reduce((s, a) => s + (Number(a.total_price) || 0), 0);
-                    const profitPrikaz = apps.filter(a => a.status === 'završeno').reduce((s, a) => {
+                    
+                    const profitOdTermina = apps.filter(a => a.status === 'završeno').reduce((s, a) => {
                         let udeo = (userProfile.role === 'owner') ? a.studio_share : (a.total_price - a.studio_share);
                         return s + (Number(udeo) || 0);
                     }, 0);
+
+                    // Oduzimanje troškova samo ako je owner
+                    const konacniProfit = (userProfile.role === 'owner') ? (profitOdTermina - ukupniTroskovi) : profitOdTermina;
+                    
                     const ukupniDepoziti = apps.filter(a => a.status === 'zakazano').reduce((s, a) => s + (Number(a.deposit) || 0), 0);
 
                     document.getElementById('total-sum').innerText = `€${totalUgovoreno}`;
-                    document.getElementById('studio-sum').innerText = `€${profitPrikaz.toFixed(0)}`;
+                    document.getElementById('studio-sum').innerText = `€${konacniProfit.toFixed(0)}`;
                     document.getElementById('deposit-sum').innerText = `€${ukupniDepoziti}`;
 
                     let h = `<table><tr><th>Klijent</th><th style="text-align: center;">Status</th><th>Datum</th><th>Cena</th><th style="text-align:right;">Akcije</th></tr>`;
