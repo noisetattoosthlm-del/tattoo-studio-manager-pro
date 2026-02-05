@@ -1,4 +1,4 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="sr">
 <head>
     <meta charset="UTF-8">
@@ -21,9 +21,11 @@
             margin: 0; 
             display: flex; 
             min-height: 100vh; 
-            font-weight: 600; 
+            font-weight: 600;
+            overflow: hidden;
         }
         
+        /* Sidebar */
         .sidebar { 
             width: 280px; 
             background: rgba(0,0,0,0.4); 
@@ -31,6 +33,7 @@
             padding: 40px 20px; 
             display: flex;
             flex-direction: column;
+            z-index: 10;
         }
         
         .logo { 
@@ -49,7 +52,7 @@
             margin: 5px 0; 
             cursor: pointer; 
             border-radius: 12px; 
-            transition: 0.2s; 
+            transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
             color: #64748b; 
             display: flex;
             align-items: center;
@@ -59,42 +62,65 @@
         .nav-item:hover, .nav-item.active { 
             background: var(--card); 
             color: white; 
+            transform: translateX(5px);
         }
 
-        .main { flex: 1; padding: 50px; overflow-y: auto; }
+        /* Main Content */
+        .main { flex: 1; padding: 50px; overflow-y: auto; position: relative; }
         
-        .page-content { display: none; }
+        .page-content { display: none; animation: fadeIn 0.4s ease-out; }
         .page-content.active { display: block; }
         
-        h1 { font-weight: 800; font-size: 2.5rem; margin-bottom: 40px; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        h1 { font-weight: 800; font-size: 2.5rem; margin-bottom: 40px; letter-spacing: -1px; }
 
+        /* Stats Cards */
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-bottom: 50px; }
         .stat-card { 
             background: var(--card); 
             padding: 30px; 
             border-radius: 24px; 
             border: 1px solid rgba(255,255,255,0.05);
-            transition: 0.3s;
+            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(10px);
         }
-        .stat-card:hover { transform: translateY(-5px); border-color: var(--accent); }
-        .stat-card h3 { margin: 0; color: #64748b; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
-        .stat-card p { font-size: 2.2rem; font-weight: 800; margin: 15px 0 0 0; }
+        .stat-card:hover { 
+            transform: translateY(-10px); 
+            border-color: var(--accent);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        .stat-card h3 { margin: 0; color: #64748b; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; }
+        .stat-card p { font-size: 2.5rem; font-weight: 800; margin: 15px 0 0 0; }
 
-        /* Tabela Stil */
-        table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 20px; overflow: hidden; margin-top: 20px; }
-        th, td { padding: 20px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        th { color: #64748b; font-size: 0.8rem; text-transform: uppercase; }
+        /* Tabela */
+        .table-wrapper {
+            background: var(--card);
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.05);
+            padding: 20px;
+            margin-top: 20px;
+        }
+        table { width: 100%; border-collapse: collapse; }
+        th { text-align: left; padding: 15px; color: #64748b; font-size: 0.8rem; text-transform: uppercase; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        td { padding: 18px 15px; border-bottom: 1px solid rgba(255,255,255,0.02); font-size: 0.9rem; }
+        tr:last-child td { border: none; }
 
+        /* Form Styling */
         .booking-form { 
             background: var(--card); 
             padding: 40px; 
             border-radius: 30px; 
             border: 1px solid rgba(255,255,255,0.08); 
             max-width: 800px;
+            backdrop-filter: blur(20px);
         }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         input { 
-            background: #161e2c; 
+            background: rgba(22, 30, 44, 0.5); 
             border: 2px solid #2d3748; 
             color: white; 
             padding: 15px; 
@@ -103,19 +129,24 @@
             box-sizing: border-box; 
             font-family: 'Poppins', sans-serif;
             font-weight: 600;
+            transition: 0.3s;
         }
+        input:focus { border-color: var(--accent); outline: none; background: rgba(59, 130, 246, 0.05); }
         .full-width { grid-column: span 2; }
         .admin-btn { 
             background: var(--accent); 
             color: white; 
             border: none; 
-            padding: 18px; 
-            border-radius: 16px; 
+            padding: 20px; 
+            border-radius: 18px; 
             cursor: pointer; 
             font-weight: 800; 
             text-transform: uppercase;
+            transition: 0.3s;
+            box-shadow: 0 10px 20px rgba(59, 130, 246, 0.2);
         }
-        label { display: block; margin-bottom: 8px; font-size: 0.85rem; color: #94a3b8; }
+        .admin-btn:hover { transform: scale(1.02); background: #2563eb; }
+        label { display: block; margin-bottom: 8px; font-size: 0.8rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
     </style>
 </head>
 <body>
@@ -134,22 +165,26 @@
                 <div class="stat-card"><h3>Procenat Studija</h3><p id="studio-sum">€0</p></div>
                 <div class="stat-card"><h3>Aktivni termini</h3><p id="app-count">0</p></div>
             </div>
-            <div id="table-container"></div>
+            
+            <div class="table-wrapper">
+                <h3>Poslednji termini</h3>
+                <div id="table-container">Učitavanje podataka...</div>
+            </div>
         </div>
 
         <div id="booking-page" class="page-content">
-            <h1>Zakaži Termin</h1>
+            <h1>Novi Termin</h1>
             <div class="booking-form">
                 <div class="form-grid">
-                    <div class="full-width"><label>Puno ime klijenta</label><input type="text" id="c_name"></div>
-                    <div><label>Instagram Username</label><input type="text" id="c_insta"></div>
-                    <div><label>Kontakt Telefon</label><input type="text" id="c_phone"></div>
-                    <div class="full-width"><label>Email Klijenta</label><input type="email" id="c_email"></div>
-                    <div class="full-width"><label>Opis tetovaže</label><input type="text" id="c_type"></div>
+                    <div class="full-width"><label>Ime klijenta</label><input type="text" id="c_name" placeholder="Marko Marković"></div>
+                    <div><label>Instagram</label><input type="text" id="c_insta" placeholder="@profil"></div>
+                    <div><label>Telefon</label><input type="text" id="c_phone" placeholder="06xxxxxxxx"></div>
+                    <div class="full-width"><label>Email</label><input type="email" id="c_email" placeholder="klijent@mail.com"></div>
+                    <div class="full-width"><label>Tip tetovaže</label><input type="text" id="c_type" placeholder="Realizam, crno-sivo..."></div>
                     <div><label>Datum i Vreme</label><input type="datetime-local" id="app_time"></div>
-                    <div><label>Ukupna Cena (€)</label><input type="number" id="total_price"></div>
-                    <div class="full-width"><label>Procenat Artista (%)</label><input type="number" id="artist_percent" value="50"></div>
-                    <button class="admin-btn full-width" onclick="saveAppointment()">SAČUVAJ TERMIN U BAZU</button>
+                    <div><label>Cena (€)</label><input type="number" id="total_price" placeholder="0"></div>
+                    <div class="full-width"><label>Procenat artista (%)</label><input type="number" id="artist_percent" value="50"></div>
+                    <button class="admin-btn full-width" onclick="saveAppointment()">SAČUVAJ U BAZU</button>
                 </div>
             </div>
         </div>
@@ -160,33 +195,63 @@
         const supabaseKey = 'sb_publishable_J66CdYuykkwjyulPJp2O1Q_e0ZZLXe7'; 
         const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
+        // Navigacija
         function showPage(pageId, element) {
+            // Skloni sve stranice
             document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
+            // Deaktiviraj sve dugmiće
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            // Prikaži traženu stranicu
             document.getElementById(pageId).classList.add('active');
             element.classList.add('active');
         }
 
-        async function loadDashboard() {
-            const { data: apps } = await supabase.from('appointments').select('*');
+        // Učitavanje podataka
+        async function loadData() {
+            const { data: apps, error } = await supabase
+                .from('appointments')
+                .select('*')
+                .order('appointment_time', { ascending: false });
+
             if (apps) {
-                const total = apps.reduce((s, a) => s + (a.total_price || 0), 0);
-                const studio = apps.reduce((s, a) => s + (a.studio_share || 0), 0);
+                const total = apps.reduce((s, a) => s + (Number(a.total_price) || 0), 0);
+                const studio = apps.reduce((s, a) => s + (Number(a.studio_share) || 0), 0);
+                
                 document.getElementById('total-sum').innerText = `€${total}`;
-                document.getElementById('studio-sum').innerText = `€${studio}`;
+                document.getElementById('studio-sum').innerText = `€${studio.toFixed(0)}`;
                 document.getElementById('app-count').innerText = apps.length;
 
-                let html = `<table><thead><tr><th>Klijent</th><th>Vreme</th><th>Cena</th><th>Procenat Studija</th></tr></thead><tbody>`;
+                if (apps.length === 0) {
+                    document.getElementById('table-container').innerHTML = "Nema unetih termina.";
+                    return;
+                }
+
+                let html = `<table><thead><tr><th>Klijent</th><th>Datum</th><th>Cena</th><th>Studio</th></tr></thead><tbody>`;
                 apps.forEach(a => {
-                    html += `<tr><td>${a.client_name}</td><td>${new Date(a.appointment_time).toLocaleString('sr-RS')}</td><td>€${a.total_price}</td><td>€${a.studio_share.toFixed(2)}</td></tr>`;
+                    const date = new Date(a.appointment_time).toLocaleDateString('sr-RS');
+                    html += `<tr>
+                        <td>${a.client_name}<br><span style="color:#3b82f6;font-size:0.7rem;">${a.client_instagram || ''}</span></td>
+                        <td>${date}</td>
+                        <td style="font-weight:800;">€${a.total_price}</td>
+                        <td style="color:#00ff00;">€${Number(a.studio_share).toFixed(0)}</td>
+                    </tr>`;
                 });
                 html += `</tbody></table>`;
                 document.getElementById('table-container').innerHTML = html;
             }
         }
 
+        // Čuvanje u bazu
         async function saveAppointment() {
+            const btn = document.querySelector('.admin-btn');
+            btn.innerText = "SAČUVAVANJE...";
+            btn.style.opacity = "0.5";
+
+            const { data: { user } } = await supabase.auth.getUser();
+
             const appData = {
+                owner_id: user.id,
                 client_name: document.getElementById('c_name').value,
                 client_instagram: document.getElementById('c_insta').value,
                 client_phone: document.getElementById('c_phone').value,
@@ -196,13 +261,26 @@
                 total_price: parseFloat(document.getElementById('total_price').value),
                 artist_percentage: parseFloat(document.getElementById('artist_percent').value)
             };
+
             const { error } = await supabase.from('appointments').insert([appData]);
-            if (error) alert(error.message); else location.reload();
+
+            if (error) {
+                alert("Greška: " + error.message);
+                btn.innerText = "SAČUVAJ U BAZU";
+                btn.style.opacity = "1";
+            } else {
+                alert("Termin uspešno sačuvan!");
+                location.reload();
+            }
         }
 
-        async function logout() { await supabase.auth.signOut(); window.location.href = 'index.html'; }
+        async function logout() {
+            await supabase.auth.signOut();
+            window.location.href = 'index.html';
+        }
 
-        loadDashboard(); // Pokreće učitavanje podataka čim se uđe
+        // Pokreni učitavanje
+        loadData();
     </script>
 </body>
 </html>
