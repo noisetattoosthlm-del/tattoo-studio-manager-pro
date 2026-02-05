@@ -30,16 +30,48 @@
         .owner-only { display: none; }
 
         .main { flex: 1; padding: 40px; overflow-y: auto; background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.05), transparent); }
-        h1 { font-weight: 800; font-size: 2.8rem; margin-bottom: 40px; letter-spacing: -1px; }
+        h1 { font-weight: 800; font-size: 2.8rem; margin-bottom: 20px; letter-spacing: -1px; }
 
-        /* BRZI FILTERI CSS */
-        .quick-filters { display: flex; gap: 10px; margin-bottom: 25px; overflow-x: auto; padding-bottom: 5px; }
-        .btn-quick { 
-            background: rgba(255,255,255,0.05); color: #64748b; border: 1px solid rgba(255,255,255,0.1); 
-            padding: 10px 20px; border-radius: 12px; cursor: pointer; font-weight: 700; font-size: 0.75rem;
-            white-space: nowrap; transition: 0.3s;
+        /* --- BRZI FILTERI (POBOLJŠANO ZA MOBILNI) --- */
+        .quick-filters-container {
+            margin-bottom: 30px;
         }
-        .btn-quick.active { background: var(--accent); color: white; border-color: var(--accent); }
+        .quick-filters-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            color: #64748b;
+            margin-bottom: 10px;
+            font-weight: 600;
+            display: block;
+        }
+        .quick-filters { 
+            display: flex; 
+            gap: 12px; 
+            overflow-x: auto; 
+            padding-bottom: 10px;
+            scrollbar-width: none; /* Firefox */
+        }
+        .quick-filters::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+
+        .btn-quick { 
+            background: #1e293b; 
+            color: #94a3b8; 
+            border: 1px solid rgba(59, 130, 246, 0.3); 
+            padding: 12px 22px; 
+            border-radius: 14px; 
+            cursor: pointer; 
+            font-weight: 700; 
+            font-size: 0.8rem;
+            white-space: nowrap; 
+            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .btn-quick.active { 
+            background: var(--accent); 
+            color: white; 
+            border-color: var(--accent);
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
 
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 50px; }
         .stat-card { 
@@ -80,14 +112,6 @@
 
         input, select { width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 12px; border: 1px solid #1e293b; background: #020617; color: white; font-family: 'Poppins'; box-sizing: border-box; font-size: 1rem; }
 
-        .btn-action-done { background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; color: #10b981; padding: 10px 14px; border-radius: 10px; cursor: pointer; font-size: 0.7rem; font-weight: 800; }
-        .btn-action-noshow { background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 10px 14px; border-radius: 10px; cursor: pointer; font-size: 0.7rem; font-weight: 800; }
-        .btn-action-pay { background: rgba(59, 130, 246, 0.1); border: 1px solid #3b82f6; color: #3b82f6; padding: 10px 14px; border-radius: 10px; cursor: pointer; font-size: 0.7rem; font-weight: 800; }
-        .btn-action-delete { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.1); color: #64748b; padding: 10px 14px; border-radius: 10px; cursor: pointer; font-size: 0.7rem; font-weight: 800; }
-        
-        .filter-group { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
-        .filter-select { width: auto; margin: 0; padding: 10px 20px; border-radius: 15px; background: var(--card); border: 1px solid rgba(255,255,255,0.05); font-weight: 600; cursor: pointer; color: white; }
-
         @media (max-width: 900px) {
             body { flex-direction: column; }
             .sidebar { 
@@ -96,9 +120,8 @@
             }
             .logo { margin-bottom: 0; font-size: 0.8rem; min-width: 150px; margin-right: 20px; }
             .nav-item { margin: 0 5px; padding: 10px 15px; font-size: 0.8rem; }
-            .nav-item[style*="margin-top: auto"] { margin-top: 0 !important; margin-left: auto; }
-            .main { padding: 20px; }
-            h1 { font-size: 1.8rem; margin-bottom: 25px; }
+            .main { padding: 20px; padding-top: 10px; }
+            h1 { font-size: 1.8rem; margin-bottom: 15px; }
             .stats-grid { grid-template-columns: 1fr; gap: 10px; margin-bottom: 30px; }
             .stat-card { padding: 20px; }
             .stat-card p { font-size: 1.8rem; }
@@ -118,10 +141,13 @@
     <div class="main" id="dashboard-section">
         <h1 id="main-greeting">Statistika Studija</h1>
         
-        <div class="quick-filters">
-            <button id="qf-month" class="btn-quick active" onclick="setQuickFilter('month')">Ovaj mesec</button>
-            <button id="qf-today" class="btn-quick" onclick="setQuickFilter('today')">Danas</button>
-            <button id="qf-unpaid" class="btn-quick owner-only" onclick="setQuickFilter('unpaid')">💰 Neisplaćeno</button>
+        <div class="quick-filters-container">
+            <span class="quick-filters-label">Brzi pregled</span>
+            <div class="quick-filters">
+                <button id="qf-month" class="btn-quick active" onclick="setQuickFilter('month')">Ovaj mesec</button>
+                <button id="qf-today" class="btn-quick" onclick="setQuickFilter('today')">Danas</button>
+                <button id="qf-unpaid" class="btn-quick owner-only" onclick="setQuickFilter('unpaid')">💰 Neisplaćeno</button>
+            </div>
         </div>
 
         <div class="filter-group" id="standard-filters">
@@ -192,16 +218,13 @@
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
         let userProfile = null;
-        let currentFilterMode = 'month'; // Režimi: month, today, unpaid
+        let currentFilterMode = 'month';
 
         function setQuickFilter(mode) {
             currentFilterMode = mode;
             document.querySelectorAll('.btn-quick').forEach(b => b.classList.remove('active'));
             document.getElementById(`qf-${mode}`).classList.add('active');
-            
-            // Sakrij standardne selektore ako smo u Today ili Unpaid režimu radi preglednosti
-            document.getElementById('standard-filters').style.opacity = (mode === 'month') ? "1" : "0.3";
-            
+            document.getElementById('standard-filters').style.display = (mode === 'month') ? "flex" : "none";
             osveziPodatke();
         }
 
@@ -249,7 +272,7 @@
                 const m = document.getElementById('month-select').value;
                 const y = document.getElementById('year-select').value;
                 const selectedMonthStr = `${y}-${m}`;
-                const todayStr = new Date().toISOString().split('T')[0];
+                const todayStr = new Date().toLocaleDateString('en-CA'); // Format YYYY-MM-DD
 
                 let query = supabaseClient.from('appointments').select('*').eq('studio_id', userProfile.studio_id);
                 if (userProfile.role !== 'owner') query = query.eq('artist_id', user.id);
@@ -259,8 +282,6 @@
 
                 if (allApps) {
                     let filteredApps = [];
-
-                    // PRIMENA FILTRIRANJA
                     if (currentFilterMode === 'today') {
                         filteredApps = allApps.filter(a => a.appointment_time.startsWith(todayStr));
                     } else if (currentFilterMode === 'unpaid') {
@@ -269,7 +290,6 @@
                         filteredApps = allApps.filter(a => a.appointment_time.startsWith(selectedMonthStr));
                     }
 
-                    // Obračun statistike
                     const troskovi = allTroskovi ? allTroskovi.filter(t => t.created_at.startsWith(selectedMonthStr)) : [];
                     const ukupniTroskovi = troskovi.reduce((s, t) => s + (Number(t.amount) || 0), 0);
                     const totalUgovoreno = filteredApps.filter(a => a.status !== 'no-show').reduce((s, a) => s + (Number(a.total_price) || 0), 0);
@@ -310,7 +330,6 @@
             } catch (err) { console.error(err); }
         }
 
-        // Ostale funkcije ostaju nepromenjene
         function prikaziSekciju(sekcija) {
             document.getElementById('dashboard-section').style.display = (sekcija === 'dashboard' ? 'block' : 'none');
             document.getElementById('artists-section').style.display = (sekcija === 'artisti' ? 'block' : 'none');
@@ -324,61 +343,9 @@
         async function updateStatus(id, newStatus) { await supabaseClient.from('appointments').update({ status: newStatus }).eq('id', id); osveziPodatke(); }
         async function updatePayout(id) { if(confirm("Isplaćeno?")) { await supabaseClient.from('appointments').update({ payout_status: 'isplaćeno' }).eq('id', id); osveziPodatke(); } }
         async function obrisiTermin(id) { if(confirm("Obriši?")) { await supabaseClient.from('appointments').delete().eq('id', id); osveziPodatke(); } }
-        
-        async function napraviArtista() {
-            const email = document.getElementById('new-artist-email').value;
-            const password = document.getElementById('new-artist-pass').value;
-            const fullName = document.getElementById('new-artist-name').value;
-            const { data: authData } = await supabaseClient.auth.signUp({ email, password });
-            if (authData.user) {
-                await supabaseClient.from('profiles').insert([{ id: authData.user.id, full_name: fullName, role: 'artist', studio_id: userProfile.studio_id }]);
-                alert("Dodat!"); ucitajArtiste();
-            }
-        }
-
-        async function ucitajArtiste() {
-            const { data: artisti } = await supabaseClient.from('profiles').select('*').eq('studio_id', userProfile.studio_id);
-            if (artisti) {
-                let html = '';
-                artisti.forEach(a => { html += `<tr><td><strong>${a.full_name}</strong></td><td>${a.role}</td><td style="text-align:right;"><button class="btn-action-delete" onclick="obrisiProfil('${a.id}')">Ukloni</button></td></tr>`; });
-                document.getElementById('artists-list-body').innerHTML = html;
-            }
-        }
-
-        async function dodajTrosak() {
-            const title = document.getElementById('exp-title').value;
-            const amount = parseFloat(document.getElementById('exp-amount').value);
-            await supabaseClient.from('expenses').insert([{ studio_id: userProfile.studio_id, title, amount }]);
-            ucitajTroskove();
-        }
-
-        async function ucitajTroskove() {
-            const { data: troskovi } = await supabaseClient.from('expenses').select('*').eq('studio_id', userProfile.studio_id).order('created_at', {ascending: false});
-            if (troskovi) {
-                let html = '';
-                troskovi.forEach(t => { html += `<tr><td><strong>${t.title}</strong></td><td style="color:#ef4444;">-€${t.amount}</td><td>${new Date(t.created_at).toLocaleDateString('sr-RS')}</td><td style="text-align:right;"><button class="btn-action-delete" onclick="obrisiTrosak('${t.id}')">X</button></td></tr>`; });
-                document.getElementById('expenses-list-body').innerHTML = html;
-            }
-        }
-
-        async function saveData() {
-            const { data: { user } } = await supabaseClient.auth.getUser();
-            const cena = parseFloat(document.getElementById('total_price').value) || 0;
-            const procenat = parseFloat(document.getElementById('artist_percent').value) || 50;
-            await supabaseClient.from('appointments').insert([{
-                owner_id: user.id, artist_id: user.id, studio_id: userProfile.studio_id,
-                client_name: document.getElementById('c_name').value, 
-                client_instagram: document.getElementById('c_insta').value,
-                appointment_time: document.getElementById('app_time').value, 
-                total_price: cena, deposit: parseFloat(document.getElementById('deposit_amt').value) || 0,
-                artist_percentage: procenat, studio_share: cena * ((100 - procenat) / 100), 
-                status: 'zakazano', payout_status: 'nema'
-            }]);
-            zatvoriModal(); osveziPodatke();
-        }
-
-        function zatvoriModal() { document.getElementById('bookingModal').style.display = 'none'; }
         async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
+        function zatvoriModal() { document.getElementById('bookingModal').style.display = 'none'; }
+        
         initDashboard();
     </script>
 </body>
