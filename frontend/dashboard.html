@@ -46,14 +46,6 @@
             transition: 0.3s; box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
         }
 
-        .avatar-circle {
-            width: 40px; height: 40px; border-radius: 12px; background: var(--accent);
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 800; color: white; font-size: 0.9rem; text-transform: uppercase;
-            overflow: hidden; border: 1px solid rgba(255,255,255,0.1);
-        }
-        .avatar-circle img { width: 100%; height: 100%; object-fit: cover; }
-
         .btn-export { 
             background: rgba(255, 255, 255, 0.05); color: #64748b; border: 1px solid rgba(255,255,255,0.1); 
             padding: 10px 20px; border-radius: 15px; cursor: pointer; font-weight: 600; font-size: 0.75rem;
@@ -133,17 +125,13 @@
     </div>
 
     <div class="main" id="artists-section" style="display:none;">
-        <h1>Upravljanje Artisti</h1>
+        <h1>Upravljanje Artistima</h1>
         <div style="background: var(--card); padding: 30px; border-radius: 24px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.05);">
             <h3 style="margin-top:0; font-size: 1rem; color: var(--accent);">DODAJ NOVOG ARTISTA</h3>
             <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                 <input type="text" id="new-artist-name" placeholder="Ime artista" style="flex:1;">
                 <input type="email" id="new-artist-email" placeholder="Email" style="flex:1;">
                 <input type="password" id="new-artist-pass" placeholder="Lozinka" style="flex:1;">
-                <div style="flex:1; min-width: 200px;">
-                    <label class="modal-label" style="margin-bottom: 5px; display: block;">Slika profila:</label>
-                    <input type="file" id="new-artist-file" accept="image/*" style="padding: 10px;">
-                </div>
                 <button class="btn-add" id="btn-create-artist" style="margin:0; width: 100%;" onclick="napraviArtista()">KREIRAJ NALOG</button>
             </div>
         </div>
@@ -311,42 +299,17 @@
             } catch (err) { console.error(err); }
         }
 
-        // --- NOVO: NAPRAVI ARTISTA FUNKCIJA SA PRAVIM UPLOADOM ---
         async function napraviArtista() {
             const btn = document.getElementById('btn-create-artist');
             const name = document.getElementById('new-artist-name').value;
             const email = document.getElementById('new-artist-email').value;
             const password = document.getElementById('new-artist-pass').value;
-            const fileInput = document.getElementById('new-artist-file');
-            const file = fileInput.files[0];
 
             if(!name || !email || !password) { alert("Popuni sva polja!"); return; }
-            btn.innerText = "UČITAVANJE...";
+            btn.innerText = "KREIRANJE...";
             btn.disabled = true;
 
             try {
-                let finalAvatarUrl = null;
-
-                // 1. Upload slike u Storage ako postoji
-                if (file) {
-                    const fileExt = file.name.split('.').pop();
-                    const fileName = `${Math.random()}.${fileExt}`;
-                    const filePath = `artist_avatars/${fileName}`;
-
-                    const { error: uploadError } = await supabaseClient.storage
-                        .from('avatars')
-                        .upload(filePath, file);
-
-                    if (uploadError) throw uploadError;
-
-                    const { data: publicUrlData } = supabaseClient.storage
-                        .from('avatars')
-                        .getPublicUrl(filePath);
-                    
-                    finalAvatarUrl = publicUrlData.publicUrl;
-                }
-
-                // 2. Kreiramo nalog u Auth sistemu
                 const { data, error } = await supabaseClient.auth.signUp({
                     email: email,
                     password: password,
@@ -355,15 +318,13 @@
 
                 if (error) throw error;
 
-                // 3. Upisujemo profil sa slikom
                 const { error: profileError } = await supabaseClient
                     .from('profiles')
                     .insert([{ 
                         id: data.user.id, 
                         full_name: name, 
                         role: 'artist', 
-                        studio_id: userProfile.studio_id,
-                        avatar_url: finalAvatarUrl
+                        studio_id: userProfile.studio_id
                     }]);
 
                 if (profileError) throw profileError;
@@ -372,7 +333,6 @@
                 document.getElementById('new-artist-name').value = '';
                 document.getElementById('new-artist-email').value = '';
                 document.getElementById('new-artist-pass').value = '';
-                fileInput.value = '';
                 ucitajArtiste();
 
             } catch (err) {
@@ -394,15 +354,8 @@
                     const brojTermina = terminiArtista.length;
                     const ukupniPromet = terminiArtista.filter(t => t.status === 'završeno').reduce((s, t) => s + (Number(t.total_price) || 0), 0);
 
-                    const avatarHtml = a.avatar_url 
-                        ? `<img src="${a.avatar_url}" style="width:100%; height:100%; object-fit:cover;">`
-                        : a.full_name.charAt(0);
-
                     html += `<tr>
-                        <td style="display:flex; align-items:center; gap:12px;">
-                            <div class="avatar-circle">${avatarHtml}</div>
-                            <div><strong>${a.full_name}</strong><br><small style="color:#64748b;">${a.role}</small></div>
-                        </td>
+                        <td><strong>${a.full_name}</strong></td>
                         <td>${a.role}</td>
                         <td>${brojTermina}</td>
                         <td style="color:var(--accent); font-weight:800;">€${ukupniPromet}</td>
