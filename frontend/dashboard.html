@@ -45,10 +45,11 @@
         }
         .btn-add:hover { transform: scale(1.02); }
 
-        .table-container { background: var(--card); border-radius: 30px; padding: 15px; border: 1px solid rgba(255,255,255,0.05); overflow-x: hidden; }
-        table { width: 100%; border-collapse: collapse; table-layout: fixed; } 
-        th { text-align: left; padding: 15px; color: #64748b; font-size: 0.7rem; text-transform: uppercase; }
-        td { padding: 15px; border-top: 1px solid rgba(255,255,255,0.02); vertical-align: middle; }
+        /* FIX: Izbačena fiksna tabela, dodata bolja responzivnost */
+        .table-container { background: var(--card); border-radius: 30px; padding: 15px; border: 1px solid rgba(255,255,255,0.05); overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; } 
+        th { text-align: left; padding: 12px 15px; color: #64748b; font-size: 0.7rem; text-transform: uppercase; }
+        td { padding: 12px 15px; border-top: 1px solid rgba(255,255,255,0.02); vertical-align: middle; }
 
         .check-badge {
             display: inline-flex; align-items: center; justify-content: center;
@@ -57,9 +58,9 @@
         }
 
         .status-zakazano {
-            padding: 4px 8px; border-radius: 6px; font-size: 0.6rem; font-weight: 800; 
+            padding: 5px 10px; border-radius: 6px; font-size: 0.6rem; font-weight: 800; 
             background: rgba(59, 130, 246, 0.1); color: var(--accent); text-transform: uppercase;
-            display: inline-block;
+            white-space: nowrap; display: inline-block;
         }
 
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); }
@@ -72,9 +73,9 @@
             box-sizing: border-box; font-size: 0.9rem;
         }
 
-        /* SMANJENA DUGMAD DA BI STALA U RED */
-        .btn-action-done { background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; color: #10b981; padding: 6px 10px; border-radius: 10px; cursor: pointer; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; }
-        .btn-action-delete { background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 6px 10px; border-radius: 10px; cursor: pointer; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; margin-left: 4px; }
+        /* AKCIJE: Dodato white-space: nowrap da dugmići uvek stoje u liniji */
+        .btn-action-done { background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; color: #10b981; padding: 8px 12px; border-radius: 10px; cursor: pointer; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; margin-right: 5px; }
+        .btn-action-delete { background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 8px 12px; border-radius: 10px; cursor: pointer; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; }
     </style>
 </head>
 <body>
@@ -144,13 +145,12 @@
                     document.getElementById('studio-sum').innerText = `€${profitStudija.toFixed(0)}`;
                     document.getElementById('deposit-sum').innerText = `€${ukupniDepoziti}`;
 
-                    // NOVE ŠIRINE: Akcije su dobile 35% da ne bi pucale
                     let h = `<table><tr>
-                        <th style="width: 18%;">Klijent</th>
-                        <th style="width: 14%; text-align: center;">Status</th>
-                        <th style="width: 20%;">Datum</th>
-                        <th style="width: 13%;">Cena</th>
-                        <th style="width: 35%; text-align:right;">Akcije</th>
+                        <th>Klijent</th>
+                        <th style="text-align: center;">Status</th>
+                        <th>Datum</th>
+                        <th>Cena</th>
+                        <th style="text-align:right;">Akcije</th>
                     </tr>`;
 
                     apps.forEach(a => {
@@ -166,9 +166,7 @@
                             </td>
                             <td style="text-align:center;">${statusHtml}</td>
                             <td style="white-space: nowrap; font-size: 0.8rem; font-weight: 600;">${datum}h</td>
-                            <td>
-                                <div style="font-weight:800; font-size: 0.95rem;">€${a.total_price}</div>
-                            </td>
+                            <td style="white-space: nowrap; font-weight:800; font-size: 0.95rem;">€${a.total_price}</td>
                             <td style="text-align:right; white-space:nowrap;">
                                 ${a.status === 'zakazano' ? `<button class="btn-action-done" onclick="updateStatus('${a.id}', 'završeno')">Završi</button>` : ''}
                                 <button class="btn-action-delete" onclick="obrisiTermin('${a.id}')">Obriši</button>
