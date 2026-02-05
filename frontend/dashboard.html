@@ -299,7 +299,6 @@
             btn.innerText = "KREIRANJE...";
 
             try {
-                // Registracija novog korisnika u Supabase Auth
                 const { data, error } = await supabaseClient.auth.signUp({
                     email: email,
                     password: pass,
@@ -308,7 +307,6 @@
 
                 if (error) throw error;
 
-                // Dodavanje u profiles tabelu
                 if (data.user) {
                     const { error: profileError } = await supabaseClient.from('profiles').insert([{
                         id: data.user.id,
@@ -467,12 +465,12 @@
                     if(error) throw error;
                 } else {
                     const { data: { user } } = await supabaseClient.auth.getUser();
-                    const current_owner_id = userProfile.owner_id || user.id;
-
+                    
+                    // BITNO: Koristimo studio_id i owner_id direktno iz userProfile-a ulogovanog korisnika
                     const { error } = await supabaseClient.from('appointments').insert([{ 
                         ...payload, 
                         artist_id: user.id, 
-                        owner_id: current_owner_id,
+                        owner_id: userProfile.owner_id || user.id,
                         studio_id: userProfile.studio_id, 
                         status: 'zakazano', 
                         payout_status: 'nema' 
@@ -546,7 +544,7 @@
             document.getElementById('dashboard-section').style.display = (sekcija === 'dashboard' ? 'block' : 'none');
             document.getElementById('klijenti-section').style.display = (sekcija === 'klijenti' ? 'block' : 'none');
             document.getElementById('artisti-section').style.display = (sekcija === 'artisti' ? 'block' : 'none');
-            document.getElementById('troskovi-section').style.display = (sekcija === 'troskovi' ? 'none' : 'none');
+            document.getElementById('troskovi-section').style.display = 'none';
             if (sekcija === 'troskovi') document.getElementById('troskovi-section').style.display = 'block';
             
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
@@ -632,6 +630,7 @@
         async function updateStatus(id, newStatus) { await supabaseClient.from('appointments').update({ status: newStatus }).eq('id', id); osveziPodatke(); }
         async function updatePayout(id) { if(confirm("Isplaćeno?")) { await supabaseClient.from('appointments').update({ payout_status: 'isplaćeno' }).eq('id', id); osveziPodatke(); } }
         async function obrisiTermin(id) { if(confirm("Obriši?")) { await supabaseClient.from('appointments').delete().eq('id', id); osveziPodatke(); } }
+        async function obrisiProfil(id) { if(confirm("Ukloniti artista?")) { await supabaseClient.from('profiles').delete().eq('id', id); ucitajArtiste(); } }
         function zatvoriModal() { document.getElementById('bookingModal').style.display = 'none'; editingId = null; }
         async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
 
