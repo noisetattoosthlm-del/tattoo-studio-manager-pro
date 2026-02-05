@@ -75,7 +75,8 @@
         .btn-action-done { background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; color: #10b981; padding: 10px 14px; border-radius: 10px; cursor: pointer; font-size: 0.7rem; font-weight: 800; }
         .btn-action-noshow { background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 10px 14px; border-radius: 10px; cursor: pointer; font-size: 0.7rem; font-weight: 800; }
         .btn-action-pay { background: rgba(59, 130, 246, 0.1); border: 1px solid #3b82f6; color: #3b82f6; padding: 10px 14px; border-radius: 10px; cursor: pointer; font-size: 0.7rem; font-weight: 800; }
-        .btn-action-delete { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.1); color: #64748b; padding: 10px 14px; border-radius: 10px; cursor: pointer; font-size: 0.7rem; font-weight: 800; }
+        .btn-action-edit { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.1); color: #ffffff; padding: 10px 14px; border-radius: 10px; cursor: pointer; font-size: 0.7rem; font-weight: 800; }
+        .btn-action-delete { background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.2); color: #ef4444; padding: 10px 14px; border-radius: 10px; cursor: pointer; font-size: 0.7rem; font-weight: 800; }
         
         .filter-group { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
         .filter-select { width: auto; margin: 0; padding: 10px 20px; border-radius: 15px; background: var(--card); border: 1px solid rgba(255,255,255,0.05); font-weight: 600; cursor: pointer; color: white; }
@@ -120,7 +121,7 @@
             <div class="stat-card"><h3><span id="profit-label">Čist Profit</span></h3><p id="studio-sum">€0</p></div>
             <div class="stat-card"><h3>Depoziti</h3><p id="deposit-sum">€0</p></div>
         </div>
-        <button class="btn-add" onclick="document.getElementById('bookingModal').style.display='block'">+ NOVI TERMIN</button>
+        <button class="btn-add" onclick="otvoriModalNovi()">+ NOVI TERMIN</button>
         <div class="table-container" id="tabela-div">Učitavanje...</div>
     </div>
 
@@ -153,7 +154,7 @@
 
     <div id="bookingModal" class="modal">
         <div class="modal-content">
-            <h2 style="margin:0 0 25px 0;">Novi Termin</h2>
+            <h2 id="modalTitle" style="margin:0 0 25px 0;">Novi Termin</h2>
             <label class="modal-label">Ime klijenta</label>
             <input type="text" id="c_name">
             <label class="modal-label">Instagram (@)</label>
@@ -188,6 +189,8 @@
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
         let userProfile = null;
+        let editingId = null; 
+        let currentAppsData = [];
 
         function popuniMeseceIGodine() {
             const mFilter = document.getElementById('month-select');
@@ -241,6 +244,7 @@
                 const { data: allTroskovi } = await supabaseClient.from('expenses').select('*').eq('studio_id', userProfile.studio_id);
 
                 if (allApps) {
+                    currentAppsData = allApps; 
                     let filteredApps = allApps.filter(a => a.appointment_time.startsWith(selectedMonthStr));
                     const troskovi = allTroskovi ? allTroskovi.filter(t => t.created_at.startsWith(selectedMonthStr)) : [];
                     const ukupniTroskovi = troskovi.reduce((s, t) => s + (Number(t.amount) || 0), 0);
@@ -274,6 +278,7 @@
                             <td>€${a.total_price}<span class="pay-type-icon" title="${a.payment_type || 'Cash'}">${pIcon}</span></td>
                             <td style="text-align:right;"><div class="action-cell">
                                 ${a.status === 'zakazano' ? `<button class="btn-action-done" onclick="updateStatus('${a.id}', 'završeno')">Završi</button><button class="btn-action-noshow" onclick="updateStatus('${a.id}', 'no-show')">No-Show</button>` : ''}
+                                <button class="btn-action-edit" onclick="otvoriModalEdit('${a.id}')">✏️</button>
                                 ${a.status === 'završeno' && !isPayed && userProfile.role === 'owner' ? `<button class="btn-action-pay" onclick="updatePayout('${a.id}')">Isplati</button>` : ''}
                                 <button class="btn-action-delete" onclick="obrisiTermin('${a.id}')">Obriši</button>
                             </div></td></tr>`;
@@ -283,12 +288,43 @@
             } catch (err) { console.error(err); }
         }
 
+        function otvoriModalNovi() {
+            editingId = null;
+            document.getElementById('modalTitle').innerText = "Novi Termin";
+            document.getElementById('c_name').value = "";
+            document.getElementById('c_insta').value = "";
+            document.getElementById('app_time').value = "";
+            document.getElementById('total_price').value = "";
+            document.getElementById('deposit_amt').value = "0";
+            document.getElementById('payment_type').value = "Cash";
+            document.getElementById('bookingModal').style.display = 'block';
+        }
+
+        function otvoriModalEdit(id) {
+            const app = currentAppsData.find(a => a.id === id);
+            if (!app) return;
+            editingId = id;
+            document.getElementById('modalTitle').innerText = "Izmeni Termin";
+            document.getElementById('c_name').value = app.client_name;
+            document.getElementById('c_insta').value = app.client_instagram || "";
+            const d = new Date(app.appointment_time);
+            const dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0') + 'T' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+            document.getElementById('app_time').value = dateStr;
+            document.getElementById('total_price').value = app.total_price;
+            document.getElementById('deposit_amt').value = app.deposit;
+            document.getElementById('artist_percent').value = app.artist_percentage;
+            document.getElementById('payment_type').value = app.payment_type || "Cash";
+            document.getElementById('bookingModal').style.display = 'block';
+        }
+
         function prikaziSekciju(sekcija) {
             document.getElementById('dashboard-section').style.display = (sekcija === 'dashboard' ? 'block' : 'none');
             document.getElementById('artists-section').style.display = (sekcija === 'artisti' ? 'block' : 'none');
             document.getElementById('troskovi-section').style.display = (sekcija === 'troskovi' ? 'block' : 'none');
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            document.getElementById(`nav-${sekcija === 'dashboard' ? 'dash' : sekcija}`).classList.add('active');
+            if(document.getElementById(`nav-${sekcija === 'dashboard' ? 'dash' : (sekcija === 'artisti' ? 'artisti' : 'troskovi')}`)) {
+                document.getElementById(`nav-${sekcija === 'dashboard' ? 'dash' : (sekcija === 'artisti' ? 'artisti' : 'troskovi')}`).classList.add('active');
+            }
             if(sekcija === 'artisti') ucitajArtiste();
             if(sekcija === 'troskovi') ucitajTroskove();
         }
@@ -332,20 +368,32 @@
             const { data: { user } } = await supabaseClient.auth.getUser();
             const cena = parseFloat(document.getElementById('total_price').value) || 0;
             const procenat = parseFloat(document.getElementById('artist_percent').value) || 50;
-            await supabaseClient.from('appointments').insert([{
-                owner_id: user.id, artist_id: user.id, studio_id: userProfile.studio_id,
+            
+            const payload = {
                 client_name: document.getElementById('c_name').value, 
                 client_instagram: document.getElementById('c_insta').value,
                 appointment_time: document.getElementById('app_time').value, 
-                total_price: cena, deposit: parseFloat(document.getElementById('deposit_amt').value) || 0,
-                artist_percentage: procenat, studio_share: cena * ((100 - procenat) / 100), 
-                status: 'zakazano', payout_status: 'nema',
+                total_price: cena, 
+                deposit: parseFloat(document.getElementById('deposit_amt').value) || 0,
+                artist_percentage: procenat, 
+                studio_share: cena * ((100 - procenat) / 100), 
                 payment_type: document.getElementById('payment_type').value
-            }]);
+            };
+
+            if (editingId) {
+                await supabaseClient.from('appointments').update(payload).eq('id', editingId);
+            } else {
+                await supabaseClient.from('appointments').insert([{
+                    ...payload,
+                    owner_id: user.id, artist_id: user.id, studio_id: userProfile.studio_id,
+                    status: 'zakazano', payout_status: 'nema'
+                }]);
+            }
+            
             zatvoriModal(); osveziPodatke();
         }
 
-        function zatvoriModal() { document.getElementById('bookingModal').style.display = 'none'; }
+        function zatvoriModal() { document.getElementById('bookingModal').style.display = 'none'; editingId = null; }
         initDashboard();
     </script>
 </body>
