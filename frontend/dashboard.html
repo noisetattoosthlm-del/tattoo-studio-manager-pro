@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="sr">
 <head>
     <meta charset="UTF-8">
@@ -26,6 +26,9 @@
         .nav-item:hover { background: var(--card); color: white; transform: translateX(8px); }
         .nav-item.active { background: rgba(59, 130, 246, 0.1); color: var(--accent); }
 
+        /* Novo: Sakrivanje Owner opcija dok se ne proveri uloga */
+        .owner-only { display: none; }
+
         .main { flex: 1; padding: 40px; overflow-y: auto; background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.05), transparent); }
         h1 { font-weight: 800; font-size: 2.8rem; margin-bottom: 40px; letter-spacing: -1px; }
 
@@ -45,7 +48,6 @@
         }
         .btn-add:hover { transform: scale(1.02); }
 
-        /* FIX: Izbačena fiksna tabela, dodata bolja responzivnost */
         .table-container { background: var(--card); border-radius: 30px; padding: 15px; border: 1px solid rgba(255,255,255,0.05); overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 600px; } 
         th { text-align: left; padding: 12px 15px; color: #64748b; font-size: 0.7rem; text-transform: uppercase; }
@@ -73,7 +75,6 @@
             box-sizing: border-box; font-size: 0.9rem;
         }
 
-        /* AKCIJE: Dodato white-space: nowrap da dugmići uvek stoje u liniji */
         .btn-action-done { background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; color: #10b981; padding: 8px 12px; border-radius: 10px; cursor: pointer; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; margin-right: 5px; }
         .btn-action-delete { background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 8px 12px; border-radius: 10px; cursor: pointer; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; }
     </style>
@@ -81,16 +82,18 @@
 <body>
 
     <div class="sidebar">
-        <div class="logo">Tattoo Studio Management Pro</div>
+        <div class="logo" id="studio-name">Tattoo Studio Pro</div>
         <div class="nav-item active">Dashboard</div>
+        <div class="nav-item owner-only">Artisti</div>
+        <div class="nav-item owner-only">Troškovi</div>
         <div class="nav-item" style="margin-top: auto;" onclick="logout()">Odjavi se</div>
     </div>
 
     <div class="main">
-        <h1>Statistika Studija</h1>
+        <h1 id="main-greeting">Statistika Studija</h1>
         <div class="stats-grid">
             <div class="stat-card"><h3>Ugovoreno</h3><p id="total-sum">€0</p></div>
-            <div class="stat-card"><h3>Čist Profit</h3><p id="studio-sum">€0</p></div>
+            <div class="stat-card"><h3><span id="profit-label">Čist Profit</span></h3><p id="studio-sum">€0</p></div>
             <div class="stat-card"><h3>Depoziti</h3><p id="deposit-sum">€0</p></div>
         </div>
         <button class="btn-add" onclick="document.getElementById('bookingModal').style.display='block'">+ NOVI TERMIN</button>
@@ -132,17 +135,63 @@
         const supabaseKey = 'sb_publishable_J66CdYuykkwjyulPJp2O1Q_e0ZZLXe7'; 
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
+        let currentUserRole = 'artist'; // Default
+
+        // 1. INICIJALIZACIJA: Provera uloge pri učitavanju
+        async function initDashboard() {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if (!user) { window.location.href = 'index.html'; return; }
+
+            const { data: profile } = await supabaseClient
+                .from('profiles')
+                .select('*')
+                .eq('id', user.id)
+                .single();
+
+            if (profile) {
+                currentUserRole = profile.role;
+                document.getElementById('studio-name').innerText = profile.studio_name || "Tattoo Studio Pro";
+                
+                if (profile.role === 'owner') {
+                    document.querySelectorAll('.owner-only').forEach(el => el.style.display = 'flex');
+                    document.getElementById('profit-label').innerText = 'Čist Profit Studija';
+                } else {
+                    document.getElementById('profit-label').innerText = 'Moja Zarada';
+                    document.getElementById('main-greeting').innerText = 'Moji Termini';
+                }
+            }
+            osveziPodatke();
+        }
+
         async function osveziPodatke() {
             try {
-                const { data: apps, error } = await supabaseClient.from('appointments').select('*').order('appointment_time', {ascending: true});
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                
+                // 2. PAMETNO FILTRIRANJE
+                let query = supabaseClient.from('appointments').select('*');
+                
+                // Ako nije owner, vidi samo svoje termine
+                if (currentUserRole !== 'owner') {
+                    query = query.eq('artist_id', user.id);
+                }
+
+                const { data: apps, error } = await query.order('appointment_time', {ascending: true});
                 if (error) throw error;
+                
                 if (apps) {
                     const totalUgovoreno = apps.reduce((s, a) => s + (Number(a.total_price) || 0), 0);
-                    const profitStudija = apps.filter(a => a.status === 'završeno').reduce((s, a) => s + (Number(a.studio_share) || 0), 0);
+                    
+                    // 3. SMART PROFIT KALKULACIJA
+                    const profitPrikaz = apps.filter(a => a.status === 'završeno').reduce((s, a) => {
+                        // Ako si owner računaš studio_share, ako si artist računaš ostatak
+                        let udeo = (currentUserRole === 'owner') ? a.studio_share : (a.total_price - a.studio_share);
+                        return s + (Number(udeo) || 0);
+                    }, 0);
+
                     const ukupniDepoziti = apps.filter(a => a.status === 'zakazano').reduce((s, a) => s + (Number(a.deposit) || 0), 0);
 
                     document.getElementById('total-sum').innerText = `€${totalUgovoreno}`;
-                    document.getElementById('studio-sum').innerText = `€${profitStudija.toFixed(0)}`;
+                    document.getElementById('studio-sum').innerText = `€${profitPrikaz.toFixed(0)}`;
                     document.getElementById('deposit-sum').innerText = `€${ukupniDepoziti}`;
 
                     let h = `<table><tr>
@@ -199,10 +248,17 @@
             const studioShare = cena * ((100 - procenat) / 100);
 
             await supabaseClient.from('appointments').insert([{
-                owner_id: user.id, client_name: document.getElementById('c_name').value,
+                owner_id: user.id, 
+                artist_id: user.id, // Podrazumevano dodeljuje tebi
+                client_name: document.getElementById('c_name').value,
                 client_email: document.getElementById('c_email').value,
-                client_instagram: document.getElementById('c_insta').value, appointment_time: document.getElementById('app_time').value,
-                total_price: cena, deposit: depozit, artist_percentage: procenat, studio_share: studioShare, status: 'zakazano'
+                client_instagram: document.getElementById('c_insta').value, 
+                appointment_time: document.getElementById('app_time').value,
+                total_price: cena, 
+                deposit: depozit, 
+                artist_percentage: procenat, 
+                studio_share: studioShare, 
+                status: 'zakazano'
             }]);
 
             document.getElementById('bookingModal').style.display = 'none';
@@ -210,7 +266,9 @@
         }
 
         async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
-        osveziPodatke();
+        
+        // Pokrećemo aplikaciju sa proverom uloge
+        initDashboard();
     </script>
 </body>
 </html>
