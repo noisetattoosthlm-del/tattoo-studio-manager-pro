@@ -1,4 +1,4 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="sr">
 <head>
     <meta charset="UTF-8">
@@ -26,7 +26,6 @@
         .nav-item:hover { background: var(--card); color: white; transform: translateX(8px); }
         .nav-item.active { background: rgba(59, 130, 246, 0.1); color: var(--accent); }
 
-        /* Novo: Sakrivanje Owner opcija dok se ne proveri uloga */
         .owner-only { display: none; }
 
         .main { flex: 1; padding: 40px; overflow-y: auto; background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.05), transparent); }
@@ -82,14 +81,14 @@
 <body>
 
     <div class="sidebar">
-        <div class="logo" id="studio-name">Tattoo Studio Pro</div>
-        <div class="nav-item active">Dashboard</div>
-        <div class="nav-item owner-only">Artisti</div>
-        <div class="nav-item owner-only">Troškovi</div>
+        <div class="logo">Tattoo Studio Management Pro</div>
+        <div class="nav-item active" id="nav-dash" onclick="prikaziSekciju('dashboard')">Dashboard</div>
+        <div class="nav-item owner-only" id="nav-artisti" onclick="prikaziSekciju('artisti')">Artisti</div>
+        <div class="nav-item owner-only" id="nav-troskovi" onclick="prikaziSekciju('troskovi')">Troškovi</div>
         <div class="nav-item" style="margin-top: auto;" onclick="logout()">Odjavi se</div>
     </div>
 
-    <div class="main">
+    <div class="main" id="dashboard-section">
         <h1 id="main-greeting">Statistika Studija</h1>
         <div class="stats-grid">
             <div class="stat-card"><h3>Ugovoreno</h3><p id="total-sum">€0</p></div>
@@ -98,6 +97,16 @@
         </div>
         <button class="btn-add" onclick="document.getElementById('bookingModal').style.display='block'">+ NOVI TERMIN</button>
         <div class="table-container" id="tabela-div">Učitavanje...</div>
+    </div>
+
+    <div class="main" id="artists-section" style="display:none;">
+        <h1>Upravljanje Artistima</h1>
+        <div class="table-container">
+            <table id="artists-table">
+                <thead><tr><th>Ime Artista</th><th>Uloga</th><th style="text-align:right;">Akcije</th></tr></thead>
+                <tbody id="artists-list-body"></tbody>
+            </table>
+        </div>
     </div>
 
     <div id="bookingModal" class="modal">
@@ -135,23 +144,16 @@
         const supabaseKey = 'sb_publishable_J66CdYuykkwjyulPJp2O1Q_e0ZZLXe7'; 
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-        let currentUserRole = 'artist'; // Default
+        let userProfile = null;
 
-        // 1. INICIJALIZACIJA: Provera uloge pri učitavanju
         async function initDashboard() {
             const { data: { user } } = await supabaseClient.auth.getUser();
             if (!user) { window.location.href = 'index.html'; return; }
 
-            const { data: profile } = await supabaseClient
-                .from('profiles')
-                .select('*')
-                .eq('id', user.id)
-                .single();
+            const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', user.id).single();
 
             if (profile) {
-                currentUserRole = profile.role;
-                document.getElementById('studio-name').innerText = profile.studio_name || "Tattoo Studio Pro";
-                
+                userProfile = profile;
                 if (profile.role === 'owner') {
                     document.querySelectorAll('.owner-only').forEach(el => el.style.display = 'flex');
                     document.getElementById('profit-label').innerText = 'Čist Profit Studija';
@@ -163,111 +165,101 @@
             osveziPodatke();
         }
 
+        // NAVIGACIJA
+        function prikaziSekciju(sekcija) {
+            document.getElementById('dashboard-section').style.display = 'none';
+            document.getElementById('artists-section').style.display = 'none';
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+            if (sekcija === 'dashboard') {
+                document.getElementById('dashboard-section').style.display = 'block';
+                document.getElementById('nav-dash').classList.add('active');
+                osveziPodatke();
+            } else if (sekcija === 'artisti') {
+                document.getElementById('artists-section').style.display = 'block';
+                document.getElementById('nav-artisti').classList.add('active');
+                ucitajArtiste();
+            }
+        }
+
+        async function ucitajArtiste() {
+            const { data: artisti } = await supabaseClient.from('profiles')
+                .select('*')
+                .eq('studio_id', userProfile.studio_id); // SAMO MOJ STUDIO
+
+            if (artisti) {
+                let html = '';
+                artisti.forEach(a => {
+                    html += `<tr>
+                        <td><strong>${a.full_name || 'Umetnik'}</strong></td>
+                        <td>${a.role.toUpperCase()}</td>
+                        <td style="text-align:right;"><button class="btn-action-delete" onclick="obrisiProfil('${a.id}')">Ukloni</button></td>
+                    </tr>`;
+                });
+                document.getElementById('artists-list-body').innerHTML = html;
+            }
+        }
+
         async function osveziPodatke() {
             try {
                 const { data: { user } } = await supabaseClient.auth.getUser();
+                let query = supabaseClient.from('appointments').select('*').eq('studio_id', userProfile.studio_id); // PRIVATNOST
                 
-                // 2. PAMETNO FILTRIRANJE
-                let query = supabaseClient.from('appointments').select('*');
-                
-                // Ako nije owner, vidi samo svoje termine
-                if (currentUserRole !== 'owner') {
-                    query = query.eq('artist_id', user.id);
-                }
+                if (userProfile.role !== 'owner') { query = query.eq('artist_id', user.id); }
 
                 const { data: apps, error } = await query.order('appointment_time', {ascending: true});
-                if (error) throw error;
-                
                 if (apps) {
                     const totalUgovoreno = apps.reduce((s, a) => s + (Number(a.total_price) || 0), 0);
-                    
-                    // 3. SMART PROFIT KALKULACIJA
                     const profitPrikaz = apps.filter(a => a.status === 'završeno').reduce((s, a) => {
-                        // Ako si owner računaš studio_share, ako si artist računaš ostatak
-                        let udeo = (currentUserRole === 'owner') ? a.studio_share : (a.total_price - a.studio_share);
+                        let udeo = (userProfile.role === 'owner') ? a.studio_share : (a.total_price - a.studio_share);
                         return s + (Number(udeo) || 0);
                     }, 0);
-
                     const ukupniDepoziti = apps.filter(a => a.status === 'zakazano').reduce((s, a) => s + (Number(a.deposit) || 0), 0);
 
                     document.getElementById('total-sum').innerText = `€${totalUgovoreno}`;
                     document.getElementById('studio-sum').innerText = `€${profitPrikaz.toFixed(0)}`;
                     document.getElementById('deposit-sum').innerText = `€${ukupniDepoziti}`;
 
-                    let h = `<table><tr>
-                        <th>Klijent</th>
-                        <th style="text-align: center;">Status</th>
-                        <th>Datum</th>
-                        <th>Cena</th>
-                        <th style="text-align:right;">Akcije</th>
-                    </tr>`;
-
+                    let h = `<table><tr><th>Klijent</th><th style="text-align: center;">Status</th><th>Datum</th><th>Cena</th><th style="text-align:right;">Akcije</th></tr>`;
                     apps.forEach(a => {
                         const datum = new Date(a.appointment_time).toLocaleString('sr-RS', {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'});
-                        let statusHtml = a.status === 'završeno' 
-                            ? `<div class="check-badge">✓</div>` 
-                            : `<span class="status-zakazano">ZAKAZANO</span>`;
-
                         h += `<tr>
-                            <td>
-                                <div style="font-weight:800; font-size:0.95rem;">${a.client_name}</div>
-                                <div style="font-size:0.65rem; color:#64748b;">${a.client_instagram || '-'}</div>
-                            </td>
-                            <td style="text-align:center;">${statusHtml}</td>
-                            <td style="white-space: nowrap; font-size: 0.8rem; font-weight: 600;">${datum}h</td>
-                            <td style="white-space: nowrap; font-weight:800; font-size: 0.95rem;">€${a.total_price}</td>
-                            <td style="text-align:right; white-space:nowrap;">
+                            <td><div style="font-weight:800;">${a.client_name}</div><div style="font-size:0.65rem; color:#64748b;">${a.client_instagram || '-'}</div></td>
+                            <td style="text-align:center;">${a.status === 'završeno' ? '<div class="check-badge">✓</div>' : '<span class="status-zakazano">ZAKAZANO</span>'}</td>
+                            <td>${datum}h</td>
+                            <td>€${a.total_price}</td>
+                            <td style="text-align:right;">
                                 ${a.status === 'zakazano' ? `<button class="btn-action-done" onclick="updateStatus('${a.id}', 'završeno')">Završi</button>` : ''}
                                 <button class="btn-action-delete" onclick="obrisiTermin('${a.id}')">Obriši</button>
                             </td>
                         </tr>`;
                     });
-                    h += `</table>`;
-                    document.getElementById('tabela-div').innerHTML = h;
+                    document.getElementById('tabela-div').innerHTML = h + `</table>`;
                 }
             } catch (err) { console.error(err); }
         }
 
-        async function updateStatus(id, newStatus) {
-            await supabaseClient.from('appointments').update({ status: newStatus }).eq('id', id);
-            osveziPodatke();
-        }
-
-        async function obrisiTermin(id) {
-            if(confirm("Obriši ovaj termin?")) {
-                await supabaseClient.from('appointments').delete().eq('id', id);
-                osveziPodatke();
-            }
-        }
+        async function updateStatus(id, newStatus) { await supabaseClient.from('appointments').update({ status: newStatus }).eq('id', id); osveziPodatke(); }
+        async function obrisiTermin(id) { if(confirm("Obriši?")) { await supabaseClient.from('appointments').delete().eq('id', id); osveziPodatke(); } }
 
         async function saveData() {
             const { data: { user } } = await supabaseClient.auth.getUser();
             const cena = parseFloat(document.getElementById('total_price').value) || 0;
-            const depozit = parseFloat(document.getElementById('deposit_amt').value) || 0;
             const procenat = parseFloat(document.getElementById('artist_percent').value) || 50;
             const studioShare = cena * ((100 - procenat) / 100);
 
             await supabaseClient.from('appointments').insert([{
-                owner_id: user.id, 
-                artist_id: user.id, // Podrazumevano dodeljuje tebi
-                client_name: document.getElementById('c_name').value,
-                client_email: document.getElementById('c_email').value,
-                client_instagram: document.getElementById('c_insta').value, 
-                appointment_time: document.getElementById('app_time').value,
-                total_price: cena, 
-                deposit: depozit, 
-                artist_percentage: procenat, 
-                studio_share: studioShare, 
-                status: 'zakazano'
+                owner_id: user.id, artist_id: user.id, studio_id: userProfile.studio_id, // DODELJUJE STUDIJU
+                client_name: document.getElementById('c_name').value, client_instagram: document.getElementById('c_insta').value,
+                appointment_time: document.getElementById('app_time').value, total_price: cena,
+                deposit: parseFloat(document.getElementById('deposit_amt').value) || 0,
+                artist_percentage: procenat, studio_share: studioShare, status: 'zakazano'
             }]);
-
             document.getElementById('bookingModal').style.display = 'none';
             osveziPodatke();
         }
 
         async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
-        
-        // Pokrećemo aplikaciju sa proverom uloge
         initDashboard();
     </script>
 </body>
