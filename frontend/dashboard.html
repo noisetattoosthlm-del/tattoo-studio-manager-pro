@@ -53,6 +53,10 @@
         th { text-align: left; padding: 20px; color: #64748b; font-size: 0.8rem; text-transform: uppercase; }
         td { padding: 20px; border-top: 1px solid rgba(255,255,255,0.02); }
 
+        .status-badge {
+            padding: 4px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase;
+        }
+
         .modal {
             display: none; position: fixed; z-index: 1000; left: 0; top: 0; 
             width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px);
@@ -84,8 +88,8 @@
         <h1>Statistika Studija</h1>
         <div class="stats-grid">
             <div class="stat-card"><h3>Ukupno ugovoreno</h3><p id="total-sum">€0</p></div>
-            <div class="stat-card"><h3>Profit Studija</h3><p id="studio-sum">€0</p></div>
-            <div class="stat-card"><h3>Termini</h3><p id="app-count">0</p></div>
+            <div class="stat-card"><h3>Čist Profit</h3><p id="studio-sum">€0</p></div>
+            <div class="stat-card"><h3>Aktivni Termini</h3><p id="app-count">0</p></div>
         </div>
         <button class="btn-add" onclick="document.getElementById('bookingModal').style.display='block'">+ NOVI TERMIN</button>
         <div class="table-container" id="tabela-div">Učitavanje...</div>
@@ -112,7 +116,6 @@
     </div>
 
     <script>
-        // ISPRAVLJENO: Dodato 'supabase.' ispred createClient
         const supabaseUrl = 'https://yunuwkjydqzgkqtbgwup.supabase.co'; 
         const supabaseKey = 'sb_publishable_J66CdYuykkwjyulPJp2O1Q_e0ZZLXe7'; 
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
@@ -122,28 +125,55 @@
                 const { data: apps, error } = await supabaseClient.from('appointments').select('*').order('appointment_time', {ascending: true});
                 if (error) throw error;
                 if (apps) {
-                    const total = apps.reduce((s, a) => s + (Number(a.total_price) || 0), 0);
-                    const studio = apps.reduce((s, a) => s + (Number(a.studio_share) || 0), 0);
-                    document.getElementById('total-sum').innerText = `€${total}`;
-                    document.getElementById('studio-sum').innerText = `€${studio.toFixed(0)}`;
-                    document.getElementById('app-count').innerText = apps.length;
+                    // 1. Ukupno ugovoreno (sve što nije otkazano)
+                    const totalUgovoreno = apps.filter(a => a.status !== 'otkazano').reduce((s, a) => s + (Number(a.total_price) || 0), 0);
+                    // 2. Čist profit (samo ono što je ZAVRŠENO)
+                    const profitStudija = apps.filter(a => a.status === 'završeno').reduce((s, a) => s + (Number(a.studio_share) || 0), 0);
+                    // 3. Broj termina (oni koji tek dolaze)
+                    const brojAktivnih = apps.filter(a => a.status === 'zakazano').length;
 
-                    let h = `<table><tr><th>Klijent</th><th>Datum i Vreme</th><th>Cena</th><th style="text-align:right">Akcija</th></tr>`;
+                    document.getElementById('total-sum').innerText = `€${totalUgovoreno}`;
+                    document.getElementById('studio-sum').innerText = `€${profitStudija.toFixed(0)}`;
+                    document.getElementById('app-count').innerText = brojAktivnih;
+
+                    let h = `<table><tr><th>Klijent</th><th>Status</th><th>Datum</th><th>Cena</th><th style="text-align:right">Akcije</th></tr>`;
                     apps.forEach(a => {
                         const datum = new Date(a.appointment_time).toLocaleString('sr-RS', {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'});
-                        h += `<tr><td><div style="font-weight:600">${a.client_name}</div><div style="font-size:0.75rem; color:#64748b">${a.client_instagram || '-'}</div></td><td>${datum}h</td><td style="color:#3b82f6; font-weight:800">€${a.total_price}</td><td style="text-align:right"><button onclick="obrisiTermin('${a.id}')" style="background:none; border:none; color:#ff4444; cursor:pointer; font-size:1.2rem; font-weight:800">&times;</button></td></tr>`;
+                        
+                        let sColor = "#3b82f6"; // default zakazano
+                        if(a.status === 'završeno') sColor = "#10b981";
+                        if(a.status === 'otkazano') sColor = "#ef4444";
+
+                        h += `<tr>
+                            <td>
+                                <div style="font-weight:600">${a.client_name}</div>
+                                <div style="font-size:0.75rem; color:#64748b">${a.client_instagram || '-'}</div>
+                            </td>
+                            <td><span class="status-badge" style="background:${sColor}20; color:${sColor}">${a.status}</span></td>
+                            <td>${datum}h</td>
+                            <td style="font-weight:800">€${a.total_price}</td>
+                            <td style="text-align:right">
+                                ${a.status === 'zakazano' ? `<button onclick="updateStatus('${a.id}', 'završeno')" title="Završi" style="background:none; border:none; color:#10b981; cursor:pointer; font-size:1.1rem; margin-right:10px;">✓</button>` : ''}
+                                <button onclick="obrisiTermin('${a.id}')" style="background:none; border:none; color:#ff4444; cursor:pointer; font-size:1.2rem; font-weight:800">&times;</button>
+                            </td>
+                        </tr>`;
                     });
                     h += `</table>`;
                     document.getElementById('tabela-div').innerHTML = h;
                 }
             } catch (err) { 
-                console.error("Greška pri učitavanju:", err.message);
-                document.getElementById('tabela-div').innerHTML = "Greška pri povezivanju sa bazom.";
+                console.error("Greška:", err.message);
             }
         }
 
+        async function updateStatus(id, newStatus) {
+            const { error } = await supabaseClient.from('appointments').update({ status: newStatus }).eq('id', id);
+            if (error) alert("Greška: " + error.message);
+            else osveziPodatke();
+        }
+
         async function obrisiTermin(id) {
-            if(confirm("Da li želiš da obrišeš ovaj termin?")) {
+            if(confirm("Obriši ovaj termin?")) {
                 const { error } = await supabaseClient.from('appointments').delete().eq('id', id);
                 if (error) alert("Greška: " + error.message); else osveziPodatke();
             }
@@ -152,8 +182,6 @@
         async function saveData() {
             try {
                 const { data: { user } } = await supabaseClient.auth.getUser();
-                if (!user) { alert("Greška: Korisnik nije ulogovan!"); return; }
-
                 const cena = parseFloat(document.getElementById('total_price').value) || 0;
                 const procenat = parseFloat(document.getElementById('artist_percent').value) || 0;
                 const studioShare = cena * ((100 - procenat) / 100);
@@ -166,31 +194,24 @@
                     appointment_time: document.getElementById('app_time').value,
                     total_price: cena,
                     artist_percentage: procenat,
-                    studio_share: studioShare
+                    studio_share: studioShare,
+                    status: 'zakazano'
                 };
                 
                 if(!d.appointment_time || !d.client_name || cena <= 0) {
-                    alert("Obavezna polja: Ime, Datum i Cena veća od 0!");
-                    return;
+                    alert("Popuni obavezna polja!"); return;
                 }
 
                 const { error } = await supabaseClient.from('appointments').insert([d]);
-                
-                if (error) {
-                    alert("Baza odbija upis: " + error.message);
-                } else {
-                    alert("Uspešno sačuvano!");
+                if (error) alert(error.message);
+                else {
                     document.getElementById('bookingModal').style.display = 'none';
                     osveziPodatke(); 
                 }
-            } catch (err) {
-                alert("Sistemska greška: " + err.message);
-            }
+            } catch (err) { alert(err.message); }
         }
 
         async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
-        
-        // Pokretanje
         osveziPodatke();
     </script>
 </body>
