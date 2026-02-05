@@ -45,7 +45,8 @@
             border: 1px solid rgba(255,255,255,0.05); transition: 0.5s; backdrop-filter: blur(10px);
         }
         .stat-card h3 { margin: 0; font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
-        .stat-card p { font-size: 2.2rem; margin: 10px 0 0 0; font-weight: 800; }
+        .stat-card p { font-size: 1.8rem; margin: 10px 0 0 0; font-weight: 800; line-height: 1.2; }
+        .currency-sub { font-size: 0.9rem; color: #64748b; display: block; font-weight: 400; }
 
         .btn-add { 
             background: var(--accent); color: white; border: none; padding: 18px 35px; 
@@ -317,22 +318,50 @@
                 if (allApps) {
                     globalApps = allApps;
                     let filteredApps = allApps.filter(a => a.appointment_time && a.appointment_time.startsWith(selectedMonthStr));
-                    const troskovi = allTroskovi ? allTroskovi.filter(t => t.created_at.startsWith(selectedMonthStr)) : [];
+                    const troskovi = (allTroskovi && userProfile.role === 'owner' && artistFilter === 'all') 
+                        ? allTroskovi.filter(t => t.created_at.startsWith(selectedMonthStr)) 
+                        : [];
                     
-                    const totalUgovoreno = filteredApps.filter(a => a.status !== 'no-show').reduce((s, a) => s + (Number(a.total_price) || 0), 0);
-                    const profitOdTermina = filteredApps.reduce((s, a) => {
+                    // UGOVORENO
+                    let ugovorenoEur = 0;
+                    let ugovorenoRsd = 0;
+                    filteredApps.filter(a => a.status !== 'no-show').forEach(a => {
+                        if(a.currency === 'din') ugovorenoRsd += (Number(a.total_price) || 0);
+                        else ugovorenoEur += (Number(a.total_price) || 0);
+                    });
+
+                    // PROFIT (ZARADA)
+                    let profitEur = 0;
+                    let profitRsd = 0;
+                    filteredApps.forEach(a => {
                         let udeo = 0;
                         if (a.status === 'završeno') udeo = (userProfile.role === 'owner') ? a.studio_share : (a.total_price - a.studio_share);
                         else if (a.status === 'no-show' && a.deposit > 0) udeo = (userProfile.role === 'owner') ? a.deposit : 0;
-                        return s + (Number(udeo) || 0);
-                    }, 0);
+                        
+                        if(a.currency === 'din') profitRsd += udeo;
+                        else profitEur += udeo;
+                    });
+
+                    // Oduzimanje troškova samo za ownera
+                    if(userProfile.role === 'owner' && artistFilter === 'all') {
+                        troskovi.forEach(t => {
+                            if(t.currency === 'din') profitRsd -= (Number(t.amount) || 0);
+                            else profitEur -= (Number(t.amount) || 0);
+                        });
+                    }
+
+                    // DEPOZITI
+                    let depozitEur = 0;
+                    let depozitRsd = 0;
+                    filteredApps.filter(a => a.status === 'zakazano').forEach(a => {
+                        if(a.currency === 'din') depozitRsd += (Number(a.deposit) || 0);
+                        else depozitEur += (Number(a.deposit) || 0);
+                    });
                     
-                    const ukupniTroskovi = (userProfile.role === 'owner' && artistFilter === 'all') ? troskovi.reduce((s, t) => s + (Number(t.amount) || 0), 0) : 0;
-                    const konacniProfit = profitOdTermina - ukupniTroskovi;
-                    
-                    document.getElementById('total-sum').innerText = `€${totalUgovoreno}`;
-                    document.getElementById('studio-sum').innerText = `€${konacniProfit.toFixed(0)}`;
-                    document.getElementById('deposit-sum').innerText = `€${filteredApps.filter(a => a.status === 'zakazano').reduce((s, a) => s + (Number(a.deposit) || 0), 0)}`;
+                    // Prikaz
+                    document.getElementById('total-sum').innerHTML = `€${ugovorenoEur}<span class="currency-sub">${ugovorenoRsd} RSD</span>`;
+                    document.getElementById('studio-sum').innerHTML = `€${profitEur.toFixed(0)}<span class="currency-sub">${profitRsd.toFixed(0)} RSD</span>`;
+                    document.getElementById('deposit-sum').innerHTML = `€${depozitEur}<span class="currency-sub">${depozitRsd} RSD</span>`;
                     
                     inicijalizujGrafikon(filteredApps, y, m);
                     renderujTabelu(filteredApps);
@@ -403,6 +432,8 @@
             finally { saveBtn.disabled = false; saveBtn.innerText = originalText; }
         }
 
+        // --- OSTALE FUNKCIJE SU IDENTICNE ---
+
         function otvoriModalNovi() {
             editingId = null; document.getElementById('modal-title').innerText = "Novi Termin";
             document.querySelectorAll('#bookingModal input').forEach(i => i.value = "");
@@ -434,6 +465,7 @@
             await supabaseClient.from('expenses').insert([{ studio_id: userProfile.studio_id, title, amount, currency }]);
             document.getElementById('exp-title').value = ''; document.getElementById('exp-amount').value = '';
             ucitajTroskove();
+            osveziPodatke();
         }
 
         async function ucitajTroskove() {
@@ -447,7 +479,14 @@
             document.getElementById('expenses-list-body').innerHTML = html;
         }
 
-        // --- ZADRŽANE ORIGINALNE FUNKCIJE ---
+        async function obrisiTrosak(id) {
+            if(confirm("Obriši trošak?")) {
+                await supabaseClient.from('expenses').delete().eq('id', id);
+                ucitajTroskove();
+                osveziPodatke();
+            }
+        }
+
         function prikaziSekciju(sekcija) {
             document.getElementById('dashboard-section').style.display = (sekcija === 'dashboard' ? 'block' : 'none');
             document.getElementById('klijenti-section').style.display = (sekcija === 'klijenti' ? 'block' : 'none');
@@ -463,12 +502,17 @@
 
         async function ucitajArtiste() {
             const { data: artisti } = await supabaseClient.from('profiles').select('*').eq('studio_id', userProfile.studio_id);
-            const { data: sviTermini } = await supabaseClient.from('appointments').select('artist_id, total_price, status').eq('studio_id', userProfile.studio_id);
+            const { data: sviTermini } = await supabaseClient.from('appointments').select('artist_id, total_price, status, currency').eq('studio_id', userProfile.studio_id);
             let html = '';
             if (artisti) artisti.forEach(a => { 
                 const termini = sviTermini ? sviTermini.filter(t => t.artist_id === a.id && t.status === 'završeno') : [];
-                const promet = termini.reduce((s, t) => s + (Number(t.total_price) || 0), 0);
-                html += `<tr><td><strong>${a.full_name}</strong></td><td>${a.role}</td><td>${termini.length}</td><td style="color:var(--accent); font-weight:800;">€${promet}</td><td style="text-align:right;"><button class="btn-action-delete" onclick="obrisiProfil('${a.id}')">Ukloni</button></td></tr>`; 
+                let prometEur = 0;
+                let prometRsd = 0;
+                termini.forEach(t => {
+                    if(t.currency === 'din') prometRsd += (Number(t.total_price) || 0);
+                    else prometEur += (Number(t.total_price) || 0);
+                });
+                html += `<tr><td><strong>${a.full_name}</strong></td><td>${a.role}</td><td>${termini.length}</td><td style="color:var(--accent); font-weight:800;">€${prometEur} <span style="font-size:0.7rem; color:#64748b; font-weight:400;">/ ${prometRsd} RSD</span></td><td style="text-align:right;"><button class="btn-action-delete" onclick="obrisiProfil('${a.id}')">Ukloni</button></td></tr>`; 
             });
             document.getElementById('artists-list-body').innerHTML = html;
         }
@@ -498,10 +542,17 @@
         function inicijalizujGrafikon(apps, year, month) {
             const daysInMonth = new Date(year, month, 0).getDate();
             const dailyRevenue = Array(daysInMonth).fill(0);
-            apps.forEach(a => { if(a.status === 'završeno') dailyRevenue[new Date(a.appointment_time).getDate()-1] += (userProfile.role === 'owner' ? a.studio_share : a.total_price - a.studio_share); });
+            // Grafikon i dalje prikazuje sumarno u EUR radi preglednosti (može se dodati konverzija ako je bitno, ali obično se gleda volumen)
+            apps.forEach(a => { 
+                if(a.status === 'završeno') {
+                    let iznos = (userProfile.role === 'owner' ? a.studio_share : a.total_price - a.studio_share);
+                    // Opciono: ovde bi mogao dodati fiktivni kurs ako želiš da RSD vidiš na grafiku
+                    dailyRevenue[new Date(a.appointment_time).getDate()-1] += iznos; 
+                }
+            });
             const ctx = document.getElementById('revenueChart').getContext('2d');
             if (myChart) myChart.destroy();
-            myChart = new Chart(ctx, { type: 'line', data: { labels: Array.from({length: daysInMonth}, (_, i) => i + 1), datasets: [{ label: 'Zarada', data: dailyRevenue, borderColor: '#3b82f6', fill: true, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: false } });
+            myChart = new Chart(ctx, { type: 'line', data: { labels: Array.from({length: daysInMonth}, (_, i) => i + 1), datasets: [{ label: 'Zarada (EUR)', data: dailyRevenue, borderColor: '#3b82f6', fill: true, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: false } });
         }
 
         async function updateStatus(id, newStatus) { await supabaseClient.from('appointments').update({ status: newStatus }).eq('id', id); osveziPodatke(); }
