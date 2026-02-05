@@ -132,10 +132,23 @@
                 <input type="text" id="new-artist-name" placeholder="Ime artista">
                 <input type="email" id="new-artist-email" placeholder="Email">
                 <input type="password" id="new-artist-pass" placeholder="Lozinka">
-                <button class="btn-add" style="margin:0;" onclick="napraviArtista()">KREIRAJ NALOG</button>
+                <button class="btn-add" id="btn-create-artist" style="margin:0;" onclick="napraviArtista()">KREIRAJ NALOG</button>
             </div>
         </div>
-        <div class="table-container"><table id="artists-table"><thead><tr><th>Ime Artista</th><th>Uloga</th><th style="text-align:right;">Akcije</th></tr></thead><tbody id="artists-list-body"></tbody></table></div>
+        <div class="table-container">
+            <table id="artists-table">
+                <thead>
+                    <tr>
+                        <th>Artist</th>
+                        <th>Uloga</th>
+                        <th>Termini</th>
+                        <th>Ukupan Promet</th>
+                        <th style="text-align:right;">Akcije</th>
+                    </tr>
+                </thead>
+                <tbody id="artists-list-body"></tbody>
+            </table>
+        </div>
     </div>
 
     <div class="main" id="troskovi-section" style="display:none;">
@@ -286,6 +299,79 @@
             } catch (err) { console.error(err); }
         }
 
+        // --- NOVO: NAPRAVI ARTISTA FUNKCIJA ---
+        async function napraviArtista() {
+            const btn = document.getElementById('btn-create-artist');
+            const name = document.getElementById('new-artist-name').value;
+            const email = document.getElementById('new-artist-email').value;
+            const password = document.getElementById('new-artist-pass').value;
+
+            if(!name || !email || !password) { alert("Popuni sva polja!"); return; }
+            btn.innerText = "KREIRANJE...";
+            btn.disabled = true;
+
+            try {
+                // 1. Kreiramo nalog u Supabase Auth sistemu
+                const { data, error } = await supabaseClient.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: { data: { full_name: name } }
+                });
+
+                if (error) throw error;
+
+                // 2. Automatski upisujemo profil sa Ownerovim studio_id
+                const { error: profileError } = await supabaseClient
+                    .from('profiles')
+                    .insert([{ 
+                        id: data.user.id, 
+                        full_name: name, 
+                        role: 'artist', 
+                        studio_id: userProfile.studio_id 
+                    }]);
+
+                if (profileError) throw profileError;
+
+                alert("Artist uspešno kreiran!");
+                document.getElementById('new-artist-name').value = '';
+                document.getElementById('new-artist-email').value = '';
+                document.getElementById('new-artist-pass').value = '';
+                ucitajArtiste();
+
+            } catch (err) {
+                alert("Greška: " + err.message);
+            } finally {
+                btn.innerText = "KREIRAJ NALOG";
+                btn.disabled = false;
+            }
+        }
+
+        async function ucitajArtiste() {
+            // Povlačimo artiste i njihove termine da izračunamo statistiku
+            const { data: artisti } = await supabaseClient.from('profiles').select('*').eq('studio_id', userProfile.studio_id);
+            const { data: sviTermini } = await supabaseClient.from('appointments').select('artist_id, total_price, status').eq('studio_id', userProfile.studio_id);
+
+            if (artisti) {
+                let html = '';
+                artisti.forEach(a => { 
+                    const terminiArtista = sviTermini ? sviTermini.filter(t => t.artist_id === a.id) : [];
+                    const brojTermina = terminiArtista.length;
+                    const ukupniPromet = terminiArtista.filter(t => t.status === 'završeno').reduce((s, t) => s + (Number(t.total_price) || 0), 0);
+
+                    html += `<tr>
+                        <td><strong>${a.full_name}</strong><br><small style="color:#64748b;">${a.role}</small></td>
+                        <td>${a.role}</td>
+                        <td>${brojTermina}</td>
+                        <td style="color:var(--accent); font-weight:800;">€${ukupniPromet}</td>
+                        <td style="text-align:right;">
+                            <button class="btn-action-delete" onclick="obrisiProfil('${a.id}')">Ukloni</button>
+                        </td>
+                    </tr>`; 
+                });
+                document.getElementById('artists-list-body').innerHTML = html;
+            }
+        }
+
         function otvoriModalNovi() {
             editingId = null;
             document.getElementById('modal-title').innerText = "Novi Termin";
@@ -359,19 +445,14 @@
                         }]);
                 }
 
-                if (result.error) {
-                    console.error("Supabase Error Detail:", result.error);
-                    alert("Greška baze: " + result.error.message); 
-                    return;
-                }
+                if (result.error) { throw result.error; }
 
                 zatvoriModal(); 
                 await osveziPodatke();
                 alert("Uspešno sačuvano!");
 
             } catch (err) {
-                console.error("Sistemska greška:", err);
-                alert("Sistemska greška: " + err.message);
+                alert("Greška: " + err.message);
             } finally {
                 saveBtn.disabled = false;
                 saveBtn.innerText = originalText;
@@ -392,15 +473,6 @@
         async function updatePayout(id) { if(confirm("Isplaćeno?")) { await supabaseClient.from('appointments').update({ payout_status: 'isplaćeno' }).eq('id', id); osveziPodatke(); } }
         async function obrisiTermin(id) { if(confirm("Obriši?")) { await supabaseClient.from('appointments').delete().eq('id', id); osveziPodatke(); } }
         async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
-
-        async function ucitajArtiste() {
-            const { data: artisti } = await supabaseClient.from('profiles').select('*').eq('studio_id', userProfile.studio_id);
-            if (artisti) {
-                let html = '';
-                artisti.forEach(a => { html += `<tr><td><strong>${a.full_name}</strong></td><td>${a.role}</td><td style="text-align:right;"><button class="btn-action-delete" onclick="obrisiProfil('${a.id}')">Ukloni</button></td></tr>`; });
-                document.getElementById('artists-list-body').innerHTML = html;
-            }
-        }
 
         async function dodajTrosak() {
             const title = document.getElementById('exp-title').value;
