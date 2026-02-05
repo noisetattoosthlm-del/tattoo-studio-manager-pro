@@ -36,8 +36,18 @@
         .chart-container { 
             background: var(--card); border: 1px solid rgba(255,255,255,0.05); 
             padding: 25px; border-radius: 30px; margin-bottom: 30px; height: 300px;
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px); position: relative;
         }
+
+        .chart-toggle {
+            position: absolute; top: 15px; right: 25px; z-index: 10;
+            display: flex; gap: 5px; background: rgba(0,0,0,0.2); padding: 5px; border-radius: 12px;
+        }
+        .toggle-btn {
+            padding: 5px 12px; border-radius: 8px; border: none; background: transparent;
+            color: #64748b; font-size: 0.7rem; font-weight: 800; cursor: pointer; transition: 0.3s;
+        }
+        .toggle-btn.active { background: var(--accent); color: white; }
 
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 50px; }
         .stat-card { 
@@ -89,7 +99,7 @@
         .filter-select { width: auto; margin: 0; padding: 10px 20px; border-radius: 15px; background: var(--card); border: 1px solid rgba(255,255,255,0.05); font-weight: 600; cursor: pointer; color: white; }
 
         @media print {
-            .sidebar, .btn-add, .filter-group, .action-cell { display: none !important; }
+            .sidebar, .btn-add, .filter-group, .action-cell, .chart-toggle { display: none !important; }
             .main { padding: 0; background: white; color: black !important; }
             .stat-card, .table-container { border: 1px solid #ccc; background: white; color: black; }
             h1, p, h3, td, th { color: black !important; }
@@ -138,6 +148,10 @@
         </div>
 
         <div class="chart-container">
+            <div class="chart-toggle">
+                <button id="toggle-eur" class="toggle-btn active" onclick="promeniValutuGrafikona('€')">EUR</button>
+                <button id="toggle-rsd" class="toggle-btn" onclick="promeniValutuGrafikona('din')">RSD</button>
+            </div>
             <canvas id="revenueChart"></canvas>
         </div>
 
@@ -246,7 +260,9 @@
         let userProfile = null;
         let editingId = null;
         let globalApps = [];
+        let filteredAppsGlobal = []; // Čuvamo filtrirane termine za brzu promenu grafikona
         let myChart = null;
+        let chartCurrency = '€'; // Default valuta za grafikon
 
         function popuniMeseceIGodine() {
             const mFilter = document.getElementById('month-select');
@@ -317,7 +333,7 @@
 
                 if (allApps) {
                     globalApps = allApps;
-                    let filteredApps = allApps.filter(a => a.appointment_time && a.appointment_time.startsWith(selectedMonthStr));
+                    filteredAppsGlobal = allApps.filter(a => a.appointment_time && a.appointment_time.startsWith(selectedMonthStr));
                     const troskovi = (allTroskovi && userProfile.role === 'owner' && artistFilter === 'all') 
                         ? allTroskovi.filter(t => t.created_at.startsWith(selectedMonthStr)) 
                         : [];
@@ -326,7 +342,7 @@
                     let profitEur = 0; let profitRsd = 0;
                     let depozitEur = 0; let depozitRsd = 0;
 
-                    filteredApps.forEach(a => {
+                    filteredAppsGlobal.forEach(a => {
                         if(a.status !== 'no-show') {
                             if(a.currency === 'din') ugovorenoRsd += (Number(a.total_price) || 0);
                             else ugovorenoEur += (Number(a.total_price) || 0);
@@ -354,8 +370,8 @@
                     document.getElementById('studio-sum').innerHTML = `€${profitEur.toFixed(0)}<span class="currency-sub">${profitRsd.toFixed(0)} RSD</span>`;
                     document.getElementById('deposit-sum').innerHTML = `€${depozitEur}<span class="currency-sub">${depozitRsd} RSD</span>`;
                     
-                    inicijalizujGrafikon(filteredApps, y, m);
-                    renderujTabelu(filteredApps);
+                    inicijalizujGrafikon(filteredAppsGlobal, y, m);
+                    renderujTabelu(filteredAppsGlobal);
                 }
             } catch (err) { console.error(err); }
         }
@@ -421,10 +437,7 @@
                     if(error) throw error;
                 } else {
                     const { data: { user } } = await supabaseClient.auth.getUser();
-                    
-                    // POPRAVKA OVDE: Dodajemo owner_id koji baza zahteva
                     const current_owner_id = userProfile.owner_id || user.id;
-
                     const { error } = await supabaseClient.from('appointments').insert([{ 
                         ...payload, 
                         artist_id: user.id, 
@@ -468,6 +481,57 @@
             document.getElementById('bookingModal').style.display = 'block';
         }
 
+        function promeniValutuGrafikona(valuta) {
+            chartCurrency = valuta;
+            document.getElementById('toggle-eur').classList.toggle('active', valuta === '€');
+            document.getElementById('toggle-rsd').classList.toggle('active', valuta === 'din');
+            
+            const m = document.getElementById('month-select').value;
+            const y = document.getElementById('year-select').value;
+            inicijalizujGrafikon(filteredAppsGlobal, y, m);
+        }
+
+        function inicijalizujGrafikon(apps, year, month) {
+            const daysInMonth = new Date(year, month, 0).getDate();
+            const dailyRevenue = Array(daysInMonth).fill(0);
+            
+            apps.forEach(a => { 
+                if(a.status === 'završeno' && a.currency === (chartCurrency === '€' ? '€' : 'din')) {
+                    let iznos = (userProfile.role === 'owner' ? a.studio_share : a.total_price - a.studio_share);
+                    dailyRevenue[new Date(a.appointment_time).getDate()-1] += iznos; 
+                }
+            });
+
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            if (myChart) myChart.destroy();
+            
+            const label = chartCurrency === '€' ? 'Zarada (EUR)' : 'Zarada (RSD)';
+            
+            myChart = new Chart(ctx, { 
+                type: 'line', 
+                data: { 
+                    labels: Array.from({length: daysInMonth}, (_, i) => i + 1), 
+                    datasets: [{ 
+                        label: label, 
+                        data: dailyRevenue, 
+                        borderColor: '#3b82f6', 
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        fill: true, 
+                        tension: 0.4 
+                    }] 
+                }, 
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        x: { grid: { display: false } }
+                    }
+                } 
+            });
+        }
+
+        // --- Ostale funkcije (Nepromenjene) ---
         async function dodajTrosak() {
             const title = document.getElementById('exp-title').value;
             const amount = parseFloat(document.getElementById('exp-amount').value);
@@ -502,8 +566,7 @@
             document.getElementById('dashboard-section').style.display = (sekcija === 'dashboard' ? 'block' : 'none');
             document.getElementById('klijenti-section').style.display = (sekcija === 'klijenti' ? 'block' : 'none');
             document.getElementById('artisti-section').style.display = (sekcija === 'artisti' ? 'block' : 'none');
-            document.getElementById('troskovi-section').style.display = (sekcija === 'troskovi' ? 'none' : 'none');
-            if (sekcija === 'troskovi') document.getElementById('troskovi-section').style.display = 'block';
+            document.getElementById('troskovi-section').style.display = (sekcija === 'troskovi' ? 'block' : 'none');
             
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             const navId = sekcija === 'dashboard' ? 'nav-dash' : (sekcija === 'klijenti' ? 'nav-klijenti' : 'nav-' + sekcija);
@@ -547,20 +610,6 @@
             document.getElementById('c_phone').value = phone === '-' ? '' : phone;
             document.getElementById('c_insta').value = insta === '-' ? '' : insta;
             prikaziSekciju('dashboard');
-        }
-
-        function inicijalizujGrafikon(apps, year, month) {
-            const daysInMonth = new Date(year, month, 0).getDate();
-            const dailyRevenue = Array(daysInMonth).fill(0);
-            apps.forEach(a => { 
-                if(a.status === 'završeno') {
-                    let iznos = (userProfile.role === 'owner' ? a.studio_share : a.total_price - a.studio_share);
-                    dailyRevenue[new Date(a.appointment_time).getDate()-1] += iznos; 
-                }
-            });
-            const ctx = document.getElementById('revenueChart').getContext('2d');
-            if (myChart) myChart.destroy();
-            myChart = new Chart(ctx, { type: 'line', data: { labels: Array.from({length: daysInMonth}, (_, i) => i + 1), datasets: [{ label: 'Zarada (EUR)', data: dailyRevenue, borderColor: '#3b82f6', fill: true, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: false } });
         }
 
         async function updateStatus(id, newStatus) { await supabaseClient.from('appointments').update({ status: newStatus }).eq('id', id); osveziPodatke(); }
