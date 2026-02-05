@@ -157,6 +157,8 @@
             <h2 id="modalTitle" style="margin:0 0 25px 0;">Novi Termin</h2>
             <label class="modal-label">Ime klijenta</label>
             <input type="text" id="c_name">
+            <label class="modal-label">Email klijenta</label>
+            <input type="email" id="c_email">
             <label class="modal-label">Instagram (@)</label>
             <input type="text" id="c_insta">
             <label class="modal-label">Datum i vreme</label>
@@ -244,7 +246,7 @@
                 const { data: allTroskovi } = await supabaseClient.from('expenses').select('*').eq('studio_id', userProfile.studio_id);
 
                 if (allApps) {
-                    currentAppsData = allApps; 
+                    currentAppsData = allApps;
                     let filteredApps = allApps.filter(a => a.appointment_time.startsWith(selectedMonthStr));
                     const troskovi = allTroskovi ? allTroskovi.filter(t => t.created_at.startsWith(selectedMonthStr)) : [];
                     const ukupniTroskovi = troskovi.reduce((s, t) => s + (Number(t.amount) || 0), 0);
@@ -292,10 +294,12 @@
             editingId = null;
             document.getElementById('modalTitle').innerText = "Novi Termin";
             document.getElementById('c_name').value = "";
+            document.getElementById('c_email').value = "";
             document.getElementById('c_insta').value = "";
             document.getElementById('app_time').value = "";
             document.getElementById('total_price').value = "";
             document.getElementById('deposit_amt').value = "0";
+            document.getElementById('artist_percent').value = "50";
             document.getElementById('payment_type').value = "Cash";
             document.getElementById('bookingModal').style.display = 'block';
         }
@@ -306,15 +310,56 @@
             editingId = id;
             document.getElementById('modalTitle').innerText = "Izmeni Termin";
             document.getElementById('c_name').value = app.client_name;
+            document.getElementById('c_email').value = app.client_email || "";
             document.getElementById('c_insta').value = app.client_instagram || "";
+            
             const d = new Date(app.appointment_time);
             const dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0') + 'T' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
             document.getElementById('app_time').value = dateStr;
+            
             document.getElementById('total_price').value = app.total_price;
             document.getElementById('deposit_amt').value = app.deposit;
             document.getElementById('artist_percent').value = app.artist_percentage;
             document.getElementById('payment_type').value = app.payment_type || "Cash";
             document.getElementById('bookingModal').style.display = 'block';
+        }
+
+        async function saveData() {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            const cena = parseFloat(document.getElementById('total_price').value) || 0;
+            const procenat = parseFloat(document.getElementById('artist_percent').value) || 50;
+            
+            const payload = {
+                client_name: document.getElementById('c_name').value,
+                client_email: document.getElementById('c_email').value,
+                client_instagram: document.getElementById('c_insta').value,
+                appointment_time: document.getElementById('app_time').value, 
+                total_price: cena, 
+                deposit: parseFloat(document.getElementById('deposit_amt').value) || 0,
+                artist_percentage: procenat, 
+                studio_share: cena * ((100 - procenat) / 100), 
+                payment_type: document.getElementById('payment_type').value
+            };
+
+            if (editingId) {
+                // UPDATE
+                const { error } = await supabaseClient.from('appointments').update(payload).eq('id', editingId);
+                if(error) alert("Greška pri izmeni!");
+            } else {
+                // INSERT NOVI
+                const { error } = await supabaseClient.from('appointments').insert([{
+                    ...payload,
+                    owner_id: user.id, 
+                    artist_id: user.id, 
+                    studio_id: userProfile.studio_id,
+                    status: 'zakazano', 
+                    payout_status: 'nema'
+                }]);
+                if(error) alert("Greška pri dodavanju!");
+            }
+            
+            zatvoriModal(); 
+            osveziPodatke();
         }
 
         function prikaziSekciju(sekcija) {
@@ -364,36 +409,8 @@
         
         async function obrisiTrosak(id) { if(confirm("Obriši trošak?")) { await supabaseClient.from('expenses').delete().eq('id', id); ucitajTroskove(); } }
 
-        async function saveData() {
-            const { data: { user } } = await supabaseClient.auth.getUser();
-            const cena = parseFloat(document.getElementById('total_price').value) || 0;
-            const procenat = parseFloat(document.getElementById('artist_percent').value) || 50;
-            
-            const payload = {
-                client_name: document.getElementById('c_name').value, 
-                client_instagram: document.getElementById('c_insta').value,
-                appointment_time: document.getElementById('app_time').value, 
-                total_price: cena, 
-                deposit: parseFloat(document.getElementById('deposit_amt').value) || 0,
-                artist_percentage: procenat, 
-                studio_share: cena * ((100 - procenat) / 100), 
-                payment_type: document.getElementById('payment_type').value
-            };
-
-            if (editingId) {
-                await supabaseClient.from('appointments').update(payload).eq('id', editingId);
-            } else {
-                await supabaseClient.from('appointments').insert([{
-                    ...payload,
-                    owner_id: user.id, artist_id: user.id, studio_id: userProfile.studio_id,
-                    status: 'zakazano', payout_status: 'nema'
-                }]);
-            }
-            
-            zatvoriModal(); osveziPodatke();
-        }
-
         function zatvoriModal() { document.getElementById('bookingModal').style.display = 'none'; editingId = null; }
+        
         initDashboard();
     </script>
 </body>
