@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="sr">
 <head>
     <meta charset="UTF-8">
@@ -74,7 +74,7 @@
     </div>
 
     <script>
-// Konfiguracija (Ubaci svoje podatke sa slika ovde)
+// Konfiguracija (Tvoji podaci)
 const supabaseUrl = 'https://yunuwkjydqzgkqtbgwup.supabase.co'; 
 const supabaseKey = 'sb_publishable_J66CdYuykkwjyulPJp2O1Q_e0ZZLXe7'; 
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
@@ -111,8 +111,10 @@ async function signIn() {
         statusDiv.style.color = "#00ff00";
         statusDiv.innerText = "Prijavljen kao: " + profile.role.toUpperCase();
         
-        // Ovde ćemo u sledećem koraku dodati "Redirect" na tvoj Dashboard
-        console.log("Uspešan ulaz za ulogu:", profile.role);
+        // --- KLJUČNI DODATAK: PREBACIVANJE NA DASHBOARD ---
+        setTimeout(() => {
+            window.location.href = 'dashboard.html';
+        }, 1000); // Mala pauza od 1 sekunde da korisnik vidi potvrdu
     }
 }
     </script>
