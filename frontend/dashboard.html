@@ -317,11 +317,14 @@
 
         async function saveData() {
             const saveBtn = document.getElementById('save-btn');
+            const originalText = saveBtn.innerText;
             saveBtn.disabled = true;
             saveBtn.innerText = "ČUVANJE...";
 
             try {
                 const { data: { user } } = await supabaseClient.auth.getUser();
+                if (!user) throw new Error("Korisnik nije ulogovan!");
+
                 const cena = parseFloat(document.getElementById('total_price').value) || 0;
                 const procenat = parseFloat(document.getElementById('artist_percent').value) || 50;
                 
@@ -337,15 +340,14 @@
                     payment_type: document.getElementById('payment_type').value
                 };
 
-                let error;
+                let result;
                 if (editingId) {
-                    const { error: updateError } = await supabaseClient
+                    result = await supabaseClient
                         .from('appointments')
                         .update(payload)
                         .eq('id', editingId);
-                    error = updateError;
                 } else {
-                    const { error: insertError } = await supabaseClient
+                    result = await supabaseClient
                         .from('appointments')
                         .insert([{
                             ...payload,
@@ -355,19 +357,24 @@
                             status: 'zakazano', 
                             payout_status: 'nema'
                         }]);
-                    error = insertError;
                 }
 
-                if (error) throw error;
+                if (result.error) {
+                    console.error("Supabase Error Detail:", result.error);
+                    alert("Greška baze: " + result.error.message); 
+                    return;
+                }
 
                 zatvoriModal(); 
                 await osveziPodatke();
+                alert("Uspešno sačuvano!");
+
             } catch (err) {
-                console.error("Greška pri čuvanju:", err);
-                alert("Greška pri čuvanju podataka!");
+                console.error("Sistemska greška:", err);
+                alert("Sistemska greška: " + err.message);
             } finally {
                 saveBtn.disabled = false;
-                saveBtn.innerText = "SAČUVAJ";
+                saveBtn.innerText = originalText;
             }
         }
 
