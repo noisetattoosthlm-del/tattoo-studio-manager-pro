@@ -1,4 +1,4 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="sr">
 <head>
     <meta charset="UTF-8">
@@ -26,7 +26,6 @@
             padding: 16px 20px; margin: 8px 0; cursor: pointer; border-radius: 15px; 
             color: #64748b; transition: 0.4s; display: flex; align-items: center;
         }
-        .nav-item:hover { background: var(--card); color: white; transform: translateX(8px); }
         .nav-item.active { background: rgba(59, 130, 246, 0.1); color: var(--accent); }
 
         .main { flex: 1; padding: 60px; overflow-y: auto; background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.05), transparent); }
@@ -46,16 +45,29 @@
             transition: 0.3s; box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
         }
 
-        /* TABELA NIVELACIJA - FIX */
-        .table-container { background: var(--card); border-radius: 30px; padding: 20px; border: 1px solid rgba(255,255,255,0.05); }
-        table { width: 100%; border-collapse: collapse; table-layout: fixed; } 
-        th { text-align: left; padding: 20px; color: #64748b; font-size: 0.8rem; text-transform: uppercase; }
-        td { padding: 20px; border-top: 1px solid rgba(255,255,255,0.02); vertical-align: middle; }
+        /* FLEX SISTEM ZA SAVRŠENU NIVELACIJU */
+        .list-container { background: var(--card); border-radius: 30px; padding: 10px; border: 1px solid rgba(255,255,255,0.05); }
+        
+        .list-header { 
+            display: flex; padding: 20px; color: #64748b; font-size: 0.75rem; 
+            text-transform: uppercase; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .list-row { 
+            display: flex; align-items: center; padding: 20px; 
+            border-bottom: 1px solid rgba(255,255,255,0.02); 
+        }
 
-        /* Status badge fix */
+        /* FIKSNE ŠIRINE ZA SVAKI DEO */
+        .col-klijent { width: 25%; }
+        .col-status  { width: 18%; }
+        .col-datum   { width: 17%; }
+        .col-cena    { width: 15%; }
+        .col-akcije  { width: 25%; display: flex; justify-content: flex-end; gap: 8px; }
+
         .status-badge {
             padding: 6px 12px; border-radius: 8px; font-size: 0.65rem; font-weight: 800; 
-            text-transform: uppercase; display: inline-block; min-width: 90px; text-align: center;
+            text-transform: uppercase; display: inline-block; min-width: 85px; text-align: center;
         }
 
         .modal {
@@ -76,13 +88,13 @@
 
         .btn-action-done {
             background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; color: #10b981;
-            padding: 8px 16px; border-radius: 12px; cursor: pointer; font-size: 0.75rem;
+            padding: 8px 14px; border-radius: 12px; cursor: pointer; font-size: 0.7rem;
             font-weight: 800; text-transform: uppercase; transition: 0.3s;
         }
         .btn-action-delete {
             background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444;
-            padding: 8px 16px; border-radius: 12px; cursor: pointer; font-size: 0.75rem;
-            font-weight: 800; text-transform: uppercase; transition: 0.3s; margin-left: 8px;
+            padding: 8px 14px; border-radius: 12px; cursor: pointer; font-size: 0.7rem;
+            font-weight: 800; text-transform: uppercase; transition: 0.3s;
         }
     </style>
 </head>
@@ -102,7 +114,7 @@
             <div class="stat-card"><h3>Depoziti u kasi</h3><p id="deposit-sum">€0</p></div>
         </div>
         <button class="btn-add" onclick="document.getElementById('bookingModal').style.display='block'">+ NOVI TERMIN</button>
-        <div class="table-container" id="tabela-div">Učitavanje...</div>
+        <div class="list-container" id="tabela-div">Učitavanje podataka...</div>
     </div>
 
     <div id="bookingModal" class="modal">
@@ -152,37 +164,39 @@
                     document.getElementById('studio-sum').innerText = `€${profitStudija.toFixed(0)}`;
                     document.getElementById('deposit-sum').innerText = `€${ukupniDepoziti}`;
 
-                    // STROGO DEFINISANE ŠIRINE KOLONA ZA CEO RED
-                    let h = `<table><tr>
-                        <th style="width: 25%;">Klijent</th>
-                        <th style="width: 15%;">Status</th>
-                        <th style="width: 20%;">Datum</th>
-                        <th style="width: 15%;">Cena / Depozit</th>
-                        <th style="width: 25%; text-align:right;">Akcije</th>
-                    </tr>`;
+                    let h = `
+                        <div class="list-header">
+                            <div class="col-klijent">Klijent</div>
+                            <div class="col-status">Status</div>
+                            <div class="col-datum">Datum</div>
+                            <div class="col-cena">Cena</div>
+                            <div class="col-akcije">Akcije</div>
+                        </div>`;
 
                     apps.forEach(a => {
                         const datum = new Date(a.appointment_time).toLocaleString('sr-RS', {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'});
                         let sColor = a.status === 'završeno' ? "#10b981" : "#3b82f6";
 
-                        h += `<tr>
-                            <td style="width: 25%;">
-                                <div style="font-weight:600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${a.client_name}</div>
-                                <div style="font-size:0.75rem; color:#64748b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${a.client_instagram || '-'}</div>
-                            </td>
-                            <td style="width: 15%;"><span class="status-badge" style="background:${sColor}20; color:${sColor}">${a.status}</span></td>
-                            <td style="width: 20%; white-space: nowrap; font-size: 0.85rem;">${datum}h</td>
-                            <td style="width: 15%;">
+                        h += `
+                        <div class="list-row">
+                            <div class="col-klijent">
+                                <div style="font-weight:600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${a.client_name}</div>
+                                <div style="font-size:0.7rem; color:#64748b;">${a.client_instagram || '-'}</div>
+                            </div>
+                            <div class="col-status">
+                                <span class="status-badge" style="background:${sColor}20; color:${sColor}">${a.status}</span>
+                            </div>
+                            <div class="col-datum" style="font-size:0.85rem; color:#cbd5e1; white-space: nowrap;">${datum}h</div>
+                            <div class="col-cena">
                                 <div style="font-weight:800">€${a.total_price}</div>
-                                ${a.deposit > 0 ? `<div style="font-size:0.7rem; color:#10b981">Dep: €${a.deposit}</div>` : ''}
-                            </td>
-                            <td style="width: 25%; text-align:right; white-space:nowrap;">
+                                ${a.deposit > 0 ? `<div style="font-size:0.65rem; color:#10b981">Dep: €${a.deposit}</div>` : ''}
+                            </div>
+                            <div class="col-akcije">
                                 ${a.status === 'zakazano' ? `<button class="btn-action-done" onclick="updateStatus('${a.id}', 'završeno')">Završi</button>` : ''}
                                 <button class="btn-action-delete" onclick="obrisiTermin('${a.id}')">Obriši</button>
-                            </td>
-                        </tr>`;
+                            </div>
+                        </div>`;
                     });
-                    h += `</table>`;
                     document.getElementById('tabela-div').innerHTML = h;
                 }
             } catch (err) { console.error(err); }
@@ -205,26 +219,16 @@
             const cena = parseFloat(document.getElementById('total_price').value) || 0;
             const depozit = parseFloat(document.getElementById('deposit_amt').value) || 0;
             const procenat = parseFloat(document.getElementById('artist_percent').value) || 50;
-            
             const studioShare = cena * ((100 - procenat) / 100);
 
             const { error } = await supabaseClient.from('appointments').insert([{
-                owner_id: user.id,
-                client_name: document.getElementById('c_name').value,
-                client_instagram: document.getElementById('c_insta').value,
-                appointment_time: document.getElementById('app_time').value,
-                total_price: cena,
-                deposit: depozit,
-                artist_percentage: procenat,
-                studio_share: studioShare,
-                status: 'zakazano'
+                owner_id: user.id, client_name: document.getElementById('c_name').value,
+                client_instagram: document.getElementById('c_insta').value, appointment_time: document.getElementById('app_time').value,
+                total_price: cena, deposit: depozit, artist_percentage: procenat, studio_share: studioShare, status: 'zakazano'
             }]);
 
             if (error) alert(error.message);
-            else {
-                document.getElementById('bookingModal').style.display = 'none';
-                osveziPodatke();
-            }
+            else { document.getElementById('bookingModal').style.display = 'none'; osveziPodatke(); }
         }
 
         async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
