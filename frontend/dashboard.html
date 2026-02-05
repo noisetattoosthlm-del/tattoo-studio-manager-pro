@@ -176,7 +176,7 @@
                     </select>
                 </div>
             </div>
-            <button class="btn-add" style="width:100%; margin-top: 10px;" onclick="saveData()">SAČUVAJ</button>
+            <button id="save-btn" class="btn-add" style="width:100%; margin-top: 10px;" onclick="saveData()">SAČUVAJ</button>
             <button onclick="zatvoriModal()" style="background:none; border:none; color:#64748b; width:100%; cursor:pointer; margin-top:10px; font-weight:600;">Otkaži</button>
         </div>
     </div>
@@ -316,33 +316,59 @@
         }
 
         async function saveData() {
-            const { data: { user } } = await supabaseClient.auth.getUser();
-            const cena = parseFloat(document.getElementById('total_price').value) || 0;
-            const procenat = parseFloat(document.getElementById('artist_percent').value) || 50;
-            
-            const payload = {
-                client_name: document.getElementById('c_name').value, 
-                client_email: document.getElementById('c_email').value,
-                client_instagram: document.getElementById('c_insta').value,
-                appointment_time: document.getElementById('app_time').value, 
-                total_price: cena, 
-                deposit: parseFloat(document.getElementById('deposit_amt').value) || 0,
-                artist_percentage: procenat, 
-                studio_share: cena * ((100 - procenat) / 100),
-                payment_type: document.getElementById('payment_type').value
-            };
+            const saveBtn = document.getElementById('save-btn');
+            saveBtn.disabled = true;
+            saveBtn.innerText = "ČUVANJE...";
 
-            if (editingId) {
-                await supabaseClient.from('appointments').update(payload).eq('id', editingId);
-            } else {
-                await supabaseClient.from('appointments').insert([{
-                    ...payload,
-                    owner_id: user.id, artist_id: user.id, studio_id: userProfile.studio_id,
-                    status: 'zakazano', payout_status: 'nema'
-                }]);
+            try {
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                const cena = parseFloat(document.getElementById('total_price').value) || 0;
+                const procenat = parseFloat(document.getElementById('artist_percent').value) || 50;
+                
+                const payload = {
+                    client_name: document.getElementById('c_name').value, 
+                    client_email: document.getElementById('c_email').value,
+                    client_instagram: document.getElementById('c_insta').value,
+                    appointment_time: document.getElementById('app_time').value, 
+                    total_price: cena, 
+                    deposit: parseFloat(document.getElementById('deposit_amt').value) || 0,
+                    artist_percentage: procenat, 
+                    studio_share: cena * ((100 - procenat) / 100),
+                    payment_type: document.getElementById('payment_type').value
+                };
+
+                let error;
+                if (editingId) {
+                    const { error: updateError } = await supabaseClient
+                        .from('appointments')
+                        .update(payload)
+                        .eq('id', editingId);
+                    error = updateError;
+                } else {
+                    const { error: insertError } = await supabaseClient
+                        .from('appointments')
+                        .insert([{
+                            ...payload,
+                            owner_id: user.id, 
+                            artist_id: user.id, 
+                            studio_id: userProfile.studio_id,
+                            status: 'zakazano', 
+                            payout_status: 'nema'
+                        }]);
+                    error = insertError;
+                }
+
+                if (error) throw error;
+
+                zatvoriModal(); 
+                await osveziPodatke();
+            } catch (err) {
+                console.error("Greška pri čuvanju:", err);
+                alert("Greška pri čuvanju podataka!");
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerText = "SAČUVAJ";
             }
-            zatvoriModal(); 
-            osveziPodatke();
         }
 
         function prikaziSekciju(sekcija) {
