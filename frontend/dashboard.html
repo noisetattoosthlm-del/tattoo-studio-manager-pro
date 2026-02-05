@@ -74,18 +74,12 @@
             box-sizing: border-box; font-size: 0.9rem;
         }
 
-        /* Sređena strelica za filter */
-        #month-filter {
-            appearance: none;
-            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-            background-repeat: no-repeat;
-            background-position: right 1rem center;
-            background-size: 1em;
-            padding-right: 3rem !important;
-        }
-
         .btn-action-done { background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; color: #10b981; padding: 8px 12px; border-radius: 10px; cursor: pointer; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; margin-right: 5px; }
         .btn-action-delete { background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 8px 12px; border-radius: 10px; cursor: pointer; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; }
+        
+        /* Stil za razdvojene filtere */
+        .filter-group { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; }
+        .filter-select { width: auto; margin: 0; padding: 10px 20px; border-radius: 15px; background: var(--card); border: 1px solid rgba(255,255,255,0.05); font-weight: 600; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -101,10 +95,12 @@
     <div class="main" id="dashboard-section">
         <h1 id="main-greeting">Statistika Studija</h1>
         
-        <div style="margin-bottom: 30px; display: flex; align-items: center; gap: 15px;">
-            <span style="color: #64748b; font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">Period:</span>
-            <select id="month-filter" onchange="osveziPodatke()" style="width: auto; margin: 0; padding: 10px 25px; border-radius: 15px; background: var(--card); border: 1px solid rgba(255,255,255,0.05); font-weight: 600;">
-                </select>
+        <div class="filter-group">
+            <span style="color: #64748b; font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">Mesec:</span>
+            <select id="month-select" class="filter-select" onchange="osveziPodatke()"></select>
+            
+            <span style="color: #64748b; font-size: 0.75rem; font-weight: 800; text-transform: uppercase;">Godina:</span>
+            <select id="year-select" class="filter-select" onchange="osveziPodatke()"></select>
         </div>
 
         <div class="stats-grid">
@@ -117,7 +113,7 @@
     </div>
 
     <div class="main" id="artists-section" style="display:none;">
-        <h1>Upravljanje Artistima</h1>
+        <h1>Upravljanje Artisti</h1>
         <div style="background: var(--card); padding: 30px; border-radius: 24px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.05);">
             <h3 style="margin-top:0; font-size: 1rem; color: var(--accent);">DODAJ NOVOG ARTISTA</h3>
             <div style="display: flex; gap: 15px; flex-wrap: wrap;">
@@ -190,33 +186,32 @@
 
         let userProfile = null;
 
-        function popuniMesece() {
-            const filter = document.getElementById('month-filter');
-            filter.innerHTML = ''; // Brišemo sve da se ne bi dupliralo
-            
+        // POPUNJAVANJE ODVOJENIH FILTERA
+        function popuniMeseceIGodine() {
+            const mFilter = document.getElementById('month-select');
+            const yFilter = document.getElementById('year-select');
             const meseci = ["Januar", "Februar", "Mart", "April", "Maj", "Jun", "Jul", "Avgust", "Septembar", "Oktobar", "Novembar", "Decembar"];
             const d = new Date();
-            const trenutniMesec = d.getMonth() + 1;
-            const trenutnaGodina = d.getFullYear();
+            const currM = d.getMonth();
+            const currY = d.getFullYear();
 
-            // Prikazujemo prošlu, trenutnu i sledeću godinu hronološki
-            const godine = [trenutnaGodina - 1, trenutnaGodina, trenutnaGodina + 1];
-
-            godine.forEach(g => {
-                meseci.forEach((mIme, index) => {
-                    const mBroj = String(index + 1).padStart(2, '0');
-                    const val = `${g}-${mBroj}`;
-                    
-                    let opt = document.createElement('option');
-                    opt.value = val;
-                    opt.innerHTML = `${mIme} ${g}.`;
-                    
-                    if (index + 1 === trenutniMesec && g === trenutnaGodina) {
-                        opt.selected = true;
-                    }
-                    filter.appendChild(opt);
-                });
+            // Popuni mesece
+            meseci.forEach((ime, i) => {
+                let opt = document.createElement('option');
+                opt.value = String(i + 1).padStart(2, '0');
+                opt.innerHTML = ime;
+                if(i === currM) opt.selected = true;
+                mFilter.appendChild(opt);
             });
+
+            // Popuni godine 2026 - 2030
+            for(let y = 2026; y <= 2030; y++) {
+                let opt = document.createElement('option');
+                opt.value = y;
+                opt.innerHTML = y;
+                if(y === currY) opt.selected = true;
+                yFilter.appendChild(opt);
+            }
         }
 
         async function initDashboard() {
@@ -235,7 +230,7 @@
                     document.getElementById('main-greeting').innerText = 'Moji Termini';
                 }
             }
-            popuniMesece();
+            popuniMeseceIGodine();
             osveziPodatke();
         }
 
@@ -313,7 +308,11 @@
 
         async function osveziPodatke() {
             try {
-                const selectedMonth = document.getElementById('month-filter').value;
+                // Spajamo mesec i godinu za pretragu (npr "2027-10")
+                const m = document.getElementById('month-select').value;
+                const y = document.getElementById('year-select').value;
+                const selectedDate = `${y}-${m}`;
+                
                 const { data: { user } } = await supabaseClient.auth.getUser();
                 
                 let query = supabaseClient.from('appointments').select('*').eq('studio_id', userProfile.studio_id);
@@ -323,8 +322,8 @@
                 const { data: allTroskovi } = await supabaseClient.from('expenses').select('*').eq('studio_id', userProfile.studio_id);
 
                 if (allApps) {
-                    const apps = allApps.filter(a => a.appointment_time.startsWith(selectedMonth));
-                    const troskovi = allTroskovi ? allTroskovi.filter(t => t.created_at.startsWith(selectedMonth)) : [];
+                    const apps = allApps.filter(a => a.appointment_time.startsWith(selectedDate));
+                    const troskovi = allTroskovi ? allTroskovi.filter(t => t.created_at.startsWith(selectedDate)) : [];
                     const ukupniTroskovi = troskovi.reduce((s, t) => s + (Number(t.amount) || 0), 0);
 
                     const totalUgovoreno = apps.reduce((s, a) => s + (Number(a.total_price) || 0), 0);
