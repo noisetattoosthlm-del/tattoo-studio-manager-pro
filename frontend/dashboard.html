@@ -162,13 +162,17 @@
     </div>
 
     <div class="main" id="artists-section" style="display:none;">
-        <h1>Upravljanje Artisti</h1>
+        <h1>Upravljanje Artistima</h1>
         <div style="background: var(--card); padding: 30px; border-radius: 24px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.05);">
-            <h3 style="margin-top:0; font-size: 1rem; color: var(--accent);">DODAJ NOVOG ARTISTA</h3>
+            <h3 style="margin-top:0; font-size: 1rem; color: var(--accent);">DODAJ NOVOG ARTISTA / GOSTA</h3>
             <div style="display: flex; gap: 15px; flex-wrap: wrap;">
                 <input type="text" id="new-artist-name" placeholder="Ime artista" style="flex:1;">
                 <input type="email" id="new-artist-email" placeholder="Email" style="flex:1;">
                 <input type="password" id="new-artist-pass" placeholder="Lozinka" style="flex:1;">
+                <select id="new-artist-role" style="flex:1;">
+                    <option value="artist">Stalni Artist</option>
+                    <option value="guest">Guest Artist</option>
+                </select>
                 <button class="btn-add" id="btn-create-artist" style="margin:0; width: 100%;" onclick="napraviArtista()">KREIRAJ NALOG</button>
             </div>
         </div>
@@ -277,9 +281,15 @@
         }
 
         async function popuniArtistFilter() {
-            const { data } = await supabaseClient.from('profiles').select('id, full_name').eq('studio_id', userProfile.studio_id);
+            const { data } = await supabaseClient
+                .from('profiles')
+                .select('id, full_name')
+                .eq('studio_id', userProfile.studio_id)
+                .eq('is_active', true); // Samo aktivni se nude za nove termine
+            
             const filter = document.getElementById('artist-filter');
-            if(data) {
+            if(data && filter) {
+                filter.innerHTML = '<option value="all">Svi Artisti</option>';
                 data.forEach(a => {
                     let opt = document.createElement('option');
                     opt.value = a.id;
@@ -407,7 +417,6 @@
                 const cena = parseFloat(document.getElementById('total_price').value) || 0;
                 const procenat = parseFloat(document.getElementById('artist_percent').value) || 50;
                 
-                // Ovde se podaci šalju u tačno nazvane kolone koje si napravio u SQL-u
                 const payload = {
                     client_name: document.getElementById('c_name').value, 
                     client_phone: document.getElementById('c_phone').value,
@@ -422,36 +431,25 @@
                 };
 
                 if (editingId) {
-                    const { error } = await supabaseClient
-                        .from('appointments')
-                        .update(payload)
-                        .eq('id', editingId);
+                    const { error } = await supabaseClient.from('appointments').update(payload).eq('id', editingId);
                     if (error) throw error;
                 } else {
                     const { data: { user } } = await supabaseClient.auth.getUser();
-                    const { error } = await supabaseClient
-                        .from('appointments')
-                        .insert([{ 
-                            ...payload, 
-                            artist_id: user.id,
-                            owner_id: user.id, 
-                            studio_id: userProfile.studio_id, 
-                            status: 'zakazano', 
-                            payout_status: 'nema' 
-                        }]);
+                    const { error } = await supabaseClient.from('appointments').insert([{ 
+                        ...payload, 
+                        artist_id: user.id,
+                        owner_id: user.id, 
+                        studio_id: userProfile.studio_id, 
+                        status: 'zakazano', 
+                        payout_status: 'nema' 
+                    }]);
                     if (error) throw error;
                 }
                 
                 zatvoriModal(); 
                 await osveziPodatke();
-                alert("Uspešno sačuvano!");
-            } catch (err) { 
-                console.error("Greška pri čuvanju:", err);
-                alert("Greška: " + err.message); 
-            } finally { 
-                saveBtn.disabled = false; 
-                saveBtn.innerText = originalText; 
-            }
+            } catch (err) { alert("Greška: " + err.message); } 
+            finally { saveBtn.disabled = false; saveBtn.innerText = originalText; }
         }
 
         function prikaziSekciju(sekcija) {
@@ -473,16 +471,74 @@
         async function obrisiTermin(id) { if(confirm("Obriši?")) { await supabaseClient.from('appointments').delete().eq('id', id); osveziPodatke(); } }
         async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
         
+        // PRO ARTIST MANAGEMENT LOGIKA
         async function ucitajArtiste() {
             const { data: artisti } = await supabaseClient.from('profiles').select('*').eq('studio_id', userProfile.studio_id);
             const { data: sviTermini } = await supabaseClient.from('appointments').select('artist_id, total_price, status').eq('studio_id', userProfile.studio_id);
+            
             let html = '';
-            if (artisti) artisti.forEach(a => { 
-                const termini = sviTermini ? sviTermini.filter(t => t.artist_id === a.id && t.status === 'završeno') : [];
-                const promet = termini.reduce((s, t) => s + (Number(t.total_price) || 0), 0);
-                html += `<tr><td><strong>${a.full_name}</strong></td><td>${a.role}</td><td>${termini.length}</td><td style="color:var(--accent); font-weight:800;">€${promet}</td><td style="text-align:right;"><button class="btn-action-delete" onclick="obrisiProfil('${a.id}')">Ukloni</button></td></tr>`; 
-            });
+            if (artisti) {
+                artisti.forEach(a => { 
+                    const termini = sviTermini ? sviTermini.filter(t => t.artist_id === a.id && t.status === 'završeno') : [];
+                    const promet = termini.reduce((s, t) => s + (Number(t.total_price) || 0), 0);
+                    
+                    const statusLabel = a.is_active ? 
+                        '<span style="color:#10b981; font-size:0.7rem;">● AKTIVAN</span>' : 
+                        '<span style="color:#64748b; font-size:0.7rem;">● PAUZA</span>';
+                    
+                    const ulogaLabel = a.role_type === 'guest' ? 
+                        '<span style="background:rgba(59,130,246,0.1); color:#3b82f6; padding:2px 6px; border-radius:4px; font-size:0.6rem;">GUEST</span>' : 
+                        '<span style="background:rgba(255,255,255,0.05); color:#fff; padding:2px 6px; border-radius:4px; font-size:0.6rem;">ARTIST</span>';
+
+                    html += `<tr>
+                        <td>
+                            <div style="font-weight:800;">${a.full_name}</div>
+                            <div>${statusLabel}</div>
+                        </td>
+                        <td>${ulogaLabel}</td>
+                        <td>${termini.length}</td>
+                        <td style="color:var(--accent); font-weight:800;">€${promet}</td>
+                        <td style="text-align:right;">
+                            <div class="action-cell">
+                                <button class="btn-action-edit" onclick="toggleArtistStatus('${a.id}', ${a.is_active})">
+                                    ${a.is_active ? 'Pauziraj' : 'Aktiviraj'}
+                                </button>
+                                <button class="btn-action-delete" onclick="obrisiProfil('${a.id}')">Ukloni</button>
+                            </div>
+                        </td>
+                    </tr>`; 
+                });
+            }
             document.getElementById('artists-list-body').innerHTML = html;
+        }
+
+        async function toggleArtistStatus(id, currentStatus) {
+            const { error } = await supabaseClient.from('profiles').update({ is_active: !currentStatus }).eq('id', id);
+            if (!error) { ucitajArtiste(); popuniArtistFilter(); }
+        }
+
+        async function napraviArtista() {
+            const name = document.getElementById('new-artist-name').value;
+            const email = document.getElementById('new-artist-email').value;
+            const pass = document.getElementById('new-artist-pass').value;
+            const roleType = document.getElementById('new-artist-role').value;
+            
+            if(!name || !email || !pass) return alert("Popuni sva polja");
+
+            const { data, error } = await supabaseClient.auth.signUp({ email, password: pass, options: { data: { full_name: name } } });
+            
+            if (error) alert(error.message);
+            else {
+                await supabaseClient.from('profiles').insert([{ 
+                    id: data.user.id, 
+                    full_name: name, 
+                    role: 'artist', 
+                    role_type: roleType,
+                    studio_id: userProfile.studio_id 
+                }]);
+                alert("Artist kreiran!");
+                ucitajArtiste();
+            }
         }
 
         async function dodajTrosak() {
@@ -521,15 +577,10 @@
             editingId = id; 
             document.getElementById('modal-title').innerText = "Izmeni Termin";
             document.getElementById('c_name').value = a.client_name || ""; 
-            document.getElementById('c_phone').value = a.client_phone || ""; // Mapiranje nazad iz baze
+            document.getElementById('c_phone').value = a.client_phone || "";
             document.getElementById('c_email').value = a.client_email || ""; 
             document.getElementById('c_insta').value = a.client_instagram || "";
-            
-            if (a.appointment_time) {
-                const dateStr = a.appointment_time.substring(0, 16);
-                document.getElementById('app_time').value = dateStr; 
-            }
-            
+            if (a.appointment_time) document.getElementById('app_time').value = a.appointment_time.substring(0, 16);
             document.getElementById('total_price').value = a.total_price || 0;
             document.getElementById('deposit_amt').value = a.deposit || 0; 
             document.getElementById('artist_percent').value = a.artist_percentage || 50;
