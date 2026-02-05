@@ -377,7 +377,7 @@
                 const clientsMap = {};
                 data.forEach(a => {
                     if (!clientsMap[a.client_name]) {
-                        clientsMap[a.client_name] = { phone: a.client_phone || '-', insta: a.client_instagram || '-', last: a.appointment_time };
+                        clientsMap[a.client_name] = { phone: a.c_phone || '-', insta: a.client_instagram || '-', last: a.appointment_time };
                     }
                 });
                 let html = '';
@@ -407,7 +407,7 @@
                 const procenat = parseFloat(document.getElementById('artist_percent').value) || 50;
                 const payload = {
                     client_name: document.getElementById('c_name').value, 
-                    client_phone: document.getElementById('c_phone').value,
+                    c_phone: document.getElementById('c_phone').value,
                     client_email: document.getElementById('c_email').value,
                     client_instagram: document.getElementById('c_insta').value,
                     appointment_time: document.getElementById('app_time').value, 
@@ -415,12 +415,28 @@
                     deposit: parseFloat(document.getElementById('deposit_amt').value) || 0,
                     artist_percentage: procenat, 
                     studio_share: cena * ((100 - procenat) / 100),
-                    payment_type: document.getElementById('payment_type').value
+                    payment_type: document.getElementById('payment_type').value,
+                    artist_id: user.id 
                 };
-                if (editingId) await supabaseClient.from('appointments').update(payload).eq('id', editingId);
-                else await supabaseClient.from('appointments').insert([{ ...payload, owner_id: user.id, artist_id: user.id, studio_id: userProfile.studio_id, status: 'zakazano', payout_status: 'nema' }]);
-                zatvoriModal(); osveziPodatke();
-            } catch (err) { alert(err.message); } finally { saveBtn.disabled = false; saveBtn.innerText = originalText; }
+                if (editingId) {
+                    await supabaseClient.from('appointments').update(payload).eq('id', editingId);
+                } else {
+                    await supabaseClient.from('appointments').insert([{ 
+                        ...payload, 
+                        owner_id: user.id, 
+                        studio_id: userProfile.studio_id, 
+                        status: 'zakazano', 
+                        payout_status: 'nema' 
+                    }]);
+                }
+                zatvoriModal(); 
+                osveziPodatke();
+            } catch (err) { 
+                alert(err.message); 
+            } finally { 
+                saveBtn.disabled = false; 
+                saveBtn.innerText = originalText; 
+            }
         }
 
         function prikaziSekciju(sekcija) {
@@ -480,7 +496,7 @@
             const a = globalApps.find(app => app.id === id); if (!a) return;
             editingId = id; document.getElementById('modal-title').innerText = "Izmeni Termin";
             document.getElementById('c_name').value = a.client_name; 
-            document.getElementById('c_phone').value = a.client_phone || "";
+            document.getElementById('c_phone').value = a.c_phone || "";
             document.getElementById('c_email').value = a.client_email || ""; 
             document.getElementById('c_insta').value = a.client_instagram || "";
             document.getElementById('app_time').value = a.appointment_time.substring(0, 16); 
