@@ -33,7 +33,6 @@
         .main { flex: 1; padding: 40px; overflow-y: auto; background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.05), transparent); }
         h1 { font-weight: 800; font-size: 2.8rem; margin-bottom: 40px; letter-spacing: -1px; }
 
-        /* NOVO: Stil za grafikon */
         .chart-container { 
             background: var(--card); border: 1px solid rgba(255,255,255,0.05); 
             padding: 25px; border-radius: 30px; margin-bottom: 30px; height: 300px;
@@ -212,7 +211,7 @@
         let userProfile = null;
         let editingId = null;
         let globalApps = [];
-        let myChart = null; // NOVO: Instanca grafikona
+        let myChart = null;
 
         function popuniMeseceIGodine() {
             const mFilter = document.getElementById('month-select');
@@ -243,7 +242,7 @@
                 userProfile = profile;
                 if (profile.role === 'owner') {
                     document.querySelectorAll('.owner-only').forEach(el => el.style.display = 'flex');
-                    popuniArtistFilter(); // NOVO
+                    popuniArtistFilter();
                 } else {
                     document.getElementById('profit-label').innerText = 'Moja Zarada';
                     document.getElementById('main-greeting').innerText = 'Moji Termini';
@@ -253,7 +252,6 @@
             osveziPodatke();
         }
 
-        // NOVO: Popunjavanje dropdown-a za artiste
         async function popuniArtistFilter() {
             const { data } = await supabaseClient.from('profiles').select('id, full_name').eq('studio_id', userProfile.studio_id);
             const filter = document.getElementById('artist-filter');
@@ -272,12 +270,11 @@
                 const { data: { user } } = await supabaseClient.auth.getUser();
                 const m = document.getElementById('month-select').value;
                 const y = document.getElementById('year-select').value;
-                const artistFilter = document.getElementById('artist-filter').value; // NOVO
+                const artistFilter = document.getElementById('artist-filter').value;
                 const selectedMonthStr = `${y}-${m}`;
 
                 let query = supabaseClient.from('appointments').select('*').eq('studio_id', userProfile.studio_id);
                 
-                // NOVO: Logika filtriranja
                 if (userProfile.role !== 'owner') {
                     query = query.eq('artist_id', user.id);
                 } else if (artistFilter !== 'all') {
@@ -292,8 +289,6 @@
                     let filteredApps = allApps.filter(a => a.appointment_time.startsWith(selectedMonthStr));
                     const troskovi = allTroskovi ? allTroskovi.filter(t => t.created_at.startsWith(selectedMonthStr)) : [];
                     
-                    // Statistika
-                    // Troskovi se oduzimaju samo ako Owner gleda CEO studio (all)
                     const ukupniTroskovi = (userProfile.role === 'owner' && artistFilter === 'all') ? troskovi.reduce((s, t) => s + (Number(t.amount) || 0), 0) : 0;
                     
                     const totalUgovoreno = filteredApps.filter(a => a.status !== 'no-show').reduce((s, a) => s + (Number(a.total_price) || 0), 0);
@@ -312,13 +307,12 @@
                     document.getElementById('studio-sum').innerText = `€${konacniProfit.toFixed(0)}`;
                     document.getElementById('deposit-sum').innerText = `€${ukupniDepoziti}`;
 
-                    inicijalizujGrafikon(filteredApps, y, m); // NOVO
+                    inicijalizujGrafikon(filteredApps, y, m);
                     renderujTabelu(filteredApps);
                 }
             } catch (err) { console.error(err); }
         }
 
-        // NOVO: Funkcija za iscrtavanje grafikona
         function inicijalizujGrafikon(apps, year, month) {
             const daysInMonth = new Date(year, month, 0).getDate();
             const labels = Array.from({length: daysInMonth}, (_, i) => i + 1);
@@ -327,7 +321,6 @@
             apps.forEach(a => {
                 if(a.status === 'završeno') {
                     const dan = new Date(a.appointment_time).getDate();
-                    // Dodajemo udeo u zavisnosti ko gleda
                     const zarada = (userProfile.role === 'owner') ? a.studio_share : (a.total_price - a.studio_share);
                     dailyRevenue[dan-1] += zarada;
                 }
@@ -387,7 +380,6 @@
             document.getElementById('tabela-div').innerHTML = h + `</table>`;
         }
 
-        // --- OSTALE FUNKCIJE ---
         async function napraviArtista() {
             const btn = document.getElementById('btn-create-artist');
             const name = document.getElementById('new-artist-name').value;
@@ -424,6 +416,7 @@
             document.getElementById('modal-title').innerText = "Novi Termin";
             document.getElementById('c_name').value = ""; document.getElementById('c_email').value = ""; document.getElementById('c_insta').value = "";
             document.getElementById('app_time').value = ""; document.getElementById('total_price').value = ""; document.getElementById('deposit_amt').value = "0";
+            document.getElementById('artist_percent').value = "50";
             document.getElementById('bookingModal').style.display = 'block';
         }
 
@@ -443,24 +436,52 @@
         }
 
         async function saveData() {
-            const cena = parseFloat(document.getElementById('total_price').value) || 0;
-            const procenat = parseFloat(document.getElementById('artist_percent').value) || 50;
-            const payload = {
-                client_name: document.getElementById('c_name').value, 
-                client_email: document.getElementById('c_email').value,
-                client_instagram: document.getElementById('c_insta').value,
-                appointment_time: document.getElementById('app_time').value, 
-                total_price: cena, deposit: parseFloat(document.getElementById('deposit_amt').value) || 0,
-                artist_percentage: procenat, studio_share: cena * ((100 - procenat) / 100),
-                payment_type: document.getElementById('payment_type').value
-            };
-            if (editingId) {
-                await supabaseClient.from('appointments').update(payload).eq('id', editingId);
-            } else {
+            const saveBtn = document.getElementById('save-btn');
+            const originalText = saveBtn.innerText;
+            saveBtn.disabled = true;
+            saveBtn.innerText = "ČUVANJE...";
+
+            try {
                 const { data: { user } } = await supabaseClient.auth.getUser();
-                await supabaseClient.from('appointments').insert([{ ...payload, owner_id: user.id, artist_id: user.id, studio_id: userProfile.studio_id, status: 'zakazano', payout_status: 'nema' }]);
+                const cena = parseFloat(document.getElementById('total_price').value) || 0;
+                
+                // POPRAVKA: Dozvoljavamo 0 kao procenat. Ako je polje prazno, stavljamo 50.
+                const procenatPolje = document.getElementById('artist_percent').value;
+                const procenat = procenatPolje === "" ? 50 : parseFloat(procenatPolje);
+
+                const payload = {
+                    client_name: document.getElementById('c_name').value, 
+                    client_email: document.getElementById('c_email').value,
+                    client_instagram: document.getElementById('c_insta').value,
+                    appointment_time: document.getElementById('app_time').value, 
+                    total_price: cena, 
+                    deposit: parseFloat(document.getElementById('deposit_amt').value) || 0,
+                    artist_percentage: procenat, 
+                    // Studio share je (100 - procenat)%. Ako je procenat 0, studio share je 100% (idealno za ownera).
+                    studio_share: cena * ((100 - procenat) / 100),
+                    payment_type: document.getElementById('payment_type').value
+                };
+
+                if (editingId) {
+                    await supabaseClient.from('appointments').update(payload).eq('id', editingId);
+                } else {
+                    await supabaseClient.from('appointments').insert([{ 
+                        ...payload, 
+                        owner_id: user.id, 
+                        artist_id: user.id, 
+                        studio_id: userProfile.studio_id, 
+                        status: 'zakazano', 
+                        payout_status: 'nema' 
+                    }]);
+                }
+                zatvoriModal(); 
+                osveziPodatke();
+            } catch (err) {
+                alert(err.message);
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerText = originalText;
             }
-            zatvoriModal(); osveziPodatke();
         }
 
         function prikaziSekciju(sekcija) {
