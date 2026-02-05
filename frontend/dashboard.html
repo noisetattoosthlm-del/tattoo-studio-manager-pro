@@ -45,17 +45,15 @@
         }
         .btn-add:hover { transform: scale(1.02); }
 
-        /* FIX ZA KOLONE: Korišćenje table-layout: fixed garantuje da nema preklapanja */
         .table-container { background: var(--card); border-radius: 30px; padding: 20px; border: 1px solid rgba(255,255,255,0.05); }
         table { width: 100%; border-collapse: collapse; table-layout: fixed; } 
         th { text-align: left; padding: 20px; color: #64748b; font-size: 0.8rem; text-transform: uppercase; }
         td { padding: 20px; border-top: 1px solid rgba(255,255,255,0.02); vertical-align: middle; word-wrap: break-word; }
 
-        /* Stil za zelenu kvačicu (zamenjuje dug teksta) */
         .check-badge {
             display: inline-flex; align-items: center; justify-content: center;
-            width: 28px; height: 28px; border-radius: 8px; background: rgba(16, 185, 129, 0.2);
-            color: #10b981; font-weight: 800; border: 1px solid rgba(16, 185, 129, 0.3);
+            width: 32px; height: 32px; border-radius: 10px; background: rgba(16, 185, 129, 0.2);
+            color: #10b981; font-weight: 800; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 1.2rem;
         }
 
         .status-zakazano {
@@ -144,32 +142,32 @@
                     document.getElementById('studio-sum').innerText = `€${profitStudija.toFixed(0)}`;
                     document.getElementById('deposit-sum').innerText = `€${ukupniDepoziti}`;
 
-                    // STROGO DEFINISANE ŠIRINE KOLONA ZA iPAD
+                    // OPTIMIZOVANE ŠIRINE ZA iPAD - VIŠE MESTA ZA STATUS I DATUM
                     let h = `<table><tr>
-                        <th style="width: 22%;">Klijent</th>
-                        <th style="width: 13%;">Status</th>
-                        <th style="width: 22%;">Datum</th>
+                        <th style="width: 20%;">Klijent</th>
+                        <th style="width: 15%; text-align: center;">Status</th>
+                        <th style="width: 20%;">Datum</th>
                         <th style="width: 15%;">Cena</th>
-                        <th style="width: 28%; text-align:right;">Akcije</th>
+                        <th style="width: 30%; text-align:right;">Akcije</th>
                     </tr>`;
 
                     apps.forEach(a => {
                         const datum = new Date(a.appointment_time).toLocaleString('sr-RS', {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'});
                         
-                        // KVAČICA UMESTO REČI "ZAVRŠENO" SPREČAVA PREKLAPANJE
+                        // FIX: Prikaz zelene kvačice ako je status 'završeno'
                         let statusHtml = a.status === 'završeno' 
                             ? `<div class="check-badge">✓</div>` 
                             : `<span class="status-zakazano">ZAKAZANO</span>`;
 
                         h += `<tr>
                             <td>
-                                <div style="font-weight:600; font-size:0.9rem;">${a.client_name}</div>
-                                <div style="font-size:0.7rem; color:#64748b;">${a.client_instagram || '-'}</div>
+                                <div style="font-weight:800; font-size:1.1rem;">${a.client_name}</div>
+                                <div style="font-size:0.75rem; color:#64748b;">${a.client_instagram || '-'}</div>
                             </td>
                             <td style="text-align:center;">${statusHtml}</td>
-                            <td style="white-space: nowrap; font-size: 0.85rem;">${datum}h</td>
+                            <td style="white-space: nowrap; font-size: 0.85rem; font-weight: 600;">${datum}h</td>
                             <td>
-                                <div style="font-weight:800">€${a.total_price}</div>
+                                <div style="font-weight:800; font-size: 1.1rem;">€${a.total_price}</div>
                                 ${a.deposit > 0 ? `<div style="font-size:0.65rem; color:#10b981">Dep: €${a.deposit}</div>` : ''}
                             </td>
                             <td style="text-align:right; white-space:nowrap;">
