@@ -48,12 +48,14 @@
 
         /* TABELA NIVELACIJA */
         .table-container { background: var(--card); border-radius: 30px; padding: 20px; border: 1px solid rgba(255,255,255,0.05); }
-        table { width: 100%; border-collapse: collapse; table-layout: fixed; } /* Fiksiran layout za nivelaciju */
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; } 
         th { text-align: left; padding: 20px; color: #64748b; font-size: 0.8rem; text-transform: uppercase; }
-        td { padding: 20px; border-top: 1px solid rgba(255,255,255,0.02); vertical-align: middle; overflow: hidden; text-overflow: ellipsis; }
+        td { padding: 20px; border-top: 1px solid rgba(255,255,255,0.02); vertical-align: middle; }
 
+        /* Popravka za širinu statusa da se vidi ceo tekst */
         .status-badge {
-            padding: 4px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; display: inline-block;
+            padding: 6px 0; border-radius: 8px; font-size: 0.65rem; font-weight: 800; 
+            text-transform: uppercase; display: inline-block; width: 100px; text-align: center;
         }
 
         .modal {
@@ -142,7 +144,7 @@
                 const { data: apps, error } = await supabaseClient.from('appointments').select('*').order('appointment_time', {ascending: true});
                 if (error) throw error;
                 if (apps) {
-                    const totalUgovoreno = apps.filter(a => a.status !== 'otkazano').reduce((s, a) => s + (Number(a.total_price) || 0), 0);
+                    const totalUgovoreno = apps.reduce((s, a) => s + (Number(a.total_price) || 0), 0);
                     const profitStudija = apps.filter(a => a.status === 'završeno').reduce((s, a) => s + (Number(a.studio_share) || 0), 0);
                     const ukupniDepoziti = apps.filter(a => a.status === 'zakazano').reduce((s, a) => s + (Number(a.deposit) || 0), 0);
 
@@ -150,7 +152,7 @@
                     document.getElementById('studio-sum').innerText = `€${profitStudija.toFixed(0)}`;
                     document.getElementById('deposit-sum').innerText = `€${ukupniDepoziti}`;
 
-                    // DEFINISANJE ŠIRINE KOLONA ZA NIVELACIJU
+                    // STROGA NIVELACIJA KOLONA
                     let h = `<table><tr>
                         <th style="width: 25%;">Klijent</th>
                         <th style="width: 15%;">Status</th>
@@ -169,7 +171,7 @@
                                 <div style="font-size:0.75rem; color:#64748b">${a.client_instagram || '-'}</div>
                             </td>
                             <td><span class="status-badge" style="background:${sColor}20; color:${sColor}">${a.status}</span></td>
-                            <td>${datum}h</td>
+                            <td style="font-size:0.9rem">${datum}h</td>
                             <td>
                                 <div style="font-weight:800">€${a.total_price}</div>
                                 ${a.deposit > 0 ? `<div style="font-size:0.7rem; color:#10b981">Dep: €${a.deposit}</div>` : ''}
@@ -204,7 +206,6 @@
             const depozit = parseFloat(document.getElementById('deposit_amt').value) || 0;
             const procenat = parseFloat(document.getElementById('artist_percent').value) || 50;
             
-            // Studio Share Kalkulacija
             const studioShare = cena * ((100 - procenat) / 100);
 
             const { error } = await supabaseClient.from('appointments').insert([{
