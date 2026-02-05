@@ -1,4 +1,4 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="sr">
 <head>
     <meta charset="UTF-8">
@@ -19,7 +19,6 @@
         
         .logo { font-weight: 800; font-size: 1.1rem; margin-bottom: 60px; text-transform: uppercase; color: var(--accent); letter-spacing: 1px; }
         
-        /* VRAĆENI EFEKTI NA NAVIGACIJI */
         .nav-item { 
             padding: 16px 20px; margin: 8px 0; cursor: pointer; border-radius: 15px; 
             color: #64748b; transition: 0.4s; display: flex; align-items: center;
@@ -31,13 +30,11 @@
         h1 { font-weight: 800; font-size: 2.8rem; margin-bottom: 40px; letter-spacing: -1px; }
 
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; margin-bottom: 50px; }
-        
-        /* VRAĆENI EFEKTI NA KARTICAMA */
         .stat-card { 
             background: var(--card); padding: 35px; border-radius: 30px; 
             border: 1px solid rgba(255,255,255,0.05); transition: 0.5s; backdrop-filter: blur(10px);
         }
-        .stat-card:hover { transform: translateY(-10px); border-color: rgba(59, 130, 246, 0.2); background: rgba(255, 255, 255, 0.05); }
+        .stat-card:hover { transform: translateY(-10px); border-color: rgba(59, 130, 246, 0.2); }
         .stat-card h3 { margin: 0; font-size: 0.85rem; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
         .stat-card p { font-size: 2.5rem; margin: 15px 0 0 0; font-weight: 800; }
 
@@ -46,45 +43,38 @@
             border-radius: 20px; font-weight: 800; cursor: pointer; margin-bottom: 40px;
             transition: 0.3s; box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
         }
-        .btn-add:hover { transform: scale(1.02); filter: brightness(1.1); }
+        .btn-add:hover { transform: scale(1.02); }
 
-        /* LISTA SISTEM */
-        .list-container { background: var(--card); border-radius: 30px; padding: 10px; border: 1px solid rgba(255,255,255,0.05); }
-        .list-header { display: flex; padding: 20px; color: #64748b; font-size: 0.75rem; text-transform: uppercase; font-weight: 600; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        .list-row { display: flex; align-items: center; padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.02); transition: 0.3s; }
-        .list-row:hover { background: rgba(255,255,255,0.01); }
+        /* FIX ZA KOLONE: Korišćenje table-layout: fixed garantuje da nema preklapanja */
+        .table-container { background: var(--card); border-radius: 30px; padding: 20px; border: 1px solid rgba(255,255,255,0.05); }
+        table { width: 100%; border-collapse: collapse; table-layout: fixed; } 
+        th { text-align: left; padding: 20px; color: #64748b; font-size: 0.8rem; text-transform: uppercase; }
+        td { padding: 20px; border-top: 1px solid rgba(255,255,255,0.02); vertical-align: middle; word-wrap: break-word; }
 
-        .col-klijent { width: 28%; }
-        .col-status  { width: 12%; display: flex; justify-content: center; }
-        .col-datum   { width: 22%; }
-        .col-cena    { width: 15%; }
-        .col-akcije  { width: 23%; display: flex; justify-content: flex-end; gap: 10px; }
-
-        .check-icon {
-            width: 32px; height: 32px; background: rgba(16, 185, 129, 0.2); color: #10b981;
-            border-radius: 10px; display: flex; align-items: center; justify-content: center;
-            font-size: 1.2rem; font-weight: bold; border: 1px solid rgba(16, 185, 129, 0.3);
+        /* Stil za zelenu kvačicu (zamenjuje dug teksta) */
+        .check-badge {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 28px; height: 28px; border-radius: 8px; background: rgba(16, 185, 129, 0.2);
+            color: #10b981; font-weight: 800; border: 1px solid rgba(16, 185, 129, 0.3);
         }
-        
+
         .status-zakazano {
-            font-size: 0.6rem; font-weight: 800; color: #3b82f6; background: rgba(59, 130, 246, 0.1);
-            padding: 5px 10px; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.2);
+            padding: 6px 12px; border-radius: 8px; font-size: 0.65rem; font-weight: 800; 
+            background: rgba(59, 130, 246, 0.1); color: var(--accent); text-transform: uppercase;
         }
 
-        .btn-action-done { background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; color: #10b981; padding: 8px 14px; border-radius: 12px; cursor: pointer; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; transition: 0.3s; }
-        .btn-action-done:hover { background: #10b981; color: white; }
-        .btn-action-delete { background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 8px 14px; border-radius: 12px; cursor: pointer; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; transition: 0.3s; }
-        .btn-action-delete:hover { background: #ef4444; color: white; }
-
-        /* MODAL VRAĆEN NA ORIGINALNI STIL */
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); }
         .modal-content { background: #0f172a; margin: 5% auto; padding: 50px; border-radius: 40px; width: 90%; max-width: 550px; border: 1px solid rgba(255,255,255,0.1); }
         .modal-label { display: block; margin-bottom: 8px; font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
+
         input { 
             width: 100%; padding: 18px; margin-bottom: 15px; border-radius: 15px; 
             border: 1px solid #1e293b; background: #020617; color: white; font-family: 'Poppins';
             box-sizing: border-box; font-size: 1rem;
         }
+
+        .btn-action-done { background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; color: #10b981; padding: 8px 16px; border-radius: 12px; cursor: pointer; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; }
+        .btn-action-delete { background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 8px 16px; border-radius: 12px; cursor: pointer; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; margin-left: 8px; }
     </style>
 </head>
 <body>
@@ -98,38 +88,36 @@
     <div class="main">
         <h1>Statistika Studija</h1>
         <div class="stats-grid">
-            <div class="stat-card"><h3>Ugovoreno (Sa Dep.)</h3><p id="total-sum">€0</p></div>
+            <div class="stat-card"><h3>Ugovoreno</h3><p id="total-sum">€0</p></div>
             <div class="stat-card"><h3>Čist Profit</h3><p id="studio-sum">€0</p></div>
-            <div class="stat-card"><h3>Depoziti u kasi</h3><p id="deposit-sum">€0</p></div>
+            <div class="stat-card"><h3>Depoziti</h3><p id="deposit-sum">€0</p></div>
         </div>
         <button class="btn-add" onclick="document.getElementById('bookingModal').style.display='block'">+ NOVI TERMIN</button>
-        <div class="list-container" id="tabela-div">Učitavanje podataka...</div>
+        <div class="table-container" id="tabela-div">Učitavanje...</div>
     </div>
 
     <div id="bookingModal" class="modal">
         <div class="modal-content">
             <h2 style="margin-top:0; font-size: 2rem; margin-bottom: 30px;">Novi Termin</h2>
-            
             <label class="modal-label">Ime klijenta</label>
-            <input type="text" id="c_name" placeholder="Npr. Marko Marković">
-            
+            <input type="text" id="c_name" placeholder="Ime i prezime">
+            <label class="modal-label">Email klijenta</label>
+            <input type="email" id="c_email" placeholder="email@primer.com">
             <label class="modal-label">Instagram (@)</label>
             <input type="text" id="c_insta" placeholder="@korisnik">
-            
-            <label class="modal-label">Datum i vreme termina</label>
+            <label class="modal-label">Datum i vreme</label>
             <input type="datetime-local" id="app_time">
             
             <div style="display: flex; gap: 15px;">
                 <div style="flex:1">
                     <label class="modal-label">Ukupna cena (€)</label>
-                    <input type="number" id="total_price" placeholder="200">
+                    <input type="number" id="total_price" placeholder="0">
                 </div>
                 <div style="flex:1">
                     <label class="modal-label">Depozit (€)</label>
                     <input type="number" id="deposit_amt" value="0">
                 </div>
             </div>
-
             <label class="modal-label">Procenat artista (%)</label>
             <input type="number" id="artist_percent" value="50">
             
@@ -156,37 +144,41 @@
                     document.getElementById('studio-sum').innerText = `€${profitStudija.toFixed(0)}`;
                     document.getElementById('deposit-sum').innerText = `€${ukupniDepoziti}`;
 
-                    let h = `
-                        <div class="list-header">
-                            <div class="col-klijent">Klijent</div>
-                            <div class="col-status">Status</div>
-                            <div class="col-datum">Datum</div>
-                            <div class="col-cena">Cena / Depozit</div>
-                            <div class="col-akcije">Akcije</div>
-                        </div>`;
+                    // STROGO DEFINISANE ŠIRINE KOLONA ZA iPAD
+                    let h = `<table><tr>
+                        <th style="width: 22%;">Klijent</th>
+                        <th style="width: 13%;">Status</th>
+                        <th style="width: 22%;">Datum</th>
+                        <th style="width: 15%;">Cena</th>
+                        <th style="width: 28%; text-align:right;">Akcije</th>
+                    </tr>`;
 
                     apps.forEach(a => {
                         const datum = new Date(a.appointment_time).toLocaleString('sr-RS', {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'});
-                        let statusContent = a.status === 'završeno' ? `<div class="check-icon">✓</div>` : `<span class="status-zakazano">ZAKAZANO</span>`;
+                        
+                        // KVAČICA UMESTO REČI "ZAVRŠENO" SPREČAVA PREKLAPANJE
+                        let statusHtml = a.status === 'završeno' 
+                            ? `<div class="check-badge">✓</div>` 
+                            : `<span class="status-zakazano">ZAKAZANO</span>`;
 
-                        h += `
-                        <div class="list-row">
-                            <div class="col-klijent">
-                                <div style="font-weight:600; font-size:0.95rem;">${a.client_name}</div>
-                                <div style="font-size:0.7rem; color:#64748b">${a.client_instagram || '-'}</div>
-                            </div>
-                            <div class="col-status">${statusContent}</div>
-                            <div class="col-datum" style="font-size:0.85rem; color:#cbd5e1; white-space:nowrap;">${datum}h</div>
-                            <div class="col-cena">
+                        h += `<tr>
+                            <td>
+                                <div style="font-weight:600; font-size:0.9rem;">${a.client_name}</div>
+                                <div style="font-size:0.7rem; color:#64748b;">${a.client_instagram || '-'}</div>
+                            </td>
+                            <td style="text-align:center;">${statusHtml}</td>
+                            <td style="white-space: nowrap; font-size: 0.85rem;">${datum}h</td>
+                            <td>
                                 <div style="font-weight:800">€${a.total_price}</div>
                                 ${a.deposit > 0 ? `<div style="font-size:0.65rem; color:#10b981">Dep: €${a.deposit}</div>` : ''}
-                            </div>
-                            <div class="col-akcije">
+                            </td>
+                            <td style="text-align:right; white-space:nowrap;">
                                 ${a.status === 'zakazano' ? `<button class="btn-action-done" onclick="updateStatus('${a.id}', 'završeno')">Završi</button>` : ''}
                                 <button class="btn-action-delete" onclick="obrisiTermin('${a.id}')">Obriši</button>
-                            </div>
-                        </div>`;
+                            </td>
+                        </tr>`;
                     });
+                    h += `</table>`;
                     document.getElementById('tabela-div').innerHTML = h;
                 }
             } catch (err) { console.error(err); }
@@ -211,14 +203,15 @@
             const procenat = parseFloat(document.getElementById('artist_percent').value) || 50;
             const studioShare = cena * ((100 - procenat) / 100);
 
-            const { error } = await supabaseClient.from('appointments').insert([{
+            await supabaseClient.from('appointments').insert([{
                 owner_id: user.id, client_name: document.getElementById('c_name').value,
+                client_email: document.getElementById('c_email').value,
                 client_instagram: document.getElementById('c_insta').value, appointment_time: document.getElementById('app_time').value,
                 total_price: cena, deposit: depozit, artist_percentage: procenat, studio_share: studioShare, status: 'zakazano'
             }]);
 
-            if (error) alert(error.message);
-            else { document.getElementById('bookingModal').style.display = 'none'; osveziPodatke(); }
+            document.getElementById('bookingModal').style.display = 'none';
+            osveziPodatke();
         }
 
         async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
