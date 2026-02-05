@@ -9,132 +9,105 @@
     <style>
         :root { --bg: #0a0e17; --card: rgba(255, 255, 255, 0.03); --accent: #3b82f6; --text: #ffffff; }
         
-        /* FIX ZA BELU STRELICU I OVERFLOW */
-        html, body { overflow-x: hidden; margin: 0; padding: 0; width: 100%; }
-        #vercel-live-feedback-widget, .vercel-feedback-button { display: none !important; } 
+        /* SKLANJANJE BELE STRELICE (VERCEL TOOLBAR) */
+        vercel-live-feedback { display: none !important; }
+        #vercel-live-feedback-widget { display: none !important; }
 
         body { 
-            background: var(--bg); 
-            color: var(--text); 
-            font-family: 'Poppins', sans-serif; 
-            display: flex; 
-            min-height: 100vh; 
-            font-weight: 600;
+            background: var(--bg); color: var(--text); font-family: 'Poppins', sans-serif; 
+            margin: 0; display: flex; min-height: 100vh; overflow-x: hidden;
         }
         
         /* Sidebar */
         .sidebar { 
-            width: 280px; 
-            background: rgba(0,0,0,0.6); 
-            border-right: 1px solid rgba(255,255,255,0.05); 
-            padding: 40px 20px; 
-            display: flex;
-            flex-direction: column;
-            flex-shrink: 0;
+            width: 280px; background: rgba(0,0,0,0.4); border-right: 1px solid rgba(255,255,255,0.05); 
+            padding: 40px 20px; display: flex; flex-direction: column;
         }
         
         .logo { 
-            font-weight: 800; 
-            font-size: 1.1rem; 
-            margin-bottom: 60px; 
-            line-height: 1.2;
-            background: linear-gradient(135deg, #fff, var(--accent)); 
-            -webkit-background-clip: text; 
-            -webkit-text-fill-color: transparent;
-            text-transform: uppercase;
+            font-weight: 800; font-size: 1.1rem; margin-bottom: 60px; text-transform: uppercase;
+            background: linear-gradient(135deg, #fff, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
         
         .nav-item { 
-            padding: 15px 20px; 
-            margin: 5px 0; 
-            cursor: pointer; 
-            border-radius: 12px; 
-            transition: 0.3s; 
-            color: #64748b; 
-            display: flex;
-            align-items: center;
+            padding: 15px 20px; margin: 5px 0; cursor: pointer; border-radius: 12px; 
+            transition: 0.3s; color: #64748b; display: flex; align-items: center;
         }
         
-        .nav-item:hover, .nav-item.active { 
-            background: var(--card); 
-            color: white; 
-            transform: translateX(5px);
-        }
+        .nav-item:hover { background: var(--card); color: white; transform: translateX(5px); }
+        .nav-item.active { background: var(--accent); color: white; }
 
-        /* Main Content */
-        .main { flex: 1; padding: 50px; position: relative; }
-        
-        .page-content { display: none; }
-        .page-content.active { display: block !important; } /* Force display */
-        
+        /* Main */
+        .main { flex: 1; padding: 50px; }
         h1 { font-weight: 800; font-size: 2.5rem; margin-bottom: 40px; }
 
-        /* Stats & Table */
-        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-bottom: 50px; }
+        .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; }
         .stat-card { 
-            background: var(--card); 
-            padding: 30px; 
-            border-radius: 24px; 
-            border: 1px solid rgba(255,255,255,0.05);
-            backdrop-filter: blur(10px);
+            background: var(--card); padding: 30px; border-radius: 24px; 
+            border: 1px solid rgba(255,255,255,0.05); transition: 0.3s; backdrop-filter: blur(10px);
         }
-        .stat-card p { font-size: 2.5rem; font-weight: 800; margin: 15px 0 0 0; }
+        .stat-card:hover { transform: translateY(-5px); border-color: var(--accent); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .stat-card h3 { margin: 0; color: #64748b; font-size: 0.8rem; text-transform: uppercase; }
+        .stat-card p { font-size: 2.2rem; font-weight: 800; margin: 15px 0 0 0; }
 
-        .table-wrapper { background: var(--card); border-radius: 24px; padding: 25px; border: 1px solid rgba(255,255,255,0.05); }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th { text-align: left; color: #64748b; font-size: 0.75rem; text-transform: uppercase; padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.02); }
-
-        /* Form */
-        .booking-form { background: var(--card); padding: 40px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.08); max-width: 800px; }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        input { background: rgba(22, 30, 44, 0.8); border: 2px solid #2d3748; color: white; padding: 15px; border-radius: 14px; width: 100%; box-sizing: border-box; font-family: 'Poppins'; font-weight: 600; }
-        input:focus { border-color: var(--accent); outline: none; }
-        .full-width { grid-column: span 2; }
+        /* MODAL ZA FORMU (Pop-up) */
+        .modal {
+            display: none; position: fixed; z-index: 100; left: 0; top: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(5px);
+        }
+        .modal-content {
+            background: #111827; margin: 5% auto; padding: 40px; border-radius: 30px;
+            width: 500px; border: 1px solid var(--accent); box-shadow: 0 0 50px rgba(59, 130, 246, 0.2);
+        }
         
-        .admin-btn { 
-            background: var(--accent); color: white; border: none; padding: 20px; border-radius: 18px; 
-            cursor: pointer; font-weight: 800; text-transform: uppercase; transition: 0.3s; width: 100%;
+        input { 
+            width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #2d3748;
+            background: #1f2937; color: white; font-family: 'Poppins'; box-sizing: border-box;
         }
+        .admin-btn { 
+            background: var(--accent); color: white; border: none; padding: 15px; width: 100%;
+            border-radius: 12px; font-weight: 800; cursor: pointer; margin-top: 20px;
+        }
+
+        /* Tabela */
+        .table-container { margin-top: 40px; background: var(--card); border-radius: 24px; padding: 20px; border: 1px solid rgba(255,255,255,0.05); }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.02); }
     </style>
 </head>
 <body>
     <div class="sidebar">
-        <div class="logo">Tattoo Studio<br>Management Pro</div>
-        <div id="btn-dash" class="nav-item active" onclick="switchTab('stats-page')">Dashboard</div>
-        <div id="btn-book" class="nav-item" onclick="switchTab('booking-page')">Novi Termin</div>
+        <div class="logo">Tattoo Studio Management Pro</div>
+        <div class="nav-item active">Dashboard</div>
+        <div class="nav-item" onclick="openModal()">+ Novi Termin</div>
         <div class="nav-item" style="margin-top: auto;" onclick="logout()">Odjavi se</div>
     </div>
 
     <div class="main">
-        <div id="stats-page" class="page-content active">
-            <h1>Statistika Studija</h1>
-            <div class="stats-grid">
-                <div class="stat-card"><h3>Ukupno ugovoreno</h3><p id="total-sum">€0</p></div>
-                <div class="stat-card"><h3>Procenat Studija</h3><p id="studio-sum">€0</p></div>
-                <div class="stat-card"><h3>Broj termina</h3><p id="app-count">0</p></div>
-            </div>
-            <div class="table-wrapper">
-                <h3>Lista termina</h3>
-                <div id="table-container">Nema unetih termina.</div>
-            </div>
+        <h1>Statistika Studija</h1>
+        <div class="stats-grid">
+            <div class="stat-card"><h3>Ukupno ugovoreno</h3><p id="total-sum">€0</p></div>
+            <div class="stat-card"><h3>Procenat Studija</h3><p id="studio-sum">€0</p></div>
+            <div class="stat-card"><h3>Broj termina</h3><p id="app-count">0</p></div>
         </div>
 
-        <div id="booking-page" class="page-content">
-            <h1>Novi Termin</h1>
-            <div class="booking-form">
-                <div class="form-grid">
-                    <div class="full-width"><input type="text" id="c_name" placeholder="Ime klijenta"></div>
-                    <div><input type="text" id="c_insta" placeholder="Instagram"></div>
-                    <div><input type="text" id="c_phone" placeholder="Telefon"></div>
-                    <div class="full-width"><input type="email" id="c_email" placeholder="Email"></div>
-                    <div class="full-width"><input type="text" id="c_type" placeholder="Opis tetovaže"></div>
-                    <div><input type="datetime-local" id="app_time"></div>
-                    <div><input type="number" id="total_price" placeholder="Cena (€)"></div>
-                    <div class="full-width"><input type="number" id="artist_percent" value="50"></div>
-                    <button class="admin-btn" onclick="saveAppointment()">SAČUVAJ U BAZU</button>
-                </div>
-            </div>
+        <div class="table-container">
+            <h3>Lista Zakazanih Termina</h3>
+            <div id="data-table">Učitavanje...</div>
+        </div>
+    </div>
+
+    <div id="bookingModal" class="modal">
+        <div class="modal-content">
+            <h2 style="margin-top:0">Novi Termin</h2>
+            <input type="text" id="c_name" placeholder="Ime klijenta">
+            <input type="text" id="c_insta" placeholder="Instagram (@)">
+            <input type="email" id="c_email" placeholder="Email">
+            <input type="datetime-local" id="app_time">
+            <input type="number" id="total_price" placeholder="Ukupna cena (€)">
+            <input type="number" id="artist_percent" value="50" placeholder="Procenat artista %">
+            <button class="admin-btn" onclick="saveAppointment()">SAČUVAJ</button>
+            <button style="background:none; border:none; color:#64748b; width:100%; margin-top:10px; cursor:pointer" onclick="closeModal()">Otkaži</button>
         </div>
     </div>
 
@@ -143,26 +116,11 @@
         const supabaseKey = 'sb_publishable_J66CdYuykkwjyulPJp2O1Q_e0ZZLXe7'; 
         const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-        // DIREKTNA FUNKCIJA ZA PROMENU STRANICA
-        function switchTab(targetId) {
-            console.log("Kliknuto na: " + targetId);
-            
-            // Skloni sve
-            document.getElementById('stats-page').classList.remove('active');
-            document.getElementById('booking-page').classList.remove('active');
-            document.getElementById('btn-dash').classList.remove('active');
-            document.getElementById('btn-book').classList.remove('active');
-            
-            // Prikaži kliknuto
-            document.getElementById(targetId).classList.add('active');
-            
-            // Aktiviraj dugme u sidebar-u
-            if(targetId === 'stats-page') document.getElementById('btn-dash').classList.add('active');
-            if(targetId === 'booking-page') document.getElementById('btn-book').classList.add('active');
-        }
+        function openModal() { document.getElementById('bookingModal').style.display = 'block'; }
+        function closeModal() { document.getElementById('bookingModal').style.display = 'none'; }
 
-        async function loadData() {
-            const { data: apps } = await supabase.from('appointments').select('*').order('appointment_time', { ascending: false });
+        async function loadDashboard() {
+            const { data: apps } = await supabase.from('appointments').select('*').order('appointment_time', {ascending: true});
             if (apps) {
                 const total = apps.reduce((s, a) => s + (Number(a.total_price) || 0), 0);
                 const studio = apps.reduce((s, a) => s + (Number(a.studio_share) || 0), 0);
@@ -170,14 +128,12 @@
                 document.getElementById('studio-sum').innerText = `€${studio.toFixed(0)}`;
                 document.getElementById('app-count').innerText = apps.length;
 
-                if (apps.length > 0) {
-                    let html = `<table><thead><tr><th>Klijent</th><th>Datum</th><th>Cena</th></tr></thead><tbody>`;
-                    apps.forEach(a => {
-                        html += `<tr><td>${a.client_name}</td><td>${new Date(a.appointment_time).toLocaleDateString()}</td><td>€${a.total_price}</td></tr>`;
-                    });
-                    html += `</tbody></table>`;
-                    document.getElementById('table-container').innerHTML = html;
-                }
+                let html = `<table><tr><th>Klijent</th><th>Datum</th><th>Cena</th></tr>`;
+                apps.forEach(a => {
+                    html += `<tr><td>${a.client_name}</td><td>${new Date(a.appointment_time).toLocaleDateString()}</td><td>€${a.total_price}</td></tr>`;
+                });
+                html += `</table>`;
+                document.getElementById('data-table').innerHTML = html;
             }
         }
 
@@ -187,9 +143,7 @@
                 owner_id: user.id,
                 client_name: document.getElementById('c_name').value,
                 client_instagram: document.getElementById('c_insta').value,
-                client_phone: document.getElementById('c_phone').value,
                 client_email: document.getElementById('c_email').value,
-                tattoo_type: document.getElementById('c_type').value,
                 appointment_time: document.getElementById('app_time').value,
                 total_price: parseFloat(document.getElementById('total_price').value),
                 artist_percentage: parseFloat(document.getElementById('artist_percent').value)
@@ -199,8 +153,7 @@
         }
 
         async function logout() { await supabase.auth.signOut(); window.location.href = 'index.html'; }
-
-        loadData();
+        loadDashboard();
     </script>
 </body>
 </html>
