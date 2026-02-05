@@ -1,4 +1,4 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="sr">
 <head>
     <meta charset="UTF-8">
@@ -47,7 +47,6 @@
         }
         .btn-add:hover { transform: scale(1.02); }
 
-        /* Dugme za Export */
         .btn-export { 
             background: rgba(255, 255, 255, 0.05); color: #64748b; border: 1px solid rgba(255,255,255,0.1); 
             padding: 10px 20px; border-radius: 15px; cursor: pointer; font-weight: 600; font-size: 0.75rem;
@@ -66,7 +65,6 @@
             color: #10b981; font-weight: 800; border: 1px solid rgba(16, 185, 129, 0.3); font-size: 1rem;
         }
 
-        /* Ikonica za Isplaćeno */
         .pay-badge {
             display: inline-flex; align-items: center; justify-content: center;
             width: 26px; height: 26px; border-radius: 8px; background: rgba(59, 130, 246, 0.2);
@@ -76,6 +74,12 @@
         .status-zakazano {
             padding: 5px 10px; border-radius: 6px; font-size: 0.6rem; font-weight: 800; 
             background: rgba(59, 130, 246, 0.1); color: var(--accent); text-transform: uppercase;
+            white-space: nowrap; display: inline-block;
+        }
+
+        .status-noshow {
+            padding: 5px 10px; border-radius: 6px; font-size: 0.6rem; font-weight: 800; 
+            background: rgba(239, 68, 68, 0.1); color: #ef4444; text-transform: uppercase;
             white-space: nowrap; display: inline-block;
         }
 
@@ -90,15 +94,15 @@
         }
 
         .btn-action-done { background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; color: #10b981; padding: 8px 12px; border-radius: 10px; cursor: pointer; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; margin-right: 5px; }
+        .btn-action-noshow { background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 8px 12px; border-radius: 10px; cursor: pointer; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; margin-right: 5px; }
         .btn-action-pay { background: rgba(59, 130, 246, 0.1); border: 1px solid #3b82f6; color: #3b82f6; padding: 8px 12px; border-radius: 10px; cursor: pointer; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; margin-right: 5px; }
-        .btn-action-delete { background: rgba(239, 68, 68, 0.1); border: 1px solid #ef4444; color: #ef4444; padding: 8px 12px; border-radius: 10px; cursor: pointer; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; }
+        .btn-action-delete { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.1); color: #64748b; padding: 8px 12px; border-radius: 10px; cursor: pointer; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; }
         
         .filter-group { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; }
         .filter-select { width: auto; margin: 0; padding: 10px 20px; border-radius: 15px; background: var(--card); border: 1px solid rgba(255,255,255,0.05); font-weight: 600; cursor: pointer; }
 
-        /* Stilovi za štampu (Export) */
         @media print {
-            .sidebar, .btn-add, .filter-group, button, .btn-action-done, .btn-action-delete, .btn-action-pay { display: none !important; }
+            .sidebar, .btn-add, .filter-group, button, .btn-action-done, .btn-action-delete, .btn-action-pay, .btn-action-noshow { display: none !important; }
             body { background: white; color: black; }
             .main { padding: 0; }
             .stat-card { border: 1px solid #eee; color: black; background: none; backdrop-filter: none; }
@@ -294,9 +298,18 @@
                     const troskovi = allTroskovi ? allTroskovi.filter(t => t.created_at.startsWith(selectedDate)) : [];
                     const ukupniTroskovi = troskovi.reduce((s, t) => s + (Number(t.amount) || 0), 0);
 
-                    const totalUgovoreno = apps.reduce((s, a) => s + (Number(a.total_price) || 0), 0);
-                    const profitOdTermina = apps.filter(a => a.status === 'završeno').reduce((s, a) => {
-                        let udeo = (userProfile.role === 'owner') ? a.studio_share : (a.total_price - a.studio_share);
+                    // Ukupno ugovoreno: ne računamo one koji se nisu pojavili (no-show)
+                    const totalUgovoreno = apps.filter(a => a.status !== 'no-show').reduce((s, a) => s + (Number(a.total_price) || 0), 0);
+                    
+                    // Profit: Završeni termini + Zadržani depoziti od No-Show termina
+                    const profitOdTermina = apps.reduce((s, a) => {
+                        let udeo = 0;
+                        if (a.status === 'završeno') {
+                            udeo = (userProfile.role === 'owner') ? a.studio_share : (a.total_price - a.studio_share);
+                        } else if (a.status === 'no-show' && a.deposit > 0) {
+                            // Kod no-show, profit je depozit (vlasniku ili deljen, ovde ide studiju kao kompenzacija)
+                            udeo = (userProfile.role === 'owner') ? a.deposit : 0;
+                        }
                         return s + (Number(udeo) || 0);
                     }, 0);
 
@@ -312,16 +325,24 @@
                         const datum = new Date(a.appointment_time).toLocaleString('sr-RS', {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'});
                         const isPayed = a.payout_status === 'isplaćeno';
                         
+                        let statusBadge = '';
+                        if(a.status === 'završeno') statusBadge = '<div class="check-badge">✓</div>';
+                        else if(a.status === 'no-show') statusBadge = '<span class="status-noshow">NO-SHOW</span>';
+                        else statusBadge = '<span class="status-zakazano">ZAKAZANO</span>';
+
                         h += `<tr>
                             <td><div style="font-weight:800;">${a.client_name}</div><div style="font-size:0.65rem; color:#64748b;">${a.client_instagram || '-'}</div></td>
                             <td style="text-align:center;">
-                                ${a.status === 'završeno' ? '<div class="check-badge">✓</div>' : '<span class="status-zakazano">ZAKAZANO</span>'}
+                                ${statusBadge}
                                 ${isPayed ? '<div class="pay-badge" title="Isplaćeno">💸</div>' : ''}
                             </td>
                             <td>${datum}h</td>
                             <td>€${a.total_price}</td>
                             <td style="text-align:right;">
-                                ${a.status === 'zakazano' ? `<button class="btn-action-done" onclick="updateStatus('${a.id}', 'završeno')">Završi</button>` : ''}
+                                ${a.status === 'zakazano' ? `
+                                    <button class="btn-action-done" onclick="updateStatus('${a.id}', 'završeno')">Završi</button>
+                                    <button class="btn-action-noshow" onclick="updateStatus('${a.id}', 'no-show')">No-Show</button>
+                                ` : ''}
                                 ${a.status === 'završeno' && !isPayed && userProfile.role === 'owner' ? `<button class="btn-action-pay" onclick="updatePayout('${a.id}')">Isplati</button>` : ''}
                                 <button class="btn-action-delete" onclick="obrisiTermin('${a.id}')">Obriši</button>
                             </td>
