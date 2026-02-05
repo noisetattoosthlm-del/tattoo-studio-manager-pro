@@ -141,10 +141,10 @@
         <h1>Troškovi Studija</h1>
         <div style="background: var(--card); padding: 30px; border-radius: 24px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.05);">
             <h3 style="margin-top:0; font-size: 1rem; color: var(--accent);">DODAJ NOVI TROŠAK</h3>
-            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                <input type="text" id="exp-title" placeholder="Opis">
-                <input type="number" id="exp-amount" placeholder="Iznos (€)">
-                <button class="btn-add" style="margin:0;" onclick="dodajTrosak()">DODAJ</button>
+            <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+                <input type="text" id="exp-title" placeholder="Opis" style="flex:2; margin-bottom:0;">
+                <input type="number" id="exp-amount" placeholder="Iznos (€)" style="flex:1; margin-bottom:0;">
+                <button class="btn-add" style="margin:0; padding: 15px 30px;" onclick="dodajTrosak()">DODAJ</button>
             </div>
         </div>
         <div class="table-container"><table><thead><tr><th>Opis</th><th>Iznos</th><th>Datum</th><th style="text-align:right;">Akcije</th></tr></thead><tbody id="expenses-list-body"></tbody></table></div>
@@ -230,7 +230,6 @@
 
                 if (allApps) {
                     let filteredApps = allApps.filter(a => a.appointment_time.startsWith(selectedMonthStr));
-
                     const troskovi = allTroskovi ? allTroskovi.filter(t => t.created_at.startsWith(selectedMonthStr)) : [];
                     const ukupniTroskovi = troskovi.reduce((s, t) => s + (Number(t.amount) || 0), 0);
                     const totalUgovoreno = filteredApps.filter(a => a.status !== 'no-show').reduce((s, a) => s + (Number(a.total_price) || 0), 0);
@@ -284,17 +283,7 @@
         async function updateStatus(id, newStatus) { await supabaseClient.from('appointments').update({ status: newStatus }).eq('id', id); osveziPodatke(); }
         async function updatePayout(id) { if(confirm("Isplaćeno?")) { await supabaseClient.from('appointments').update({ payout_status: 'isplaćeno' }).eq('id', id); osveziPodatke(); } }
         async function obrisiTermin(id) { if(confirm("Obriši?")) { await supabaseClient.from('appointments').delete().eq('id', id); osveziPodatke(); } }
-        
-        async function napraviArtista() {
-            const email = document.getElementById('new-artist-email').value;
-            const password = document.getElementById('new-artist-pass').value;
-            const fullName = document.getElementById('new-artist-name').value;
-            const { data: authData } = await supabaseClient.auth.signUp({ email, password });
-            if (authData.user) {
-                await supabaseClient.from('profiles').insert([{ id: authData.user.id, full_name: fullName, role: 'artist', studio_id: userProfile.studio_id }]);
-                alert("Dodat!"); ucitajArtiste();
-            }
-        }
+        async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
 
         async function ucitajArtiste() {
             const { data: artisti } = await supabaseClient.from('profiles').select('*').eq('studio_id', userProfile.studio_id);
@@ -308,7 +297,10 @@
         async function dodajTrosak() {
             const title = document.getElementById('exp-title').value;
             const amount = parseFloat(document.getElementById('exp-amount').value);
+            if(!title || !amount) return;
             await supabaseClient.from('expenses').insert([{ studio_id: userProfile.studio_id, title, amount }]);
+            document.getElementById('exp-title').value = '';
+            document.getElementById('exp-amount').value = '';
             ucitajTroskove();
         }
 
@@ -320,6 +312,8 @@
                 document.getElementById('expenses-list-body').innerHTML = html;
             }
         }
+        
+        async function obrisiTrosak(id) { if(confirm("Obriši trošak?")) { await supabaseClient.from('expenses').delete().eq('id', id); ucitajTroskove(); } }
 
         async function saveData() {
             const { data: { user } } = await supabaseClient.auth.getUser();
@@ -338,7 +332,6 @@
         }
 
         function zatvoriModal() { document.getElementById('bookingModal').style.display = 'none'; }
-        async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
         initDashboard();
     </script>
 </body>
