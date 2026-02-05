@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="sr">
 <head>
     <meta charset="UTF-8">
@@ -112,13 +112,14 @@
     </div>
 
     <script>
+        // ISPRAVLJENO: Dodato 'supabase.' ispred createClient
         const supabaseUrl = 'https://yunuwkjydqzgkqtbgwup.supabase.co'; 
         const supabaseKey = 'sb_publishable_J66CdYuykkwjyulPJp2O1Q_e0ZZLXe7'; 
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
         async function osveziPodatke() {
             try {
-                const { data: apps, error } = await supabase.from('appointments').select('*').order('appointment_time', {ascending: true});
+                const { data: apps, error } = await supabaseClient.from('appointments').select('*').order('appointment_time', {ascending: true});
                 if (error) throw error;
                 if (apps) {
                     const total = apps.reduce((s, a) => s + (Number(a.total_price) || 0), 0);
@@ -135,20 +136,22 @@
                     h += `</table>`;
                     document.getElementById('tabela-div').innerHTML = h;
                 }
-            } catch (err) { console.error("Greška pri učitavanju:", err.message); }
+            } catch (err) { 
+                console.error("Greška pri učitavanju:", err.message);
+                document.getElementById('tabela-div').innerHTML = "Greška pri povezivanju sa bazom.";
+            }
         }
 
         async function obrisiTermin(id) {
             if(confirm("Da li želiš da obrišeš ovaj termin?")) {
-                const { error } = await supabase.from('appointments').delete().eq('id', id);
+                const { error } = await supabaseClient.from('appointments').delete().eq('id', id);
                 if (error) alert("Greška: " + error.message); else osveziPodatke();
             }
         }
 
         async function saveData() {
-            console.log("Pokrećem saveData...");
             try {
-                const { data: { user } } = await supabase.auth.getUser();
+                const { data: { user } } = await supabaseClient.auth.getUser();
                 if (!user) { alert("Greška: Korisnik nije ulogovan!"); return; }
 
                 const cena = parseFloat(document.getElementById('total_price').value) || 0;
@@ -171,24 +174,23 @@
                     return;
                 }
 
-                console.log("Podaci spremni:", d);
-                const { error } = await supabase.from('appointments').insert([d]);
+                const { error } = await supabaseClient.from('appointments').insert([d]);
                 
                 if (error) {
-                    console.error("Supabase error:", error);
-                    alert("Baza kaže: " + error.message);
+                    alert("Baza odbija upis: " + error.message);
                 } else {
-                    console.log("Uspešno upisano!");
+                    alert("Uspešno sačuvano!");
                     document.getElementById('bookingModal').style.display = 'none';
-                    location.reload();
+                    osveziPodatke(); 
                 }
             } catch (err) {
-                console.error("JS error:", err);
-                alert("Greška u aplikaciji: " + err.message);
+                alert("Sistemska greška: " + err.message);
             }
         }
 
-        async function logout() { await supabase.auth.signOut(); window.location.href = 'index.html'; }
+        async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
+        
+        // Pokretanje
         osveziPodatke();
     </script>
 </body>
