@@ -74,15 +74,47 @@
     </div>
 
     <script>
-        // Ovi podaci će se automatski povući iz Vercela (Environment Variables)
-        // Za sada ih ostavljamo praznim jer ćemo ih u sledećem koraku konfigurisati da rade automatski
-        const statusDiv = document.getElementById('status');
-        statusDiv.innerText = "SISTEM SPREMAN ZA AUTH";
+// Konfiguracija (Ubaci svoje podatke sa slika ovde)
+const supabaseUrl = 'https://yunuwkjydqzgkqtbgwup.supabase.co'; 
+const supabaseKey = 'sb_publishable_J66CdYuykkwjyulPJp2O1Q_e0ZZLXe7'; 
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-        async function signIn() {
-            statusDiv.innerText = "Povezivanje sa bazom...";
-            // Ovde će ići logika za proveru uloga (Owner/Artist/Guest)
-        }
+const statusDiv = document.getElementById('status');
+
+async function signIn() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+    
+    statusDiv.innerText = "Provera podataka...";
+    statusDiv.style.color = "#3b82f6";
+
+    // 1. Prijava korisnika
+    const { data, error } = await supabaseClient.auth.signInWithPassword({
+        email: email,
+        password: password,
+    });
+
+    if (error) {
+        statusDiv.style.color = "#ff4b2b";
+        statusDiv.innerText = "Greška: " + error.message;
+        return;
+    }
+
+    // 2. Provera uloge iz tabele "profiles"
+    const { data: profile, error: profileError } = await supabaseClient
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user.id)
+        .single();
+
+    if (profile) {
+        statusDiv.style.color = "#00ff00";
+        statusDiv.innerText = "Prijavljen kao: " + profile.role.toUpperCase();
+        
+        // Ovde ćemo u sledećem koraku dodati "Redirect" na tvoj Dashboard
+        console.log("Uspešan ulaz za ulogu:", profile.role);
+    }
+}
     </script>
 </body>
 </html>
