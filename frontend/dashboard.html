@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="sr">
 <head>
     <meta charset="UTF-8">
@@ -7,33 +7,114 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #0a0e17; --card: rgba(255, 255, 255, 0.03); --accent: #3b82f6; --text: #ffffff; }
-        body { background: var(--bg); color: var(--text); font-family: 'Poppins', sans-serif; margin: 0; display: flex; min-height: 100vh; font-weight: 600; }
+        :root { 
+            --bg: #0a0e17; 
+            --card: rgba(255, 255, 255, 0.03); 
+            --accent: #3b82f6; 
+            --text: #ffffff;
+        }
         
-        .sidebar { width: 280px; background: rgba(0,0,0,0.4); border-right: 1px solid rgba(255,255,255,0.05); padding: 40px 20px; display: flex; flex-direction: column; }
-        .logo { font-weight: 800; font-size: 1.1rem; margin-bottom: 60px; line-height: 1.2; background: linear-gradient(135deg, #fff, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-transform: uppercase; }
+        body { 
+            background: var(--bg); 
+            color: var(--text); 
+            font-family: 'Poppins', sans-serif; 
+            margin: 0; 
+            display: flex; 
+            min-height: 100vh; 
+            font-weight: 600; 
+        }
         
-        .nav-item { padding: 15px 20px; margin: 5px 0; cursor: pointer; border-radius: 12px; transition: 0.2s; color: #64748b; display: flex; align-items: center; font-size: 0.95rem; }
-        .nav-item:hover, .nav-item.active { background: var(--card); color: white; }
+        .sidebar { 
+            width: 280px; 
+            background: rgba(0,0,0,0.4); 
+            border-right: 1px solid rgba(255,255,255,0.05); 
+            padding: 40px 20px; 
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .logo { 
+            font-weight: 800; 
+            font-size: 1.1rem; 
+            margin-bottom: 60px; 
+            line-height: 1.2;
+            background: linear-gradient(135deg, #fff, var(--accent)); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+        }
+        
+        .nav-item { 
+            padding: 15px 20px; 
+            margin: 5px 0; 
+            cursor: pointer; 
+            border-radius: 12px; 
+            transition: 0.2s; 
+            color: #64748b; 
+            display: flex;
+            align-items: center;
+            font-size: 0.95rem;
+        }
+        
+        .nav-item:hover, .nav-item.active { 
+            background: var(--card); 
+            color: white; 
+        }
 
         .main { flex: 1; padding: 50px; overflow-y: auto; }
+        
         .page-content { display: none; }
         .page-content.active { display: block; }
         
         h1 { font-weight: 800; font-size: 2.5rem; margin-bottom: 40px; }
+
         .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 25px; margin-bottom: 50px; }
-        .stat-card { background: var(--card); padding: 30px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05); }
+        .stat-card { 
+            background: var(--card); 
+            padding: 30px; 
+            border-radius: 24px; 
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: 0.3s;
+        }
+        .stat-card:hover { transform: translateY(-5px); border-color: var(--accent); }
         .stat-card h3 { margin: 0; color: #64748b; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; }
         .stat-card p { font-size: 2.2rem; font-weight: 800; margin: 15px 0 0 0; }
 
-        .booking-form { background: var(--card); padding: 40px; border-radius: 30px; border: 1px solid rgba(255,255,255,0.08); max-width: 800px; }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        input { background: #161e2c; border: 2px solid #2d3748; color: white; padding: 15px; border-radius: 14px; width: 100%; box-sizing: border-box; font-family: 'Poppins', sans-serif; font-weight: 600; }
-        .full-width { grid-column: span 2; }
-        .admin-btn { background: var(--accent); color: white; border: none; padding: 18px; border-radius: 16px; cursor: pointer; font-weight: 800; text-transform: uppercase; width: 100%; margin-top: 10px; }
-        
+        /* Tabela Stil */
         table { width: 100%; border-collapse: collapse; background: var(--card); border-radius: 20px; overflow: hidden; margin-top: 20px; }
         th, td { padding: 20px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        th { color: #64748b; font-size: 0.8rem; text-transform: uppercase; }
+
+        .booking-form { 
+            background: var(--card); 
+            padding: 40px; 
+            border-radius: 30px; 
+            border: 1px solid rgba(255,255,255,0.08); 
+            max-width: 800px;
+        }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        input { 
+            background: #161e2c; 
+            border: 2px solid #2d3748; 
+            color: white; 
+            padding: 15px; 
+            border-radius: 14px; 
+            width: 100%; 
+            box-sizing: border-box; 
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+        }
+        .full-width { grid-column: span 2; }
+        .admin-btn { 
+            background: var(--accent); 
+            color: white; 
+            border: none; 
+            padding: 18px; 
+            border-radius: 16px; 
+            cursor: pointer; 
+            font-weight: 800; 
+            text-transform: uppercase;
+        }
         label { display: block; margin-bottom: 8px; font-size: 0.85rem; color: #94a3b8; }
     </style>
 </head>
@@ -47,14 +128,13 @@
 
     <div class="main">
         <div id="stats-page" class="page-content active">
-            <h1 id="welcome">Statistika Studija</h1>
+            <h1>Statistika Studija</h1>
             <div class="stats-grid">
                 <div class="stat-card"><h3>Ukupno ugovoreno</h3><p id="total-sum">€0</p></div>
                 <div class="stat-card"><h3>Procenat Studija</h3><p id="studio-sum">€0</p></div>
                 <div class="stat-card"><h3>Aktivni termini</h3><p id="app-count">0</p></div>
             </div>
-            <div id="table-container">
-                </div>
+            <div id="table-container"></div>
         </div>
 
         <div id="booking-page" class="page-content">
@@ -69,7 +149,7 @@
                     <div><label>Datum i Vreme</label><input type="datetime-local" id="app_time"></div>
                     <div><label>Ukupna Cena (€)</label><input type="number" id="total_price"></div>
                     <div class="full-width"><label>Procenat Artista (%)</label><input type="number" id="artist_percent" value="50"></div>
-                    <button class="admin-btn full-width" onclick="saveAppointment()">SAČUVAJ TERMIN</button>
+                    <button class="admin-btn full-width" onclick="saveAppointment()">SAČUVAJ TERMIN U BAZU</button>
                 </div>
             </div>
         </div>
@@ -87,19 +167,8 @@
             element.classList.add('active');
         }
 
-        async function init() {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (!user) { window.location.href = 'index.html'; return; }
-
-            const { data: profile } = await supabase.from('profiles').select('full_name').eq('id', user.id).single();
-            if (profile) document.getElementById('welcome').innerText = `Zdravo, ${profile.full_name || 'Vlasniče'}`;
-
-            fetchData();
-        }
-
-        async function fetchData() {
-            const { data: apps } = await supabase.from('appointments').select('*').order('appointment_time', { ascending: true });
-            
+        async function loadDashboard() {
+            const { data: apps } = await supabase.from('appointments').select('*');
             if (apps) {
                 const total = apps.reduce((s, a) => s + (a.total_price || 0), 0);
                 const studio = apps.reduce((s, a) => s + (a.studio_share || 0), 0);
@@ -107,10 +176,9 @@
                 document.getElementById('studio-sum').innerText = `€${studio}`;
                 document.getElementById('app-count').innerText = apps.length;
 
-                let html = `<table><thead><tr><th>Klijent</th><th>Vreme</th><th>Cena</th><th>Status</th></tr></thead><tbody>`;
+                let html = `<table><thead><tr><th>Klijent</th><th>Vreme</th><th>Cena</th><th>Procenat Studija</th></tr></thead><tbody>`;
                 apps.forEach(a => {
-                    const d = new Date(a.appointment_time).toLocaleString('sr-RS', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
-                    html += `<tr><td>${a.client_name}<br><small style="color:#64748b">${a.client_instagram || ''}</small></td><td>${d}</td><td>€${a.total_price}</td><td><span style="color:#00ff00; font-size:0.7rem;">ZAKAZANO</span></td></tr>`;
+                    html += `<tr><td>${a.client_name}</td><td>${new Date(a.appointment_time).toLocaleString('sr-RS')}</td><td>€${a.total_price}</td><td>€${a.studio_share.toFixed(2)}</td></tr>`;
                 });
                 html += `</tbody></table>`;
                 document.getElementById('table-container').innerHTML = html;
@@ -118,12 +186,7 @@
         }
 
         async function saveAppointment() {
-            const { data: { user } } = await supabase.auth.getUser();
-            const btn = document.querySelector('.admin-btn');
-            btn.innerText = "ČUVANJE...";
-
             const appData = {
-                owner_id: user.id,
                 client_name: document.getElementById('c_name').value,
                 client_instagram: document.getElementById('c_insta').value,
                 client_phone: document.getElementById('c_phone').value,
@@ -133,15 +196,13 @@
                 total_price: parseFloat(document.getElementById('total_price').value),
                 artist_percentage: parseFloat(document.getElementById('artist_percent').value)
             };
-
             const { error } = await supabase.from('appointments').insert([appData]);
-            if (error) { alert("Greška: " + error.message); btn.innerText = "SAČUVAJ TERMIN"; }
-            else { alert("Uspešno!"); location.reload(); }
+            if (error) alert(error.message); else location.reload();
         }
 
         async function logout() { await supabase.auth.signOut(); window.location.href = 'index.html'; }
 
-        init();
+        loadDashboard(); // Pokreće učitavanje podataka čim se uđe
     </script>
 </body>
 </html>
