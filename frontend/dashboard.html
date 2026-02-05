@@ -87,6 +87,15 @@
         .filter-group { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
         .filter-select { width: auto; margin: 0; padding: 10px 20px; border-radius: 15px; background: var(--card); border: 1px solid rgba(255,255,255,0.05); font-weight: 600; cursor: pointer; color: white; }
 
+        @media print {
+            .sidebar, .btn-add, .filter-group, .action-cell { display: none !important; }
+            .main { padding: 0; background: white; color: black !important; }
+            .stat-card, .table-container { border: 1px solid #ccc; background: white; color: black; }
+            h1, p, h3, td, th { color: black !important; }
+            table { border-collapse: collapse; width: 100%; }
+            th, td { border: 1px solid #eee; }
+        }
+
         @media (max-width: 900px) {
             body { flex-direction: column; }
             .sidebar { 
@@ -101,16 +110,6 @@
             .stat-card { padding: 20px; }
             .stat-card p { font-size: 1.8rem; }
             .chart-container { height: 250px; }
-        }
-
-        /* PRINT STIL ZA PDF IZVEŠTAJ */
-        @media print {
-            .sidebar, .btn-add, .filter-group, .action-cell { display: none !important; }
-            .main { padding: 0; background: white; color: black !important; }
-            .stat-card, .table-container { border: 1px solid #ccc; background: white; color: black; }
-            h1, p, h3, td, th { color: black !important; }
-            table { border-collapse: collapse; width: 100%; }
-            th, td { border: 1px solid #eee; }
         }
     </style>
 </head>
@@ -202,7 +201,7 @@
             <label class="modal-label">Ime klijenta</label>
             <input type="text" id="c_name">
             <label class="modal-label">Mobilni telefon</label>
-            <input type="text" id="c_phone" placeholder="06x / xxx-xxxx">
+            <input type="text" id="c_phone" placeholder="Unesite broj telefona">
             <label class="modal-label">Email klijenta (opciono)</label>
             <input type="email" id="c_email">
             <label class="modal-label">Instagram (@)</label>
@@ -372,7 +371,6 @@
             document.getElementById('tabela-div').innerHTML = h + `</table>`;
         }
 
-        // --- KLIJENTI LOGIKA ---
         async function ucitajKlijente() {
             const { data } = await supabaseClient.from('appointments').select('*').eq('studio_id', userProfile.studio_id).order('appointment_time', {ascending: false});
             if (data) {
@@ -413,8 +411,10 @@
                     client_email: document.getElementById('c_email').value,
                     client_instagram: document.getElementById('c_insta').value,
                     appointment_time: document.getElementById('app_time').value, 
-                    total_price: cena, deposit: parseFloat(document.getElementById('deposit_amt').value) || 0,
-                    artist_percentage: procenat, studio_share: cena * ((100 - procenat) / 100),
+                    total_price: cena, 
+                    deposit: parseFloat(document.getElementById('deposit_amt').value) || 0,
+                    artist_percentage: procenat, 
+                    studio_share: cena * ((100 - procenat) / 100),
                     payment_type: document.getElementById('payment_type').value
                 };
                 if (editingId) await supabaseClient.from('appointments').update(payload).eq('id', editingId);
@@ -452,6 +452,22 @@
             document.getElementById('artists-list-body').innerHTML = html;
         }
 
+        async function dodajTrosak() {
+            const title = document.getElementById('exp-title').value;
+            const amount = parseFloat(document.getElementById('exp-amount').value);
+            if(!title || !amount) return;
+            await supabaseClient.from('expenses').insert([{ studio_id: userProfile.studio_id, title, amount }]);
+            document.getElementById('exp-title').value = ''; document.getElementById('exp-amount').value = '';
+            ucitajTroskove();
+        }
+
+        async function ucitajTroskove() {
+            const { data } = await supabaseClient.from('expenses').select('*').eq('studio_id', userProfile.studio_id).order('created_at', {ascending: false});
+            let html = '';
+            if(data) data.forEach(t => { html += `<tr><td><strong>${t.title}</strong></td><td style="color:#ef4444;">-€${t.amount}</td><td>${new Date(t.created_at).toLocaleDateString('sr-RS')}</td><td style="text-align:right;"><button class="btn-action-delete" onclick="obrisiTrosak('${t.id}')">X</button></td></tr>`; });
+            document.getElementById('expenses-list-body').innerHTML = html;
+        }
+
         function otvoriModalNovi() {
             editingId = null; document.getElementById('modal-title').innerText = "Novi Termin";
             document.getElementById('c_name').value = ""; document.getElementById('c_phone').value = ""; document.getElementById('c_email').value = ""; 
@@ -463,10 +479,14 @@
         function otvoriModalEdit(id) {
             const a = globalApps.find(app => app.id === id); if (!a) return;
             editingId = id; document.getElementById('modal-title').innerText = "Izmeni Termin";
-            document.getElementById('c_name').value = a.client_name; document.getElementById('c_phone').value = a.client_phone || "";
-            document.getElementById('c_email').value = a.client_email || ""; document.getElementById('c_insta').value = a.client_instagram || "";
-            document.getElementById('app_time').value = a.appointment_time.substring(0, 16); document.getElementById('total_price').value = a.total_price;
-            document.getElementById('deposit_amt').value = a.deposit; document.getElementById('artist_percent').value = a.artist_percentage;
+            document.getElementById('c_name').value = a.client_name; 
+            document.getElementById('c_phone').value = a.client_phone || "";
+            document.getElementById('c_email').value = a.client_email || ""; 
+            document.getElementById('c_insta').value = a.client_instagram || "";
+            document.getElementById('app_time').value = a.appointment_time.substring(0, 16); 
+            document.getElementById('total_price').value = a.total_price;
+            document.getElementById('deposit_amt').value = a.deposit; 
+            document.getElementById('artist_percent').value = a.artist_percentage;
             document.getElementById('bookingModal').style.display = 'block';
         }
 
