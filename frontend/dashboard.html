@@ -116,6 +116,21 @@
 </head>
 <body>
 
+    <div id="setup-overlay" class="modal" style="display:none; z-index: 3000;">
+        <div class="modal-content" style="text-align: center;">
+            <h2 style="color: var(--accent); margin-bottom: 10px;">DOBRODOŠLI, ŠEFE! 🚀</h2>
+            <p style="color: #64748b; font-size: 0.85rem; margin-bottom: 25px;">Hajde da brzo podesimo tvoj studio pre nego što kreneš sa radom.</p>
+            
+            <label class="modal-label">Ime tvog studija</label>
+            <input type="text" id="setup-studio-name" placeholder="npr. Ink Master Studio">
+            
+            <label class="modal-label">Osnovni procenat artista (%)</label>
+            <input type="number" id="setup-default-percent" value="50">
+            
+            <button class="btn-add" style="width:100%; margin-top: 10px;" onclick="zavrsiSetup()">POKRENI STUDIO</button>
+        </div>
+    </div>
+
     <div class="sidebar">
         <div class="logo">Tattoo Studio Management Pro</div>
         <div class="nav-item active" id="nav-dash" onclick="prikaziSekciju('dashboard')">Dashboard</div>
@@ -278,6 +293,12 @@
                 if (profile.role === 'owner') {
                     document.querySelectorAll('.owner-only').forEach(el => el.style.display = 'flex');
                     popuniArtistFilter();
+
+                    // PROVERA SETUP-A (Dodato)
+                    const { data: studio } = await supabaseClient.from('studios').select('*').eq('id', profile.studio_id).single();
+                    if (studio && studio.setup_complete === false) {
+                        document.getElementById('setup-overlay').style.display = 'block';
+                    }
                 } else {
                     document.getElementById('profit-label').innerText = 'Moja Zarada';
                     document.getElementById('main-greeting').innerText = 'Moji Termini';
@@ -285,6 +306,29 @@
             }
             popuniMeseceIGodine();
             osveziPodatke();
+        }
+
+        // FUNKCIJA ZA ZAVRŠETAK SETUP-A (Dodato)
+        async function zavrsiSetup() {
+            const sName = document.getElementById('setup-studio-name').value;
+            const sPercent = document.getElementById('setup-default-percent').value;
+            
+            if(!sName) { alert("Moraš uneti ime studija!"); return; }
+
+            const { error } = await supabaseClient.from('studios')
+                .update({ 
+                    studio_name: sName, 
+                    default_artist_percentage: sPercent, 
+                    setup_complete: true 
+                })
+                .eq('id', userProfile.studio_id);
+
+            if(!error) {
+                document.getElementById('setup-overlay').style.display = 'none';
+                location.reload();
+            } else {
+                alert("Greška pri setup-u: " + error.message);
+            }
         }
 
         async function popuniArtistFilter() {
