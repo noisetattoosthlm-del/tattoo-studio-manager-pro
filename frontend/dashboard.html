@@ -162,7 +162,7 @@
     </div>
 
     <div class="main" id="artists-section" style="display:none;">
-        <h1>Upravljanje Artistima</h1>
+        <h1>Upravljanje Artisti</h1>
         <div style="background: var(--card); padding: 30px; border-radius: 24px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.05);">
             <h3 style="margin-top:0; font-size: 1rem; color: var(--accent);">DODAJ NOVOG ARTISTA</h3>
             <div style="display: flex; gap: 15px; flex-wrap: wrap;">
@@ -306,7 +306,7 @@
 
                 if (allApps) {
                     globalApps = allApps;
-                    let filteredApps = allApps.filter(a => a.appointment_time.startsWith(selectedMonthStr));
+                    let filteredApps = allApps.filter(a => a.appointment_time && a.appointment_time.startsWith(selectedMonthStr));
                     const troskovi = allTroskovi ? allTroskovi.filter(t => t.created_at.startsWith(selectedMonthStr)) : [];
                     const ukupniTroskovi = (userProfile.role === 'owner' && artistFilter === 'all') ? troskovi.reduce((s, t) => s + (Number(t.amount) || 0), 0) : 0;
                     const totalUgovoreno = filteredApps.filter(a => a.status !== 'no-show').reduce((s, a) => s + (Number(a.total_price) || 0), 0);
@@ -407,7 +407,7 @@
                 const cena = parseFloat(document.getElementById('total_price').value) || 0;
                 const procenat = parseFloat(document.getElementById('artist_percent').value) || 50;
                 
-                // Ovde smo osigurali da client_phone ide u ispravnu kolonu
+                // Ovde se podaci šalju u tačno nazvane kolone koje si napravio u SQL-u
                 const payload = {
                     client_name: document.getElementById('c_name').value, 
                     client_phone: document.getElementById('c_phone').value,
@@ -521,7 +521,7 @@
             editingId = id; 
             document.getElementById('modal-title').innerText = "Izmeni Termin";
             document.getElementById('c_name').value = a.client_name || ""; 
-            document.getElementById('c_phone').value = a.client_phone || ""; // Mapiranje na polje iz baze
+            document.getElementById('c_phone').value = a.client_phone || ""; // Mapiranje nazad iz baze
             document.getElementById('c_email').value = a.client_email || ""; 
             document.getElementById('c_insta').value = a.client_instagram || "";
             
