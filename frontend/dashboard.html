@@ -33,6 +33,13 @@
         .main { flex: 1; padding: 40px; overflow-y: auto; background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.05), transparent); }
         h1 { font-weight: 800; font-size: 2.8rem; margin-bottom: 40px; letter-spacing: -1px; }
 
+        /* Sredjeni filteri u jednoj liniji */
+        .filter-group { display: flex; gap: 10px; margin-bottom: 30px; align-items: center; flex-wrap: wrap; }
+        .filter-select { 
+            background: #020617; border: 1px solid #1e293b; color: white; padding: 8px 15px; 
+            border-radius: 10px; font-size: 0.85rem; cursor: pointer; min-width: 120px;
+        }
+
         .chart-container { 
             background: var(--card); border: 1px solid rgba(255,255,255,0.05); 
             padding: 25px; border-radius: 30px; margin-bottom: 30px; height: 300px;
@@ -90,6 +97,7 @@
             .main { padding: 20px; }
             h1 { font-size: 1.8rem; margin-bottom: 25px; }
             .stats-grid { grid-template-columns: 1fr; gap: 10px; }
+            .filter-group { flex-direction: row; }
         }
     </style>
 </head>
@@ -226,7 +234,10 @@
             const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', user.id).single();
             userProfile = profile;
             if (profile?.role === 'owner') {
-                document.querySelectorAll('.owner-only').forEach(el => el.style.display = 'flex');
+                document.querySelectorAll('.owner-only').forEach(el => {
+                    if(el.tagName === 'SELECT') el.style.display = 'block';
+                    else el.style.display = 'flex';
+                });
                 popuniArtistFilter();
             }
             popuniMeseceIGodine();
@@ -234,7 +245,9 @@
         }
 
         async function osveziPodatke() {
-            const m = document.getElementById('month-select').value, y = document.getElementById('year-select').value, artF = document.getElementById('artist-filter').value;
+            const m = document.getElementById('month-select').value, y = document.getElementById('year-select').value;
+            const artSelect = document.getElementById('artist-filter');
+            const artF = artSelect ? artSelect.value : 'all';
             const selM = `${y}-${m}`;
             
             let q = supabaseClient.from('appointments').select('*').eq('studio_id', userProfile.studio_id);
@@ -255,7 +268,7 @@
                     const tSum = (userProfile.role === 'owner' && artF === 'all') ? fTroskovi.filter(t => (t.currency || 'EUR') === cur).reduce((s, t) => s + Number(t.amount), 0) : 0;
                     const profit = filtered.filter(a => (a.currency || 'EUR') === cur).reduce((s, a) => {
                         let udeo = 0;
-                        if (a.status === 'završeno') udeo = (userProfile.role === 'owner') ? a.studio_share : (a.total_price - a.studio_share);
+                        if (a.status === 'završeno') udeo = (userProfile.role === 'owner') ? (a.studio_share || 0) : (a.total_price - (a.studio_share || 0));
                         else if (a.status === 'no-show' && a.deposit > 0) udeo = (userProfile.role === 'owner') ? a.deposit : 0;
                         return s + udeo;
                     }, 0);
@@ -275,61 +288,70 @@
             }
         }
 
-        async function ucitajKlijente() {
-            const { data } = await supabaseClient.from('appointments').select('*').eq('studio_id', userProfile.studio_id).order('appointment_time', {ascending: false});
-            let html = '', map = {};
-            if (data) {
-                data.forEach(a => { if(!map[a.client_name]) map[a.client_name] = a; });
-                Object.values(map).forEach(c => {
-                    html += `<tr>
-                        <td><strong>${c.client_name}</strong></td>
-                        <td>${c.client_phone || '-'}</td>
-                        <td>${c.client_instagram || '-'}</td>
-                        <td>${new Date(c.appointment_time).toLocaleDateString('sr-RS')}</td>
-                        <td style="text-align:right;"><button class="btn-action-done" onclick="otvoriModalNoviSaKlijentom('${c.client_name}','${c.client_phone}','${c.client_instagram}')">+ NOVI</button></td>
-                    </tr>`;
-                });
+        // --- POPRAVLJENA SAVE FUNKCIJA ---
+        async function saveData() {
+            const saveBtn = document.getElementById('save-btn');
+            const c_name = document.getElementById('c_name').value;
+            const app_time = document.getElementById('app_time').value;
+
+            if(!c_name || !app_time) return alert("Ime i Datum su obavezni!");
+
+            saveBtn.disabled = true; 
+            saveBtn.innerText = "ČUVANJE...";
+
+            try {
+                const cena = parseFloat(document.getElementById('total_price').value) || 0;
+                const procenat = parseFloat(document.getElementById('artist_percent').value) || 50;
+                const depozit = parseFloat(document.getElementById('deposit_amt').value) || 0;
+                
+                const payload = {
+                    client_name: c_name,
+                    client_phone: document.getElementById('c_phone').value,
+                    client_instagram: document.getElementById('c_insta').value,
+                    appointment_time: app_time, 
+                    total_price: cena,
+                    deposit: depozit,
+                    artist_percentage: procenat,
+                    studio_share: cena * ((100 - procenat) / 100),
+                    payment_type: document.getElementById('payment_type').value,
+                    currency: selectedCurrency,
+                    studio_id: userProfile.studio_id
+                };
+
+                if (editingId) {
+                    const { error } = await supabaseClient.from('appointments').update(payload).eq('id', editingId);
+                    if(error) throw error;
+                } else {
+                    // Kod novog unosa dodajemo artist_id i inicijalne statuse
+                    payload.artist_id = userProfile.id;
+                    payload.status = 'zakazano';
+                    payload.payout_status = 'nema';
+                    const { error } = await supabaseClient.from('appointments').insert([payload]);
+                    if(error) throw error;
+                }
+
+                zatvoriModal(); 
+                await osveziPodatke();
+            } catch (err) { 
+                console.error(err);
+                alert("Greška pri čuvanju: " + err.message); 
+            } finally { 
+                saveBtn.disabled = false; 
+                saveBtn.innerText = "SAČUVAJ"; 
             }
-            document.getElementById('clients-list-body').innerHTML = html || '<tr><td colspan="5">Nema klijenata</td></tr>';
         }
 
-        async function ucitajArtiste() {
-            const { data: artisti } = await supabaseClient.from('profiles').select('*').eq('studio_id', userProfile.studio_id);
-            const { data: termini } = await supabaseClient.from('appointments').select('*').eq('studio_id', userProfile.studio_id).eq('status', 'završeno');
-            let html = '';
-            artisti?.forEach(a => {
-                const mojiTermini = termini?.filter(t => t.artist_id === a.id) || [];
-                const promet = mojiTermini.reduce((s,t) => s + Number(t.total_price), 0);
-                html += `<tr><td><strong>${a.full_name}</strong></td><td>${a.role}</td><td>${mojiTermini.length}</td><td>€${promet}</td>
-                <td style="text-align:right;"><button class="btn-action-delete" onclick="obrisiProfil('${a.id}')">Ukloni</button></td></tr>`;
-            });
-            document.getElementById('artists-list-body').innerHTML = html;
-        }
-
-        async function napraviArtista() {
-            const name = document.getElementById('new-artist-name').value;
-            const email = document.getElementById('new-artist-email').value;
-            const pass = document.getElementById('new-artist-pass').value;
-            if(!name || !email || !pass) return alert("Popuni sva polja");
-            
-            const { data, error } = await supabaseClient.auth.signUp({ email, password: pass, options: { data: { full_name: name } } });
-            if(error) return alert(error.message);
-            
-            await supabaseClient.from('profiles').insert([{ id: data.user.id, full_name: name, role: 'artist', studio_id: userProfile.studio_id }]);
-            alert("Artist kreiran!");
-            ucitajArtiste();
-        }
-
-        // --- POMOĆNE FUNKCIJE KOJE SI IMAO ---
+        // --- OSTALE FUNKCIJE ---
         function popuniMeseceIGodine() {
             const mFilter = document.getElementById('month-select'), yFilter = document.getElementById('year-select');
             const meseci = ["Januar", "Februar", "Mart", "April", "Maj", "Jun", "Jul", "Avgust", "Septembar", "Oktobar", "Novembar", "Decembar"];
             const d = new Date();
+            mFilter.innerHTML = ''; yFilter.innerHTML = '';
             meseci.forEach((ime, i) => {
                 let opt = document.createElement('option'); opt.value = String(i + 1).padStart(2, '0'); opt.innerHTML = ime;
                 if(i === d.getMonth()) opt.selected = true; mFilter.appendChild(opt);
             });
-            for(let y = 2026; y <= 2030; y++) {
+            for(let y = 2025; y <= 2030; y++) {
                 let opt = document.createElement('option'); opt.value = y; opt.innerHTML = y;
                 if(y === d.getFullYear()) opt.selected = true; yFilter.appendChild(opt);
             }
@@ -338,6 +360,8 @@
         async function popuniArtistFilter() {
             const { data } = await supabaseClient.from('profiles').select('id, full_name').eq('studio_id', userProfile.studio_id);
             const filter = document.getElementById('artist-filter');
+            if(!filter) return;
+            filter.innerHTML = '<option value="all">Svi Artisti</option>';
             data?.forEach(a => { let opt = document.createElement('option'); opt.value = a.id; opt.innerHTML = a.full_name; filter.appendChild(opt); });
         }
 
@@ -353,30 +377,11 @@
             document.getElementById('tabela-div').innerHTML = h + `</table>`;
         }
 
-        async function saveData() {
-            const saveBtn = document.getElementById('save-btn');
-            saveBtn.disabled = true; saveBtn.innerText = "ČUVANJE...";
-            try {
-                const cena = parseFloat(document.getElementById('total_price').value) || 0;
-                const procenat = parseFloat(document.getElementById('artist_percent').value) || 50;
-                const payload = {
-                    client_name: document.getElementById('c_name').value, client_phone: document.getElementById('c_phone').value,
-                    client_instagram: document.getElementById('c_insta').value, appointment_time: document.getElementById('app_time').value, 
-                    total_price: cena, deposit: parseFloat(document.getElementById('deposit_amt').value) || 0,
-                    artist_percentage: procenat, studio_share: cena * ((100 - procenat) / 100),
-                    payment_type: document.getElementById('payment_type').value, currency: selectedCurrency
-                };
-                if (editingId) await supabaseClient.from('appointments').update(payload).eq('id', editingId);
-                else await supabaseClient.from('appointments').insert([{ ...payload, artist_id: userProfile.id, studio_id: userProfile.studio_id, status: 'zakazano', payout_status: 'nema' }]);
-                zatvoriModal(); await osveziPodatke();
-            } catch (err) { alert(err.message); } finally { saveBtn.disabled = false; saveBtn.innerText = "SAČUVAJ"; }
-        }
-
         function inicijalizujGrafikon(apps, y, m) {
             const days = new Date(y, m, 0).getDate();
             const data = Array(days).fill(0);
             apps.filter(a => a.status === 'završeno' && (a.currency || 'EUR') === 'EUR').forEach(a => {
-                data[new Date(a.appointment_time).getDate()-1] += (userProfile.role === 'owner' ? a.studio_share : a.total_price - a.studio_share);
+                data[new Date(a.appointment_time).getDate()-1] += (userProfile.role === 'owner' ? (a.studio_share || 0) : (a.total_price - (a.studio_share || 0)));
             });
             const ctx = document.getElementById('revenueChart').getContext('2d');
             if(myChart) myChart.destroy();
@@ -398,32 +403,32 @@
             document.getElementById('expenses-list-body').innerHTML = html;
         }
 
-        function otvoriModalNoviSaKlijentom(n, p, i) {
-            otvoriModalNovi();
-            document.getElementById('c_name').value = n;
-            document.getElementById('c_phone').value = p === '-' ? '' : p;
-            document.getElementById('c_insta').value = i === '-' ? '' : i;
-            prikaziSekciju('dashboard');
-        }
-
         function prikaziSekciju(s) {
-            ['dashboard','klijenti','artisti','troskovi'].forEach(id => document.getElementById(id+'-section').style.display = 'none');
+            ['dashboard','klijenti','artisti','troskovi'].forEach(id => {
+                const sec = document.getElementById(id+'-section');
+                if(sec) sec.style.display = 'none';
+            });
             document.getElementById(s+'-section').style.display = 'block';
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById('nav-'+(s==='dashboard'?'dash':s)).classList.add('active');
+            const activeNav = document.getElementById('nav-'+(s==='dashboard'?'dash':s));
+            if(activeNav) activeNav.classList.add('active');
             if(s==='klijenti') ucitajKlijente(); if(s==='artisti') ucitajArtiste(); if(s==='troskovi') ucitajTroskove();
         }
 
         function otvoriModalNovi() {
             editingId = null; setCurrency('EUR');
+            document.getElementById('modal-title').innerText = "Novi Termin";
             document.querySelectorAll('#bookingModal input').forEach(i => i.value = "");
-            document.getElementById('deposit_amt').value = "0"; document.getElementById('artist_percent').value = "50";
+            document.getElementById('deposit_amt').value = "0"; 
+            document.getElementById('artist_percent').value = "50";
             document.getElementById('bookingModal').style.display = 'block';
         }
 
         function otvoriModalEdit(id) {
             const a = globalApps.find(x => x.id === id); if(!a) return;
-            editingId = id; setCurrency(a.currency || 'EUR');
+            editingId = id; 
+            setCurrency(a.currency || 'EUR');
+            document.getElementById('modal-title').innerText = "Izmeni Termin";
             document.getElementById('c_name').value = a.client_name;
             document.getElementById('c_phone').value = a.client_phone || "";
             document.getElementById('c_insta').value = a.client_instagram || "";
@@ -431,6 +436,7 @@
             document.getElementById('total_price').value = a.total_price;
             document.getElementById('deposit_amt').value = a.deposit;
             document.getElementById('artist_percent').value = a.artist_percentage;
+            document.getElementById('payment_type').value = a.payment_type || 'Cash';
             document.getElementById('bookingModal').style.display = 'block';
         }
 
@@ -438,7 +444,6 @@
         async function updatePayout(id) { if(confirm("Isplaćeno?")) { await supabaseClient.from('appointments').update({ payout_status: 'isplaćeno' }).eq('id', id); osveziPodatke(); } }
         async function obrisiTermin(id) { if(confirm("Obriši?")) { await supabaseClient.from('appointments').delete().eq('id', id); osveziPodatke(); } }
         async function obrisiTrosak(id) { await supabaseClient.from('expenses').delete().eq('id', id); ucitajTroskove(); osveziPodatke(); }
-        async function obrisiProfil(id) { if(confirm("Obrisaćeš artistu?")) { await supabaseClient.from('profiles').delete().eq('id', id); ucitajArtiste(); } }
         function zatvoriModal() { document.getElementById('bookingModal').style.display = 'none'; }
         async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
 
