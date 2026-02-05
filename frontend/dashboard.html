@@ -1,4 +1,4 @@
-<<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="sr">
 <head>
     <meta charset="UTF-8">
@@ -72,6 +72,16 @@
             width: 100%; padding: 15px; margin-bottom: 15px; border-radius: 12px; 
             border: 1px solid #1e293b; background: #020617; color: white; font-family: 'Poppins';
             box-sizing: border-box; font-size: 0.9rem;
+        }
+
+        /* Sređena strelica za filter */
+        #month-filter {
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1em;
+            padding-right: 3rem !important;
         }
 
         .btn-action-done { background: rgba(16, 185, 129, 0.1); border: 1px solid #10b981; color: #10b981; padding: 8px 12px; border-radius: 10px; cursor: pointer; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; margin-right: 5px; }
@@ -180,24 +190,33 @@
 
         let userProfile = null;
 
-        // NOVO: Funkcija za popunjavanje filtera meseci
         function popuniMesece() {
             const filter = document.getElementById('month-filter');
+            filter.innerHTML = ''; // Brišemo sve da se ne bi dupliralo
+            
             const meseci = ["Januar", "Februar", "Mart", "April", "Maj", "Jun", "Jul", "Avgust", "Septembar", "Oktobar", "Novembar", "Decembar"];
             const d = new Date();
-            const currM = d.getMonth();
-            const currY = d.getFullYear();
+            const trenutniMesec = d.getMonth() + 1;
+            const trenutnaGodina = d.getFullYear();
 
-            for (let i = 0; i < 6; i++) {
-                let m = currM - i;
-                let y = currY;
-                if (m < 0) { m += 12; y -= 1; }
-                let val = `${y}-${String(m + 1).padStart(2, '0')}`;
-                let opt = document.createElement('option');
-                opt.value = val;
-                opt.innerHTML = `${meseci[m]} ${y}.`;
-                filter.appendChild(opt);
-            }
+            // Prikazujemo prošlu, trenutnu i sledeću godinu hronološki
+            const godine = [trenutnaGodina - 1, trenutnaGodina, trenutnaGodina + 1];
+
+            godine.forEach(g => {
+                meseci.forEach((mIme, index) => {
+                    const mBroj = String(index + 1).padStart(2, '0');
+                    const val = `${g}-${mBroj}`;
+                    
+                    let opt = document.createElement('option');
+                    opt.value = val;
+                    opt.innerHTML = `${mIme} ${g}.`;
+                    
+                    if (index + 1 === trenutniMesec && g === trenutnaGodina) {
+                        opt.selected = true;
+                    }
+                    filter.appendChild(opt);
+                });
+            });
         }
 
         async function initDashboard() {
@@ -216,7 +235,7 @@
                     document.getElementById('main-greeting').innerText = 'Moji Termini';
                 }
             }
-            popuniMesece(); // Pozivamo popunjavanje filtera
+            popuniMesece();
             osveziPodatke();
         }
 
@@ -294,22 +313,17 @@
 
         async function osveziPodatke() {
             try {
-                const selectedMonth = document.getElementById('month-filter').value; // npr "2026-02"
+                const selectedMonth = document.getElementById('month-filter').value;
                 const { data: { user } } = await supabaseClient.auth.getUser();
                 
-                // Povuci sve termine za studio
                 let query = supabaseClient.from('appointments').select('*').eq('studio_id', userProfile.studio_id);
                 if (userProfile.role !== 'owner') { query = query.eq('artist_id', user.id); }
                 const { data: allApps } = await query.order('appointment_time', {ascending: true});
 
-                // Povuci sve troškove za studio
                 const { data: allTroskovi } = await supabaseClient.from('expenses').select('*').eq('studio_id', userProfile.studio_id);
 
                 if (allApps) {
-                    // Filtriraj termine po mesecu
                     const apps = allApps.filter(a => a.appointment_time.startsWith(selectedMonth));
-                    
-                    // Filtriraj troškove po mesecu (koristimo created_at)
                     const troskovi = allTroskovi ? allTroskovi.filter(t => t.created_at.startsWith(selectedMonth)) : [];
                     const ukupniTroskovi = troskovi.reduce((s, t) => s + (Number(t.amount) || 0), 0);
 
