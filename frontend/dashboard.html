@@ -71,8 +71,12 @@
             box-shadow: 0 25px 50px rgba(0,0,0,0.5);
         }
 
+        .modal-label {
+            display: block; margin-bottom: 8px; font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 1px;
+        }
+
         input { 
-            width: 100%; padding: 18px; margin-bottom: 15px; border-radius: 15px; 
+            width: 100%; padding: 18px; margin-bottom: 20px; border-radius: 15px; 
             border: 1px solid #1e293b; background: #020617; color: white; font-family: 'Poppins';
             box-sizing: border-box; font-size: 1rem;
         }
@@ -103,14 +107,27 @@
 
     <div id="bookingModal" class="modal">
         <div class="modal-content">
-            <h2 style="margin-top:0; font-size: 2rem;">Novi Termin</h2>
-            <input type="text" id="c_name" placeholder="Ime klijenta">
-            <input type="text" id="c_insta" placeholder="Instagram (@)">
-            <input type="email" id="c_email" placeholder="Email klijenta">
+            <h2 style="margin-top:0; font-size: 2rem; margin-bottom: 30px;">Novi Termin</h2>
+            
+            <span class="modal-label">Ime klijenta</span>
+            <input type="text" id="c_name" placeholder="Npr. Marko Marković">
+            
+            <span class="modal-label">Instagram (@)</span>
+            <input type="text" id="c_insta" placeholder="@korisnik">
+            
+            <span class="modal-label">Email klijenta</span>
+            <input type="email" id="c_email" placeholder="klijent@mail.com">
+            
+            <span class="modal-label">Datum i vreme termina</span>
             <input type="datetime-local" id="app_time">
-            <input type="number" id="total_price" placeholder="Ukupna cena (€)">
-            <input type="number" id="artist_percent" value="50" placeholder="Procenat artista %">
-            <button class="btn-add" style="width:100%; margin-top: 20px;" onclick="saveData()">SAČUVAJ U BAZU</button>
+            
+            <span class="modal-label">Ukupna cena (€)</span>
+            <input type="number" id="total_price" placeholder="Npr. 100">
+            
+            <span class="modal-label">Procenat artista (%)</span>
+            <input type="number" id="artist_percent" value="50">
+            
+            <button class="btn-add" style="width:100%; margin-top: 10px;" onclick="saveData()">SAČUVAJ U BAZU</button>
             <button onclick="document.getElementById('bookingModal').style.display='none'" style="background:none; border:none; color:#64748b; width:100%; cursor:pointer; margin-top:15px; font-weight:600;">Otkaži</button>
         </div>
     </div>
@@ -149,6 +166,12 @@
                 total_price: parseFloat(document.getElementById('total_price').value),
                 artist_percentage: parseFloat(document.getElementById('artist_percent').value)
             };
+
+            if(!d.appointment_time) {
+                alert("Molimo vas izaberite datum i vreme termina!");
+                return;
+            }
+
             const { error } = await supabase.from('appointments').insert([d]);
             if (error) alert("Greška: " + error.message); else location.reload();
         }
