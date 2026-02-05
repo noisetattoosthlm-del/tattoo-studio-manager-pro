@@ -74,7 +74,6 @@
     </div>
 
     <script>
-// Konfiguracija (Tvoji podaci)
 const supabaseUrl = 'https://yunuwkjydqzgkqtbgwup.supabase.co'; 
 const supabaseKey = 'sb_publishable_J66CdYuykkwjyulPJp2O1Q_e0ZZLXe7'; 
 const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
@@ -88,7 +87,7 @@ async function signIn() {
     statusDiv.innerText = "Provera podataka...";
     statusDiv.style.color = "#3b82f6";
 
-    // 1. Prijava korisnika
+    // 1. Prijava
     const { data, error } = await supabaseClient.auth.signInWithPassword({
         email: email,
         password: password,
@@ -100,21 +99,28 @@ async function signIn() {
         return;
     }
 
-    // 2. Provera uloge iz tabele "profiles"
-    const { data: profile, error: profileError } = await supabaseClient
+    // 2. Provera profila (sa automatskim kreiranjem ako fali)
+    let { data: profile } = await supabaseClient
         .from('profiles')
-        .select('role')
+        .select('*')
         .eq('id', data.user.id)
         .single();
 
+    // Ako profil ne postoji (što je verovatno uzrok tvog problema), napravi ga odmah
+    if (!profile) {
+        statusDiv.innerText = "Inicijalizacija profila...";
+        const { data: newProfile, error: createError } = await supabaseClient
+            .from('profiles')
+            .insert([{ id: data.user.id, role: 'owner', full_name: 'Vlasnik' }])
+            .select()
+            .single();
+        profile = newProfile;
+    }
+
     if (profile) {
         statusDiv.style.color = "#00ff00";
-        statusDiv.innerText = "Prijavljen kao: " + profile.role.toUpperCase();
-        
-        // --- KLJUČNI DODATAK: PREBACIVANJE NA DASHBOARD ---
-        setTimeout(() => {
-            window.location.href = 'dashboard.html';
-        }, 1000); // Mala pauza od 1 sekunde da korisnik vidi potvrdu
+        statusDiv.innerText = "Uspešna prijava!";
+        window.location.href = 'dashboard.html';
     }
 }
     </script>
