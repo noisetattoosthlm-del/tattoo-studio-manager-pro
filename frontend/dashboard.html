@@ -99,7 +99,7 @@
 <body>
 
     <div class="sidebar">
-        <div class="logo">Tattoo Studio Pro</div>
+        <div class="logo">Tattoo Studio Management Pro</div>
         <div class="nav-item active" id="nav-dash" onclick="prikaziSekciju('dashboard')">Dashboard</div>
         <div class="nav-item" id="nav-klijenti" onclick="prikaziSekciju('klijenti')">Klijenti</div>
         <div class="nav-item owner-only" id="nav-artisti" onclick="prikaziSekciju('artisti')">Artisti</div>
@@ -116,14 +116,14 @@
             <select id="artist-filter" class="filter-select owner-only" onchange="osveziPodatke()">
                 <option value="all">Svi Artisti</option>
             </select>
-            <button class="btn-export" onclick="window.print()">📄 PDF</button>
+            <button class="btn-export" onclick="window.print()">📄 IZVEŠTAJ (PDF)</button>
         </div>
 
         <div class="chart-container"><canvas id="revenueChart"></canvas></div>
 
         <div class="stats-grid">
             <div class="stat-card"><h3>Ugovoreno</h3><p id="total-sum">0</p></div>
-            <div class="stat-card"><h3>Čist Profit</h3><p id="studio-sum">0</p></div>
+            <div class="stat-card"><h3><span id="profit-label">Čist Profit</span></h3><p id="studio-sum">0</p></div>
             <div class="stat-card"><h3>Depoziti</h3><p id="deposit-sum">0</p></div>
         </div>
         <button class="btn-add" onclick="otvoriModalNovi()">+ NOVI TERMIN</button>
@@ -135,18 +135,18 @@
         <div class="table-container"><table><thead><tr><th>Klijent</th><th>Mobilni</th><th>Instagram</th><th>Zadnji Termin</th><th style="text-align:right;">Akcije</th></tr></thead><tbody id="clients-list-body"></tbody></table></div>
     </div>
 
-    <div class="main" id="artists-section" style="display:none;">
-        <h1>Artisti</h1>
+    <div class="main" id="artisti-section" style="display:none;">
+        <h1>Upravljanje Artistima</h1>
         <div class="table-container"><table><thead><tr><th>Artist</th><th>Uloga</th><th>Termini</th><th>Promet</th><th style="text-align:right;">Akcije</th></tr></thead><tbody id="artists-list-body"></tbody></table></div>
     </div>
 
     <div class="main" id="troskovi-section" style="display:none;">
-        <h1>Troškovi</h1>
+        <h1>Troškovi Studija</h1>
         <div style="background: var(--card); padding: 30px; border-radius: 24px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.05);">
-            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                <input type="text" id="exp-title" placeholder="Opis" style="flex:2;">
-                <input type="number" id="exp-amount" placeholder="Iznos" style="flex:1;">
-                <select id="exp-currency" style="flex:0.5; min-width: 80px;"><option value="EUR">EUR</option><option value="RSD">RSD</option></select>
+            <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
+                <input type="text" id="exp-title" placeholder="Opis" style="flex:2; margin-bottom:0;">
+                <input type="number" id="exp-amount" placeholder="Iznos" style="flex:1; margin-bottom:0;">
+                <select id="exp-currency" style="flex:0.5; min-width:80px; margin-bottom:0;"><option value="€">EUR (€)</option><option value="din">RSD (din)</option></select>
                 <button class="btn-add" style="margin:0;" onclick="dodajTrosak()">DODAJ</button>
             </div>
         </div>
@@ -155,23 +155,17 @@
 
     <div id="bookingModal" class="modal">
         <div class="modal-content">
-            <h2 id="modal-title">Novi Termin</h2>
+            <h2 id="modal-title" style="margin:0 0 25px 0;">Novi Termin</h2>
             <label class="modal-label">Ime klijenta</label><input type="text" id="c_name">
             <label class="modal-label">Mobilni</label><input type="text" id="c_phone">
-            <label class="modal-label">Instagram</label><input type="text" id="c_insta">
-            <label class="modal-label">Datum</label><input type="datetime-local" id="app_time">
+            <label class="modal-label">Instagram (@)</label><input type="text" id="c_insta">
+            <label class="modal-label">Datum i vreme</label><input type="datetime-local" id="app_time">
             
             <div style="display: flex; gap: 10px;">
-                <div style="flex:2">
-                    <label class="modal-label">Cena</label>
-                    <input type="number" id="total_price">
-                </div>
+                <div style="flex:2"><label class="modal-label">Cena</label><input type="number" id="total_price"></div>
                 <div style="flex:1">
                     <label class="modal-label">Valuta</label>
-                    <select id="currency_choice">
-                        <option value="EUR">EUR (€)</option>
-                        <option value="RSD">RSD (din)</option>
-                    </select>
+                    <select id="currency_choice"><option value="€">EUR (€)</option><option value="din">RSD (din)</option></select>
                 </div>
             </div>
 
@@ -182,9 +176,9 @@
             
             <label class="modal-label">Plaćanje</label>
             <select id="payment_type"><option value="Cash">Cash 💵</option><option value="Card">Card 💳</option></select>
-
-            <button id="save-btn" class="btn-add" style="width:100%;" onclick="saveData()">SAČUVAJ</button>
-            <button onclick="zatvoriModal()" style="background:none; border:none; color:#64748b; width:100%; cursor:pointer; font-weight:600;">Otkaži</button>
+            
+            <button id="save-btn" class="btn-add" style="width:100%; margin-top: 10px;" onclick="saveData()">SAČUVAJ</button>
+            <button onclick="zatvoriModal()" style="background:none; border:none; color:#64748b; width:100%; cursor:pointer; margin-top:10px; font-weight:600;">Otkaži</button>
         </div>
     </div>
 
@@ -198,9 +192,10 @@
         let globalApps = [];
         let myChart = null;
 
-        // Funkcija za prikaz simbola valute bez konverzije
-        function fVal(n, v) {
-            return v === 'RSD' ? `${n} din` : `€${n}`;
+        // Funkcija za formatiranje prikaza cene sa valutom
+        function formatCena(iznos, valuta) {
+            valuta = valuta || '€';
+            return valuta === '€' ? `€${iznos}` : `${iznos} din`;
         }
 
         async function initDashboard() {
@@ -209,55 +204,70 @@
             const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', user.id).single();
             if (profile) {
                 userProfile = profile;
-                if (profile.role === 'owner') document.querySelectorAll('.owner-only').forEach(el => el.style.display = 'flex');
+                if (profile.role === 'owner') {
+                    document.querySelectorAll('.owner-only').forEach(el => el.style.display = 'flex');
+                    popuniArtistFilter();
+                } else {
+                    document.getElementById('profit-label').innerText = 'Moja Zarada';
+                }
             }
             popuniMeseceIGodine();
             osveziPodatke();
         }
 
         async function osveziPodatke() {
-            const m = document.getElementById('month-select').value;
-            const y = document.getElementById('year-select').value;
-            const artistFilter = document.getElementById('artist-filter').value;
-            const selectedMonthStr = `${y}-${m}`;
+            try {
+                const m = document.getElementById('month-select').value;
+                const y = document.getElementById('year-select').value;
+                const artistFilter = document.getElementById('artist-filter').value;
+                const selectedMonthStr = `${y}-${m}`;
 
-            let query = supabaseClient.from('appointments').select('*').eq('studio_id', userProfile.studio_id);
-            if (userProfile.role !== 'owner') query = query.eq('artist_id', userProfile.id);
-            else if (artistFilter !== 'all') query = query.eq('artist_id', artistFilter);
-            
-            const { data: allApps } = await query;
-            const { data: allTroskovi } = await supabaseClient.from('expenses').select('*').eq('studio_id', userProfile.studio_id);
+                let query = supabaseClient.from('appointments').select('*').eq('studio_id', userProfile.studio_id);
+                if (userProfile.role !== 'owner') query = query.eq('artist_id', userProfile.id);
+                else if (artistFilter !== 'all') query = query.eq('artist_id', artistFilter);
+                
+                const { data: allApps } = await query.order('appointment_time', {ascending: true});
+                if (allApps) {
+                    globalApps = allApps;
+                    let filtered = allApps.filter(a => a.appointment_time && a.appointment_time.startsWith(selectedMonthStr));
+                    
+                    // Napomena: Sabiranje mešanih valuta u stats karticama (prikazuje sumu kao €, ali tabele su tačne)
+                    const totalUgovoreno = filtered.filter(a => a.status !== 'no-show').reduce((s, a) => s + (Number(a.total_price) || 0), 0);
+                    const profit = filtered.reduce((s, a) => {
+                        let udeo = 0;
+                        if (a.status === 'završeno') udeo = (userProfile.role === 'owner') ? a.studio_share : (a.total_price - a.studio_share);
+                        else if (a.status === 'no-show' && a.deposit > 0) udeo = (userProfile.role === 'owner') ? a.deposit : 0;
+                        return s + (Number(udeo) || 0);
+                    }, 0);
 
-            if (allApps) {
-                globalApps = allApps;
-                let filtered = allApps.filter(a => a.appointment_time?.startsWith(selectedMonthStr));
-                
-                // Sabiranje (napomena: ovde sabira brojeve direktno, podrazumevajući da vlasnik prati primarnu valutu)
-                const total = filtered.reduce((s, a) => s + (Number(a.total_price) || 0), 0);
-                const profit = filtered.reduce((s, a) => s + (a.status === 'završeno' ? Number(a.studio_share) : 0), 0);
-                
-                document.getElementById('total-sum').innerText = `€${total}`;
-                document.getElementById('studio-sum').innerText = `€${profit}`;
-                
-                renderujTabelu(filtered);
-                inicijalizujGrafikon(filtered, y, m);
-            }
+                    document.getElementById('total-sum').innerText = `€${totalUgovoreno}`;
+                    document.getElementById('studio-sum').innerText = `€${profit.toFixed(0)}`;
+                    document.getElementById('deposit-sum').innerText = `€${filtered.filter(a => a.status === 'zakazano').reduce((s, a) => s + (Number(a.deposit) || 0), 0)}`;
+                    
+                    renderujTabelu(filtered);
+                    inicijalizujGrafikon(filtered, y, m);
+                }
+            } catch (err) { console.error(err); }
         }
 
-        function renderujTabelu(apps) {
-            let h = `<table><tr><th>Klijent</th><th>Status</th><th>Datum</th><th>Cena</th><th style="text-align:right;">Akcije</th></tr>`;
-            apps.forEach(a => {
-                const datum = new Date(a.appointment_time).toLocaleString('sr-RS', {day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
-                const valuta = a.currency || 'EUR';
+        function renderujTabelu(filteredApps) {
+            let h = `<table><tr><th>Klijent</th><th style="text-align: center;">Status</th><th>Datum</th><th>Cena</th><th style="text-align:right;">Akcije</th></tr>`;
+            filteredApps.forEach(a => {
+                const datum = new Date(a.appointment_time).toLocaleString('sr-RS', {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'});
+                const statusBadge = (a.status === 'završeno') ? '<div class="check-badge">✓</div>' : (a.status === 'no-show') ? '<span class="status-noshow">NO-SHOW</span>' : '<span class="status-zakazano">ZAKAZANO</span>';
+                const isPayed = a.payout_status === 'isplaćeno';
+
                 h += `<tr>
-                    <td><strong>${a.client_name}</strong></td>
-                    <td>${a.status === 'završeno' ? '✅' : '⏳'}</td>
+                    <td><div style="font-weight:800;">${a.client_name}</div></td>
+                    <td style="text-align:center;">${statusBadge}${isPayed ? '<div class="pay-badge">💸</div>' : ''}</td>
                     <td>${datum}h</td>
-                    <td>${fVal(a.total_price, valuta)}</td>
-                    <td style="text-align:right;">
+                    <td>${formatCena(a.total_price, a.currency)}</td>
+                    <td style="text-align:right;"><div class="action-cell">
+                        ${a.status === 'zakazano' ? `<button class="btn-action-done" onclick="updateStatus('${a.id}', 'završeno')">Završi</button><button class="btn-action-noshow" onclick="updateStatus('${a.id}', 'no-show')">No-Show</button>` : ''}
                         <button class="btn-action-edit" onclick="otvoriModalEdit('${a.id}')">✏️</button>
+                        ${a.status === 'završeno' && !isPayed && userProfile.role === 'owner' ? `<button class="btn-action-pay" onclick="updatePayout('${a.id}')">Isplati</button>` : ''}
                         <button class="btn-action-delete" onclick="obrisiTermin('${a.id}')">Obriši</button>
-                    </td></tr>`;
+                    </div></td></tr>`;
             });
             document.getElementById('tabela-div').innerHTML = h + `</table>`;
         }
@@ -273,21 +283,24 @@
                 client_instagram: document.getElementById('c_insta').value,
                 appointment_time: document.getElementById('app_time').value, 
                 total_price: cena, 
-                currency: valuta, // Čuvamo valutu u bazi
+                currency: valuta,
                 deposit: parseFloat(document.getElementById('deposit_amt').value) || 0,
                 artist_percentage: procenat, 
                 studio_share: cena * ((100 - procenat) / 100),
                 payment_type: document.getElementById('payment_type').value
             };
 
-            if (editingId) await supabaseClient.from('appointments').update(payload).eq('id', editingId);
-            else await supabaseClient.from('appointments').insert([{ ...payload, artist_id: userProfile.id, studio_id: userProfile.studio_id, status: 'zakazano' }]);
-            
-            zatvoriModal(); 
-            osveziPodatke();
+            if (editingId) {
+                await supabaseClient.from('appointments').update(payload).eq('id', editingId);
+            } else {
+                await supabaseClient.from('appointments').insert([{ 
+                    ...payload, artist_id: userProfile.id, studio_id: userProfile.studio_id, status: 'zakazano', payout_status: 'nema' 
+                }]);
+            }
+            zatvoriModal(); osveziPodatke();
         }
 
-        // --- OSTALE FUNKCIJE (ZADRŽANE IZ ORIGINALA) ---
+        // Pomoćne funkcije za UI (Zadržane iz tvog koda)
         function popuniMeseceIGodine() {
             const mFilter = document.getElementById('month-select');
             const yFilter = document.getElementById('year-select');
@@ -302,38 +315,80 @@
                 if(y === d.getFullYear()) opt.selected = true; yFilter.appendChild(opt);
             }
         }
-        function otvoriModalNovi() { editingId = null; document.getElementById('bookingModal').style.display = 'block'; }
-        function otvoriModalEdit(id) {
-            const a = globalApps.find(app => app.id === id); if(!a) return;
-            editingId = id; 
-            document.getElementById('c_name').value = a.client_name;
-            document.getElementById('total_price').value = a.total_price;
-            document.getElementById('currency_choice').value = a.currency || 'EUR';
+
+        function prikaziSekciju(sekcija) {
+            document.querySelectorAll('.main').forEach(el => el.style.display = 'none');
+            document.getElementById(sekcija + '-section').style.display = 'block';
+            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+            document.getElementById('nav-' + (sekcija === 'dashboard' ? 'dash' : sekcija)).classList.add('active');
+            if(sekcija === 'troskovi') ucitajTroskove();
+            if(sekcija === 'klijenti') ucitajKlijente();
+        }
+
+        function otvoriModalNovi() {
+            editingId = null; document.getElementById('modal-title').innerText = "Novi Termin";
+            document.querySelectorAll('#bookingModal input').forEach(i => i.value = "");
+            document.getElementById('deposit_amt').value = "0"; document.getElementById('artist_percent').value = "50";
             document.getElementById('bookingModal').style.display = 'block';
         }
-        function zatvoriModal() { document.getElementById('bookingModal').style.display = 'none'; }
-        function prikaziSekciju(s) { 
-            document.querySelectorAll('.main').forEach(m => m.style.display = 'none'); 
-            document.getElementById(s + '-section').style.display = 'block';
-            if(s === 'troskovi') ucitajTroskove();
+
+        function otvoriModalEdit(id) {
+            const a = globalApps.find(app => app.id === id); if(!a) return;
+            editingId = id; document.getElementById('modal-title').innerText = "Izmeni Termin";
+            document.getElementById('c_name').value = a.client_name;
+            document.getElementById('app_time').value = a.appointment_time.substring(0, 16);
+            document.getElementById('total_price').value = a.total_price;
+            document.getElementById('currency_choice').value = a.currency || '€';
+            document.getElementById('bookingModal').style.display = 'block';
         }
+
+        function zatvoriModal() { document.getElementById('bookingModal').style.display = 'none'; }
+        async function updateStatus(id, s) { await supabaseClient.from('appointments').update({ status: s }).eq('id', id); osveziPodatke(); }
+        async function updatePayout(id) { if(confirm("Isplaćeno?")) { await supabaseClient.from('appointments').update({ payout_status: 'isplaćeno' }).eq('id', id); osveziPodatke(); } }
+        async function obrisiTermin(id) { if(confirm("Obriši?")) { await supabaseClient.from('appointments').delete().eq('id', id); osveziPodatke(); } }
+        async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
+
+        // Troškovi funkcije
         async function dodajTrosak() {
             const title = document.getElementById('exp-title').value;
             const amount = document.getElementById('exp-amount').value;
             const currency = document.getElementById('exp-currency').value;
+            if(!title || !amount) return;
             await supabaseClient.from('expenses').insert([{ studio_id: userProfile.studio_id, title, amount, currency }]);
             ucitajTroskove();
         }
+
         async function ucitajTroskove() {
             const { data } = await supabaseClient.from('expenses').select('*').eq('studio_id', userProfile.studio_id);
-            let html = '';
-            if(data) data.forEach(t => { 
-                html += `<tr><td>${t.title}</td><td>${fVal(t.amount, t.currency || 'EUR')}</td><td>${new Date(t.created_at).toLocaleDateString()}</td><td style="text-align:right;"><button class="btn-action-delete" onclick="obrisiTrosak('${t.id}')">X</button></td></tr>`; 
-            });
-            document.getElementById('expenses-list-body').innerHTML = html;
+            let h = '';
+            if(data) data.forEach(t => { h += `<tr><td>${t.title}</td><td style="color:#ef4444;">-${formatCena(t.amount, t.currency)}</td><td>${new Date(t.created_at).toLocaleDateString()}</td><td style="text-align:right;"><button class="btn-action-delete" onclick="obrisiTrosak('${t.id}')">X</button></td></tr>`; });
+            document.getElementById('expenses-list-body').innerHTML = h;
         }
-        async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
-        
+
+        // Klijenti funkcija (zadržana iz tvog koda)
+        async function ucitajKlijente() {
+            const { data } = await supabaseClient.from('appointments').select('*').eq('studio_id', userProfile.studio_id).order('appointment_time', {ascending: false});
+            if (data) {
+                const clientsMap = {};
+                data.forEach(a => { if (!clientsMap[a.client_name]) clientsMap[a.client_name] = { phone: a.client_phone || '-', insta: a.client_instagram || '-', last: a.appointment_time }; });
+                let html = '';
+                Object.keys(clientsMap).forEach(name => {
+                    const c = clientsMap[name];
+                    html += `<tr><td><strong>${name}</strong></td><td>${c.phone}</td><td>${c.insta}</td><td>${new Date(c.last).toLocaleDateString('sr-RS')}</td><td style="text-align:right;"><button class="btn-action-done" onclick="otvoriModalNoviSaKlijentom('${name}', '${c.phone}', '${c.insta}')">+ NOVI</button></td></tr>`;
+                });
+                document.getElementById('clients-list-body').innerHTML = html;
+            }
+        }
+
+        function inicijalizujGrafikon(apps, year, month) {
+            const daysInMonth = new Date(year, month, 0).getDate();
+            const dailyRevenue = Array(daysInMonth).fill(0);
+            apps.forEach(a => { if(a.status === 'završeno') dailyRevenue[new Date(a.appointment_time).getDate()-1] += (userProfile.role === 'owner' ? a.studio_share : a.total_price - a.studio_share); });
+            const ctx = document.getElementById('revenueChart').getContext('2d');
+            if (myChart) myChart.destroy();
+            myChart = new Chart(ctx, { type: 'line', data: { labels: Array.from({length: daysInMonth}, (_, i) => i + 1), datasets: [{ label: 'Zarada', data: dailyRevenue, borderColor: '#3b82f6', fill: true, tension: 0.4 }] }, options: { responsive: true, maintainAspectRatio: false } });
+        }
+
         initDashboard();
     </script>
 </body>
