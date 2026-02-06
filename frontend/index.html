@@ -7,82 +7,32 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        body {
-            background-color: #0a0e17;
-            color: #e2e8f0;
-            font-family: 'Inter', sans-serif;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-            text-align: center;
-        }
-        .container {
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            background: rgba(255, 255, 255, 0.02);
-            padding: 50px;
-            border-radius: 24px;
-            backdrop-filter: blur(10px);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            max-width: 400px;
-            width: 90%;
-        }
-        h1 {
-            font-size: 2.2rem;
-            font-weight: 700;
-            margin-bottom: 10px;
-            background: linear-gradient(135deg, #fff 0%, #3b82f6 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .btn {
-            background: #3b82f6;
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 20px;
-            transition: 0.3s;
-        }
+        body { background-color: #0a0e17; color: #e2e8f0; font-family: 'Inter', sans-serif; display: flex; flex-direction: column; justify-content: center; align-items: center; height: 100vh; margin: 0; text-align: center; }
+        .container { border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.02); padding: 50px; border-radius: 24px; backdrop-filter: blur(10px); box-shadow: 0 20px 50px rgba(0,0,0,0.5); max-width: 400px; width: 90%; }
+        h1 { font-size: 2.2rem; font-weight: 700; margin-bottom: 10px; background: linear-gradient(135deg, #fff 0%, #3b82f6 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .btn { background: #3b82f6; color: white; border: none; padding: 12px 24px; border-radius: 12px; font-weight: 600; cursor: pointer; width: 100%; margin-top: 15px; transition: 0.3s; }
         .btn:hover { background: #2563eb; }
-        input {
-            width: 100%;
-            padding: 12px;
-            margin-top: 10px;
-            border-radius: 8px;
-            border: 1px solid #1e293b;
-            background: #1e293b;
-            color: white;
-            box-sizing: border-box;
-        }
-        .toggle-link {
-            margin-top: 20px;
-            font-size: 0.85rem;
-            color: #64748b;
-            cursor: pointer;
-            text-decoration: underline;
-        }
-        .toggle-link:hover { color: #3b82f6; }
+        .btn-alt { background: transparent; color: #64748b; border: 1px solid #1e293b; margin-top: 10px; }
+        input { width: 100%; padding: 12px; margin-top: 10px; border-radius: 8px; border: 1px solid #1e293b; background: #1e293b; color: white; box-sizing: border-box; }
+        #auth-title { margin-bottom: 5px; }
+        .switch-text { margin-top: 20px; font-size: 0.85rem; color: #64748b; }
+        .switch-link { color: #3b82f6; cursor: pointer; text-decoration: underline; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1 id="form-title">Tattoo Studio Manager Pro</h1>
-        <p id="form-subtitle">Prijavite se u svoj sistem</p>
+        <h1>Tattoo Studio Manager Pro</h1>
+        <p id="auth-desc">Prijavite se u svoj sistem</p>
         
-        <input type="text" id="studio_name" placeholder="Ime Vašeg Studija" style="display: none;">
-        
+        <input type="text" id="full_name" placeholder="Ime i prezime / Ime studija" style="display:none;">
         <input type="email" id="email" placeholder="Vaš Email">
         <input type="password" id="password" placeholder="Lozinka">
         
         <button class="btn" id="main-btn" onclick="handleAuth()">Prijavi se</button>
         
-        <div class="toggle-link" id="toggle-auth" onclick="toggleMode()">Nemaš nalog? Registruj studio</div>
+        <div class="switch-text" id="switch-container">
+            Nemate nalog? <span class="switch-link" onclick="toggleAuth()">Registrujte svoj Studio</span>
+        </div>
         
         <div id="status" style="margin-top: 20px; font-size: 0.8rem; color: #3b82f6;"></div>
     </div>
@@ -92,25 +42,21 @@
         const supabaseKey = 'sb_publishable_J66CdYuykkwjyulPJp2O1Q_e0ZZLXe7'; 
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-        const statusDiv = document.getElementById('status');
         let isLogin = true;
+        const statusDiv = document.getElementById('status');
 
-        function toggleMode() {
+        function toggleAuth() {
             isLogin = !isLogin;
-            document.getElementById('form-title').innerText = isLogin ? 'Tattoo Studio Manager Pro' : 'Novi Studio';
-            document.getElementById('form-subtitle').innerText = isLogin ? 'Prijavite se u svoj sistem' : 'Kreirajte nalog za svoj studio';
-            document.getElementById('main-btn').innerText = isLogin ? 'Prijavi se' : 'Registruj se';
-            document.getElementById('toggle-auth').innerText = isLogin ? 'Nemaš nalog? Registruj studio' : 'Već imaš nalog? Prijavi se';
-            document.getElementById('studio_name').style.display = isLogin ? 'none' : 'block';
-            statusDiv.innerText = "";
+            document.getElementById('full_name').style.display = isLogin ? 'none' : 'block';
+            document.getElementById('auth-desc').innerText = isLogin ? 'Prijavite se u svoj sistem' : 'Otvorite svoj studio nalog';
+            document.getElementById('main-btn').innerText = isLogin ? 'Prijavi se' : 'Registruj Studio';
+            document.getElementById('switch-container').innerHTML = isLogin ? 
+                'Nemate nalog? <span class="switch-link" onclick="toggleAuth()">Registrujte svoj Studio</span>' : 
+                'Već imate nalog? <span class="switch-link" onclick="toggleAuth()">Prijavite se</span>';
         }
 
         async function handleAuth() {
-            if (isLogin) {
-                await signIn();
-            } else {
-                await signUp();
-            }
+            if (isLogin) { await signIn(); } else { await signUp(); }
         }
 
         async function signIn() {
@@ -119,73 +65,50 @@
             statusDiv.innerText = "Provera podataka...";
             
             const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
-
-            if (error) {
-                statusDiv.style.color = "#ff4b2b";
-                statusDiv.innerText = "Greška: " + error.message;
-                return;
-            }
-
-            if (data.user) {
-                statusDiv.style.color = "#00ff00";
-                statusDiv.innerText = "Uspešna prijava!";
-                window.location.href = 'dashboard.html';
-            }
+            if (error) { statusDiv.style.color = "#ff4b2b"; statusDiv.innerText = "Greška: " + error.message; return; }
+            
+            statusDiv.style.color = "#00ff00";
+            statusDiv.innerText = "Uspešna prijava!";
+            window.location.href = 'dashboard.html';
         }
 
         async function signUp() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const studioName = document.getElementById('studio_name').value;
-
-            if (!email || !password || !studioName) {
-                statusDiv.innerText = "Sva polja su obavezna!";
-                statusDiv.style.color = "#ff4b2b";
-                return;
-            }
-
+            const fullName = document.getElementById('full_name').value;
+            
+            if (!fullName) { alert("Unesite ime vlasnika ili studija"); return; }
             statusDiv.innerText = "Kreiranje naloga...";
-            statusDiv.style.color = "#3b82f6";
 
-            // 1. Registracija korisnika
-            const { data: authData, error: authError } = await supabaseClient.auth.signUp({ email, password });
+            const { data, error } = await supabaseClient.auth.signUp({
+                email, password, options: { data: { full_name: fullName } }
+            });
 
-            if (authError) {
-                statusDiv.innerText = "Greška: " + authError.message;
-                return;
-            }
+            if (error) { statusDiv.style.color = "#ff4b2b"; statusDiv.innerText = "Greška: " + error.message; return; }
 
-            const userId = authData.user.id;
+            if (data.user) {
+                // 1. Generiši unikatan kod za studio (npr. STUDIO-XXXX)
+                const studioCode = 'ST-' + Math.random().toString(36).substring(2, 7).toUpperCase();
+                
+                // 2. Napravi Studio
+                const { data: studio, error: sErr } = await supabaseClient.from('studios').insert([{
+                    name: fullName + " Studio",
+                    owner_id: data.user.id,
+                    studio_code: studioCode
+                }]).select().single();
 
-            // 2. Kreiranje Studija (automatski generišemo kod)
-            const studioCode = Math.random().toString(36).substring(2, 8).toUpperCase();
-            const { data: studioData, error: studioError } = await supabaseClient
-                .from('studios')
-                .insert([{ name: studioName, studio_code: studioCode, owner_id: userId }])
-                .select()
-                .single();
+                if (sErr) { console.error(sErr); }
 
-            if (studioError) {
-                statusDiv.innerText = "Greška kod studija: " + studioError.message;
-                return;
-            }
-
-            // 3. Kreiranje Profila vlasnika
-            const { error: profileError } = await supabaseClient
-                .from('profiles')
-                .insert([{ 
-                    id: userId, 
-                    role: 'owner', 
-                    full_name: 'Vlasnik', 
-                    studio_id: studioData.id 
+                // 3. Napravi Profile za Owner-a
+                await supabaseClient.from('profiles').insert([{
+                    id: data.user.id,
+                    full_name: fullName,
+                    role: 'owner',
+                    studio_id: studio.id
                 }]);
 
-            if (profileError) {
-                statusDiv.innerText = "Greška kod profila: " + profileError.message;
-            } else {
-                statusDiv.style.color = "#00ff00";
-                statusDiv.innerText = "Uspešno! Proverite email za potvrdu ili se prijavite.";
-                setTimeout(() => toggleMode(), 2000);
+                statusDiv.innerText = "Uspešno! Studio kod: " + studioCode;
+                setTimeout(() => { window.location.href = 'dashboard.html'; }, 2000);
             }
         }
     </script>
