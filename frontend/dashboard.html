@@ -28,7 +28,7 @@
         .nav-item:hover { background: var(--card); color: white; transform: translateX(8px); }
         .nav-item.active { background: rgba(59, 130, 246, 0.1); color: var(--accent); }
 
-        .owner-only { display: none !important; } /* Dodato important da se ne bi sakrivali greskom */
+        .owner-only { display: none !important; } 
 
         .main { flex: 1; padding: 40px; overflow-y: auto; background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.05), transparent); }
         h1 { font-weight: 800; font-size: 2.8rem; margin-bottom: 40px; letter-spacing: -1px; }
@@ -206,13 +206,17 @@
         let myChart = null;
 
         async function initDashboard() {
-            // Čistimo keš pretraživača da izbegnemo stare netačne ID-eve
-            localStorage.clear();
+            // 1. Provera sesije bez brisanja localStorage-a da ne bi pukao login
+            const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+            
+            if (sessionError || !session) {
+                window.location.href = 'index.html';
+                return;
+            }
 
-            const { data: { user } } = await supabaseClient.auth.getUser();
-            if (!user) { window.location.href = 'index.html'; return; }
+            const user = session.user;
 
-            // Uzimamo profil i studio informacije
+            // 2. Uzimamo profil i studio informacije
             const { data: profile, error } = await supabaseClient.from('profiles')
                 .select('*, studios(*)')
                 .eq('id', user.id)
@@ -222,11 +226,10 @@
                 userProfile = profile;
                 studioInfo = profile.studios;
                 
-                console.log("Logovan kao:", profile.role, "Studio ID:", profile.studio_id);
+                console.log("Uspešan ulaz. Uloga:", profile.role);
 
-                // Provera uloge - koristimo 'owner'
+                // Silom prikazujemo elemente za ownera ako je uloga owner
                 if (profile.role === 'owner') {
-                    // Silom prikazujemo elemente za ownera
                     document.querySelectorAll('.owner-only').forEach(el => {
                         el.style.setProperty('display', 'block', 'important');
                     });
@@ -239,12 +242,9 @@
                     document.getElementById('profit-label').innerText = 'Moja Zarada';
                     document.getElementById('main-greeting').innerText = 'Moji Termini';
                 }
-            } else {
-                console.error("Profil nije pronađen!");
             }
 
             popuniMeseceIGodine();
-            // Mali delay pre učitavanja podataka da Supabase "prodiše"
             setTimeout(osveziPodatke, 500);
         }
 
@@ -274,9 +274,6 @@
             const artistFilter = document.getElementById('artist-filter').value;
             const selectedMonthStr = `${y}-${m}`;
 
-            console.log("Osvežavam za studio:", userProfile.studio_id, "Mesec:", selectedMonthStr);
-
-            // Osnovni upit uvek po studio_id
             let query = supabaseClient.from('appointments').select('*').eq('studio_id', userProfile.studio_id);
             
             if (userProfile.role !== 'owner') {
