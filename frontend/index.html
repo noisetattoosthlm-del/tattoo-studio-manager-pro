@@ -77,8 +77,9 @@
             const password = document.getElementById('password').value;
             const fullName = document.getElementById('full_name').value;
             
-            if (!fullName) { alert("Unesite ime vlasnika ili studija"); return; }
+            if (!fullName || !email || !password) { alert("Sva polja su obavezna!"); return; }
             statusDiv.innerText = "Kreiranje naloga...";
+            statusDiv.style.color = "#3b82f6";
 
             const { data, error } = await supabaseClient.auth.signUp({
                 email, password, options: { data: { full_name: fullName } }
@@ -87,28 +88,34 @@
             if (error) { statusDiv.style.color = "#ff4b2b"; statusDiv.innerText = "Greška: " + error.message; return; }
 
             if (data.user) {
-                // 1. Generiši unikatan kod za studio (npr. STUDIO-XXXX)
-                const studioCode = 'ST-' + Math.random().toString(36).substring(2, 7).toUpperCase();
-                
-                // 2. Napravi Studio
-                const { data: studio, error: sErr } = await supabaseClient.from('studios').insert([{
-                    name: fullName + " Studio",
-                    owner_id: data.user.id,
-                    studio_code: studioCode
-                }]).select().single();
+                try {
+                    // 1. Napravi Studio (Samo ime i owner_id, bez koda)
+                    const { data: studio, error: sErr } = await supabaseClient.from('studios').insert([{
+                        name: fullName + " Studio",
+                        owner_id: data.user.id
+                    }]).select().single();
 
-                if (sErr) { console.error(sErr); }
+                    if (sErr) throw sErr;
 
-                // 3. Napravi Profile za Owner-a
-                await supabaseClient.from('profiles').insert([{
-                    id: data.user.id,
-                    full_name: fullName,
-                    role: 'owner',
-                    studio_id: studio.id
-                }]);
+                    // 2. Napravi Profile za Owner-a
+                    const { error: pErr } = await supabaseClient.from('profiles').insert([{
+                        id: data.user.id,
+                        full_name: fullName,
+                        role: 'owner',
+                        studio_id: studio.id
+                    }]);
 
-                statusDiv.innerText = "Uspešno! Studio kod: " + studioCode;
-                setTimeout(() => { window.location.href = 'dashboard.html'; }, 2000);
+                    if (pErr) throw pErr;
+
+                    statusDiv.style.color = "#00ff00";
+                    statusDiv.innerText = "Uspešno kreiran studio!";
+                    setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
+
+                } catch (dbError) {
+                    statusDiv.style.color = "#ff4b2b";
+                    statusDiv.innerText = "Greška u bazi: " + dbError.message;
+                    console.error(dbError);
+                }
             }
         }
     </script>
