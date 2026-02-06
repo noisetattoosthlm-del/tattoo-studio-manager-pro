@@ -28,7 +28,7 @@
         .nav-item:hover { background: var(--card); color: white; transform: translateX(8px); }
         .nav-item.active { background: rgba(59, 130, 246, 0.1); color: var(--accent); }
 
-        .owner-only { display: none; }
+        .owner-only { display: none !important; } /* Dodato important da se ne bi sakrivali greskom */
 
         .main { flex: 1; padding: 40px; overflow-y: auto; background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.05), transparent); }
         h1 { font-weight: 800; font-size: 2.8rem; margin-bottom: 40px; letter-spacing: -1px; }
@@ -132,7 +132,7 @@
             <div class="stat-card"><h3>Depoziti</h3><p id="deposit-sum">€0</p></div>
         </div>
         <button class="btn-add" onclick="otvoriModalNovi()">+ NOVI TERMIN</button>
-        <div class="table-container" id="tabela-div">Učitavanje...</div>
+        <div class="table-container" id="tabela-div">Učitavanje podataka...</div>
     </div>
 
     <div class="main" id="klijenti-section" style="display:none;">
@@ -206,32 +206,54 @@
         let myChart = null;
 
         async function initDashboard() {
+            // Čistimo keš pretraživača da izbegnemo stare netačne ID-eve
+            localStorage.clear();
+
             const { data: { user } } = await supabaseClient.auth.getUser();
             if (!user) { window.location.href = 'index.html'; return; }
 
-            const { data: profile, error } = await supabaseClient.from('profiles').select('*, studios(*)').eq('id', user.id).single();
+            // Uzimamo profil i studio informacije
+            const { data: profile, error } = await supabaseClient.from('profiles')
+                .select('*, studios(*)')
+                .eq('id', user.id)
+                .single();
             
             if (profile) {
                 userProfile = profile;
                 studioInfo = profile.studios;
                 
-                // Provera uloge - radimo sa malim slovima jer je tako u bazi
+                console.log("Logovan kao:", profile.role, "Studio ID:", profile.studio_id);
+
+                // Provera uloge - koristimo 'owner'
                 if (profile.role === 'owner') {
-                    document.querySelectorAll('.owner-only').forEach(el => el.style.display = 'block');
-                    if(studioInfo) document.getElementById('display-studio-code').innerText = studioInfo.studio_code;
+                    // Silom prikazujemo elemente za ownera
+                    document.querySelectorAll('.owner-only').forEach(el => {
+                        el.style.setProperty('display', 'block', 'important');
+                    });
+                    
+                    if(studioInfo) {
+                        document.getElementById('display-studio-code').innerText = studioInfo.studio_code;
+                    }
                     await popuniArtistFilter();
                 } else {
                     document.getElementById('profit-label').innerText = 'Moja Zarada';
                     document.getElementById('main-greeting').innerText = 'Moji Termini';
                 }
+            } else {
+                console.error("Profil nije pronađen!");
             }
 
             popuniMeseceIGodine();
-            osveziPodatke();
+            // Mali delay pre učitavanja podataka da Supabase "prodiše"
+            setTimeout(osveziPodatke, 500);
         }
 
         async function popuniArtistFilter() {
-            const { data } = await supabaseClient.from('profiles').select('id, full_name').eq('studio_id', userProfile.studio_id);
+            if(!userProfile?.studio_id) return;
+            const { data } = await supabaseClient.from('profiles')
+                .select('id, full_name')
+                .eq('studio_id', userProfile.studio_id);
+                
             if(data) {
                 const filter = document.getElementById('artist-filter');
                 const modalSelect = document.getElementById('app_artist_id');
@@ -251,6 +273,8 @@
             const y = document.getElementById('year-select').value;
             const artistFilter = document.getElementById('artist-filter').value;
             const selectedMonthStr = `${y}-${m}`;
+
+            console.log("Osvežavam za studio:", userProfile.studio_id, "Mesec:", selectedMonthStr);
 
             // Osnovni upit uvek po studio_id
             let query = supabaseClient.from('appointments').select('*').eq('studio_id', userProfile.studio_id);
@@ -293,7 +317,7 @@
                     }
                 });
 
-                if(userProfile.role === 'owner' && artistFilter === 'all') {
+                if(userProfile.role === 'owner' && (artistFilter === 'all' || artistFilter === userProfile.id)) {
                     allTroskovi?.filter(t => t.created_at && t.created_at.startsWith(selectedMonthStr)).forEach(t => {
                         const amt = parseFloat(t.amount) || 0;
                         if(t.currency === 'din') stats.pRsd -= amt; else stats.pEur -= amt;
@@ -361,6 +385,10 @@
         }
 
         function renderujTabelu(filteredApps) {
+            if(filteredApps.length === 0) {
+                document.getElementById('tabela-div').innerHTML = `<p style="text-align:center; color:#64748b; padding:20px;">Nema termina za izabrani mesec.</p>`;
+                return;
+            }
             let h = `<table><tr><th>Klijent</th><th style="text-align: center;">Status</th><th>Datum</th><th>Cena</th><th style="text-align:right;">Akcije</th></tr>`;
             filteredApps.forEach(a => {
                 const datum = new Date(a.appointment_time).toLocaleString('sr-RS', {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'});
@@ -458,6 +486,10 @@
             editingId = null; 
             document.getElementById('modal-title').innerText = "Novi Termin";
             document.getElementById('c_name').value = '';
+            document.getElementById('c_phone').value = '';
+            document.getElementById('c_insta').value = '';
+            document.getElementById('total_price').value = '';
+            document.getElementById('deposit_amt').value = '';
             document.getElementById('bookingModal').style.display = 'block'; 
         }
 
