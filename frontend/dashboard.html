@@ -206,7 +206,6 @@
         let myChart = null;
 
         async function initDashboard() {
-            // 1. Provera sesije bez brisanja localStorage-a da ne bi pukao login
             const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
             
             if (sessionError || !session) {
@@ -216,7 +215,7 @@
 
             const user = session.user;
 
-            // 2. Uzimamo profil i studio informacije
+            // Učvrsćujemo dohvatanje profila
             const { data: profile, error } = await supabaseClient.from('profiles')
                 .select('*, studios(*)')
                 .eq('id', user.id)
@@ -226,9 +225,8 @@
                 userProfile = profile;
                 studioInfo = profile.studios;
                 
-                console.log("Uspešan ulaz. Uloga:", profile.role);
+                console.log("Ulogovan profil:", userProfile);
 
-                // Silom prikazujemo elemente za ownera ako je uloga owner
                 if (profile.role === 'owner') {
                     document.querySelectorAll('.owner-only').forEach(el => {
                         el.style.setProperty('display', 'block', 'important');
@@ -245,7 +243,8 @@
             }
 
             popuniMeseceIGodine();
-            setTimeout(osveziPodatke, 500);
+            // Kraći timeout da brže učita
+            setTimeout(osveziPodatke, 100);
         }
 
         async function popuniArtistFilter() {
@@ -274,6 +273,7 @@
             const artistFilter = document.getElementById('artist-filter').value;
             const selectedMonthStr = `${y}-${m}`;
 
+            // Uzimamo SVE termine za studio, pa filtriramo u JS-u radi lakše dijagnostike
             let query = supabaseClient.from('appointments').select('*').eq('studio_id', userProfile.studio_id);
             
             if (userProfile.role !== 'owner') {
@@ -282,12 +282,16 @@
                 query = query.eq('artist_id', artistFilter);
             }
 
-            const { data: allApps } = await query.order('appointment_time', {ascending: true});
+            const { data: allApps, error: appErr } = await query.order('appointment_time', {ascending: true});
             const { data: allTroskovi } = await supabaseClient.from('expenses').select('*').eq('studio_id', userProfile.studio_id);
 
             if (allApps) {
+                console.log("Pronađeno u bazi:", allApps.length, "termina.");
                 globalApps = allApps;
+                
+                // Filtriramo po mesecu
                 let filteredApps = allApps.filter(a => a.appointment_time && a.appointment_time.startsWith(selectedMonthStr));
+                console.log("Nakon filtera za", selectedMonthStr, ":", filteredApps.length);
                 
                 let stats = { uEur: 0, uRsd: 0, pEur: 0, pRsd: 0, dEur: 0, dRsd: 0 };
 
@@ -382,8 +386,9 @@
         }
 
         function renderujTabelu(filteredApps) {
+            const tabelaDiv = document.getElementById('tabela-div');
             if(filteredApps.length === 0) {
-                document.getElementById('tabela-div').innerHTML = `<p style="text-align:center; color:#64748b; padding:20px;">Nema termina za izabrani mesec.</p>`;
+                tabelaDiv.innerHTML = `<p style="text-align:center; color:#64748b; padding:20px;">Nema termina za izabrani mesec.</p>`;
                 return;
             }
             let h = `<table><tr><th>Klijent</th><th style="text-align: center;">Status</th><th>Datum</th><th>Cena</th><th style="text-align:right;">Akcije</th></tr>`;
@@ -401,7 +406,7 @@
                         <button class="btn-action-delete" onclick="obrisiTermin('${a.id}')">Obriši</button>
                     </div></td></tr>`;
             });
-            document.getElementById('tabela-div').innerHTML = h + `</table>`;
+            tabelaDiv.innerHTML = h + `</table>`;
         }
 
         function prikaziSekciju(sekcija) {
@@ -467,7 +472,9 @@
                     const share = parseFloat(a.studio_share) || 0;
                     let iznos = (userProfile.role === 'owner' ? share : price - share);
                     let dan = new Date(a.appointment_time).getDate() - 1;
-                    if(a.currency !== 'din') revEur[dan] += iznos; 
+                    if(dan >= 0 && dan < daysInMonth) {
+                        if(a.currency !== 'din') revEur[dan] += iznos; 
+                    }
                 }
             });
             const ctx = document.getElementById('revenueChart').getContext('2d');
