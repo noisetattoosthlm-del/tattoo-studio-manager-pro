@@ -88,7 +88,7 @@
         .filter-group { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
         .filter-select { width: auto; margin: 0; padding: 10px 20px; border-radius: 15px; background: var(--card); border: 1px solid rgba(255,255,255,0.05); font-weight: 600; cursor: pointer; color: white; }
 
-        /* NOVO: Kalendar Specifični Stilovi */
+        /* Kalendar Specifični Stilovi */
         .calendar-grid-header { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-bottom: 10px; }
         .calendar-day-label { text-align: center; font-size: 0.7rem; color: #64748b; font-weight: 800; text-transform: uppercase; }
         .calendar-days-container { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
@@ -295,7 +295,6 @@
         let globalApps = [];
         let myChart = null;
 
-        // NOVO: Funkcija za sinhronizaciju svih meseci i godina kroz celu aplikaciju
         function syncDateFilters(el) {
             const val = el.value;
             const isMonth = el.id.includes('month');
@@ -310,7 +309,6 @@
                 document.getElementById('exp-year-select').value = val;
             }
             
-            // Nakon sinhronizacije, osveži podatke za trenutno vidljivu sekciju
             osveziPodatke();
             if(document.getElementById('kalendar-section').style.display === 'block') renderujKalendarTab();
             if(document.getElementById('troskovi-section').style.display === 'block') ucitajTroskove();
@@ -633,20 +631,14 @@
             document.getElementById('payment_type').value = a.payment_type || 'Cash'; document.getElementById('bookingModal').style.display = 'block';
         }
 
-        // AZURIRANO: Dodaje trosak u odabrani mesec/godinu
         async function dodajTrosak() {
             const title = document.getElementById('exp-title').value; 
             const amount = parseFloat(document.getElementById('exp-amount').value);
             const currency = document.getElementById('exp-currency').value;
-            
             const selectedMonth = document.getElementById('exp-month-select').value;
             const selectedYear = document.getElementById('exp-year-select').value;
-
             if(!title || !amount) return;
-
-            // KREIRAMO TIMESTAMP ZA ODABRANI MESEC
             const timestamp = `${selectedYear}-${selectedMonth}-01T12:00:00`;
-
             await supabaseClient.from('expenses').insert([{ 
                 studio_id: userProfile.studio_id, 
                 title, 
@@ -654,38 +646,24 @@
                 currency,
                 created_at: timestamp 
             }]);
-
             document.getElementById('exp-title').value = ''; 
             document.getElementById('exp-amount').value = ''; 
             ucitajTroskove(); 
             osveziPodatke();
         }
 
-        // AZURIRANO: Filtrira troskove prema selektorima
         async function ucitajTroskove() {
             const m = document.getElementById('exp-month-select').value;
             const y = document.getElementById('exp-year-select').value;
             const selectedMonthStr = `${y}-${m}`;
-
-            const { data } = await supabaseClient.from('expenses')
-                .select('*')
-                .eq('studio_id', userProfile.studio_id)
-                .order('created_at', {ascending: false});
-            
+            const { data } = await supabaseClient.from('expenses').select('*').eq('studio_id', userProfile.studio_id).order('created_at', {ascending: false});
             let html = '';
             if(data) {
-                // Filtriramo klijentski na osnovu odabranog meseca
                 const filtrirani = data.filter(t => t.created_at.startsWith(selectedMonthStr));
-                
                 filtrirani.forEach(t => { 
                     const v = t.currency || '€'; 
                     const iznosPrikaz = v === '€' ? `€${t.amount}` : `${t.amount} din`;
-                    html += `<tr>
-                        <td><strong>${t.title}</strong></td>
-                        <td style="color:#ef4444;">-${iznosPrikaz}</td>
-                        <td>${new Date(t.created_at).toLocaleDateString('sr-RS')}</td>
-                        <td style="text-align:right;"><button class="btn-action-delete" onclick="obrisiTrosak('${t.id}')">X</button></td>
-                    </tr>`; 
+                    html += `<tr><td><strong>${t.title}</strong></td><td style="color:#ef4444;">-${iznosPrikaz}</td><td>${new Date(t.created_at).toLocaleDateString('sr-RS')}</td><td style="text-align:right;"><button class="btn-action-delete" onclick="obrisiTrosak('${t.id}')">X</button></td></tr>`; 
                 });
             }
             document.getElementById('expenses-list-body').innerHTML = html;
@@ -699,11 +677,9 @@
                 const el = document.getElementById(s + '-section');
                 if(el) el.style.display = (s === sekcija ? 'block' : 'none');
             });
-            
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             const navId = 'nav-' + sekcija;
             if(document.getElementById(navId)) document.getElementById(navId).classList.add('active');
-            
             if(sekcija === 'klijenti') ucitajKlijente(); 
             if(sekcija === 'artisti') ucitajArtiste(); 
             if(sekcija === 'troskovi') ucitajTroskove();
@@ -719,14 +695,7 @@
                 const termini = sviTermini ? sviTermini.filter(t => t.artist_id === a.id && t.status === 'završeno') : [];
                 let pEur = 0; let pRsd = 0;
                 termini.forEach(t => { if(t.currency === 'din') pRsd += Number(t.total_price); else pEur += Number(t.total_price); });
-                html += `<tr>
-                    <td><strong>${a.full_name}</strong></td>
-                    <td><div style="width:20px; height:20px; border-radius:5px; background:${a.color || '#3b82f6'};"></div></td>
-                    <td>${a.role}</td>
-                    <td>${termini.length}</td>
-                    <td style="color:var(--accent); font-weight:800;">€${pEur} <span style="font-size:0.7rem; color:#64748b;">/ ${pRsd} RSD</span></td>
-                    <td style="text-align:right;"><button class="btn-action-delete" onclick="obrisiProfil('${a.id}')">Ukloni</button></td>
-                </tr>`; 
+                html += `<tr><td><strong>${a.full_name}</strong></td><td><div style="width:20px; height:20px; border-radius:5px; background:${a.color || '#3b82f6'};"></div></td><td>${a.role}</td><td>${termini.length}</td><td style="color:var(--accent); font-weight:800;">€${pEur} <span style="font-size:0.7rem; color:#64748b;">/ ${pRsd} RSD</span></td><td style="text-align:right;"><button class="btn-action-delete" onclick="obrisiProfil('${a.id}')">Ukloni</button></td></tr>`; 
             });
             document.getElementById('artists-list-body').innerHTML = html;
         }
@@ -738,9 +707,28 @@
                 data.forEach(a => { if (!map[a.client_name]) map[a.client_name] = { phone: a.client_phone || '-', insta: a.client_instagram || '-', last: a.appointment_time }; });
                 let html = '';
                 Object.keys(map).forEach(n => {
-                    const c = map[n]; html += `<tr><td><strong>${n}</strong></td><td>${c.phone}</td><td>${c.insta}</td><td>${new Date(c.last).toLocaleDateString('sr-RS')}</td><td style="text-align:right;"><button class="btn-action-done" onclick="otvoriModalNoviSaKlijentom('${n}', '${c.phone}', '${c.insta}')">+ NOVI</button></td></tr>`;
+                    const c = map[n]; 
+                    html += `<tr>
+                        <td><strong>${n}</strong></td>
+                        <td>${c.phone}</td>
+                        <td>${c.insta}</td>
+                        <td>${new Date(c.last).toLocaleDateString('sr-RS')}</td>
+                        <td style="text-align:right; white-space:nowrap;">
+                            <button class="btn-action-done" onclick="otvoriModalNoviSaKlijentom('${n}', '${c.phone}', '${c.insta}')">+ NOVI</button>
+                            <button class="btn-action-delete" onclick="obrisiKlijenta('${n}')" style="margin-left:5px;">X</button>
+                        </td>
+                    </tr>`;
                 });
                 document.getElementById('clients-list-body').innerHTML = html;
+            }
+        }
+
+        // NOVO: Brisanje klijenta iz liste (briše sve njegove termine iz baze)
+        async function obrisiKlijenta(clientName) {
+            if(confirm(`Da li ste sigurni da želite da obrišete klijenta "${clientName}" i sve njegove zapise iz baze?`)) {
+                const { error } = await supabaseClient.from('appointments').delete().eq('client_name', clientName).eq('studio_id', userProfile.studio_id);
+                if(error) alert("Greška pri brisanju: " + error.message);
+                else ucitajKlijente();
             }
         }
 
