@@ -39,25 +39,7 @@
             backdrop-filter: blur(10px);
         }
 
-        /* --- KALENDAR CSS --- */
-        .cal-container { background: var(--card); border: 1px solid rgba(255,255,255,0.05); border-radius: 30px; padding: 25px; margin-bottom: 30px; backdrop-filter: blur(10px); }
-        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
-        .cal-day-name { text-align: center; font-size: 0.7rem; color: #64748b; font-weight: 800; padding-bottom: 10px; text-transform: uppercase; }
-        .cal-cell { 
-            background: rgba(255,255,255,0.02); border-radius: 15px; min-height: 60px; padding: 10px; 
-            font-size: 0.75rem; border: 1px solid transparent; transition: 0.3s; cursor: pointer; position: relative;
-        }
-        .cal-cell:hover { background: rgba(59, 130, 246, 0.1); border-color: var(--accent); }
-        .cal-cell.today { border-color: var(--accent); background: rgba(59, 130, 246, 0.05); }
-        .cal-cell.other-month { opacity: 0.1; pointer-events: none; }
-        .cal-date-num { font-weight: 800; margin-bottom: 5px; display: block; color: #64748b; }
-        .cal-cell.today .cal-date-num { color: var(--accent); }
-        .cal-events-wrap { display: flex; flex-direction: column; gap: 2px; }
-        .cal-event-dot { 
-            background: var(--accent); color: white; padding: 2px 6px; border-radius: 6px; 
-            font-size: 0.6rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
-
+        /* Promenjeno na 4 kolone za Ownera */
         .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 50px; }
         .stat-card { 
             background: var(--card); padding: 30px; border-radius: 30px; 
@@ -160,10 +142,6 @@
             <canvas id="revenueChart"></canvas>
         </div>
 
-        <div class="cal-container">
-            <div class="cal-grid" id="calendar-grid"></div>
-        </div>
-
         <div class="stats-grid">
             <div class="stat-card"><h3>Ugovoreno</h3><p id="total-sum">€0</p></div>
             <div class="stat-card"><h3><span id="profit-label">Čist Profit</span></h3><p id="studio-sum">€0</p></div>
@@ -259,6 +237,7 @@
         let globalApps = [];
         let myChart = null;
 
+        // Inicijalne funkcije (popuniMesece, initDashboard, napraviArtista, popuniArtistFilter) ostaju iste...
         function popuniMeseceIGodine() {
             const mFilter = document.getElementById('month-select');
             const yFilter = document.getElementById('year-select');
@@ -338,6 +317,7 @@
             }
         }
 
+        // IMPLEMENTACIJA DUGA U osveziPodatke
         async function osveziPodatke() {
             try {
                 const { data: { user } } = await supabaseClient.auth.getUser();
@@ -363,7 +343,7 @@
                     let ugovorenoEur = 0; let ugovorenoRsd = 0;
                     let profitEur = 0; let profitRsd = 0;
                     let depozitEur = 0; let depozitRsd = 0;
-                    let dugEur = 0; let dugRsd = 0;
+                    let dugEur = 0; let dugRsd = 0; // NOVO
 
                     filteredApps.forEach(a => {
                         if(a.status !== 'no-show') {
@@ -374,6 +354,8 @@
                         let udeo = 0;
                         if (a.status === 'završeno') {
                             udeo = (userProfile.role === 'owner') ? a.studio_share : (a.total_price - a.studio_share);
+                            
+                            // RAČUNANJE DUGA (samo ako nije isplaćeno)
                             if (a.payout_status !== 'isplaćeno') {
                                 let artistZarada = a.total_price - a.studio_share;
                                 if(a.currency === 'din') dugRsd += artistZarada; else dugEur += artistZarada;
@@ -408,50 +390,11 @@
                     
                     inicijalizujGrafikon(filteredApps, y, m);
                     renderujTabelu(filteredApps);
-                    renderujKalendar(y, m, filteredApps); // POZIV KALENDARA
                 }
             } catch (err) { console.error(err); }
         }
 
-        // --- FUNKCIJA ZA KALENDAR ---
-        function renderujKalendar(year, month, apps) {
-            const grid = document.getElementById('calendar-grid');
-            grid.innerHTML = '';
-            const daniImena = ['Pon', 'Uto', 'Sre', 'Čet', 'Pet', 'Sub', 'Ned'];
-            daniImena.forEach(d => grid.innerHTML += `<div class="cal-day-name">${d}</div>`);
-
-            const firstDay = new Date(year, month - 1, 1).getDay();
-            const startOffset = firstDay === 0 ? 6 : firstDay - 1;
-            const daysInMonth = new Date(year, month, 0).getDate();
-
-            for (let i = 0; i < startOffset; i++) grid.innerHTML += `<div class="cal-cell other-month"></div>`;
-
-            for (let d = 1; d <= daysInMonth; d++) {
-                const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                const dailyApps = apps.filter(a => a.appointment_time && a.appointment_time.startsWith(dateStr));
-                const isToday = new Date().toISOString().startsWith(dateStr) ? 'today' : '';
-                
-                let appHtml = '';
-                dailyApps.forEach(a => {
-                    appHtml += `<div class="cal-event-dot">${a.client_name}</div>`;
-                });
-
-                grid.innerHTML += `
-                    <div class="cal-cell ${isToday}" onclick="prikaziTermineDana('${dateStr}')">
-                        <span class="cal-date-num">${d}</span>
-                        <div class="cal-events-wrap">${appHtml}</div>
-                    </div>`;
-            }
-        }
-
-        function prikaziTermineDana(date) {
-            const dayApps = globalApps.filter(a => a.appointment_time.startsWith(date));
-            if(dayApps.length === 0) return;
-            let msg = `Termini za ${date}:\n\n`;
-            dayApps.forEach(a => msg += `• ${a.appointment_time.substring(11,16)}h - ${a.client_name}\n`);
-            alert(msg);
-        }
-
+        // Sve ostale funkcije (renderujTabelu, saveData, otvoriModal, troskovi, artisti, klijenti, grafikon) ostaju iste...
         function renderujTabelu(filteredApps) {
             let h = `<table><tr><th>Klijent</th><th style="text-align: center;">Status</th><th>Datum</th><th>Cena</th><th style="text-align:right;">Akcije</th></tr>`;
             filteredApps.forEach(a => {
