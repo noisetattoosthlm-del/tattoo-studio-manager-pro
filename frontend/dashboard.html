@@ -165,12 +165,16 @@
         /* ------------------------------- */
 
         @media print {
-            .sidebar, .btn-add, .filter-group, .action-cell, .briefing-container { display: none !important; }
-            .main { padding: 0; background: white; color: black !important; }
-            .stat-card, .table-container { border: 1px solid #ccc; background: white; color: black; }
+            .sidebar, .btn-add, .filter-group, .action-cell, .briefing-container, .no-print, .chart-container { 
+                display: none !important; 
+            }
+            .main { flex: 1; padding: 0 !important; background: white !important; color: black !important; }
+            .stat-card, .table-container { border: 1px solid #eee; background: white !important; color: black !important; }
             h1, p, h3, td, th { color: black !important; }
             table { border-collapse: collapse; width: 100%; }
             th, td { border: 1px solid #eee; }
+            /* Sakrivanje zadnje kolone akcija u tabelama */
+            th:last-child, td:last-child { display: none; }
         }
 
         @media (max-width: 900px) {
@@ -321,14 +325,17 @@
     </div>
 
     <div class="main" id="troskovi-section" style="display:none;">
-        <h1>Troškovi Studija</h1>
+        <div style="display: flex; align-items: center; margin-bottom: 40px;">
+            <h1>Troškovi Studija</h1>
+            <button class="btn-export" onclick="window.print()" style="margin-left: auto;">📄 IZVEŠTAJ TROŠKOVA (PDF)</button>
+        </div>
 
         <div class="filter-group">
             <select id="exp-month-select" class="filter-select" onchange="syncDateFilters(this)"></select>
             <select id="exp-year-select" class="filter-select" onchange="syncDateFilters(this)"></select>
         </div>
 
-        <div style="background: var(--card); padding: 30px; border-radius: 24px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.05);">
+        <div class="no-print" style="background: var(--card); padding: 30px; border-radius: 24px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.05);">
             <h3 style="margin-top:0; font-size: 1rem; color: var(--accent);">DODAJ NOVI TROŠAK</h3>
             <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
                 <input type="text" id="exp-title" placeholder="Opis" style="flex:2; margin-bottom:0;">
@@ -337,7 +344,21 @@
                 <button class="btn-add" style="margin:0; padding: 15px 30px;" onclick="dodajTrosak()">DODAJ</button>
             </div>
         </div>
-        <div class="table-container"><table><thead><tr><th>Opis</th><th>Iznos</th><th>Datum</th><th style="text-align:right;">Akcije</th></tr></thead><tbody id="expenses-list-body"></tbody></table></div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr><th>Opis</th><th>Iznos</th><th>Datum</th><th style="text-align:right;" class="no-print">Akcije</th></tr>
+                </thead>
+                <tbody id="expenses-list-body"></tbody>
+                <tfoot>
+                    <tr style="border-top: 2px solid var(--accent); font-weight: 800;">
+                        <td style="padding-top: 20px;">UKUPNO ZA IZABRANI PERIOD:</td>
+                        <td colspan="3" id="total-expenses-sum" style="padding-top: 20px; color: var(--accent); font-size: 1.2rem;">€0 / 0 RSD</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
     </div>
 
     <div id="bookingModal" class="modal">
@@ -855,16 +876,32 @@
             const y = document.getElementById('exp-year-select').value;
             const selectedMonthStr = `${y}-${m}`;
             const { data } = await supabaseClient.from('expenses').select('*').eq('studio_id', userProfile.studio_id).order('created_at', {ascending: false});
+            
             let html = '';
+            let sumaEur = 0;
+            let sumaRsd = 0;
+
             if(data) {
                 const filtrirani = data.filter(t => t.created_at.startsWith(selectedMonthStr));
                 filtrirani.forEach(t => { 
                     const v = t.currency || '€'; 
                     const iznosPrikaz = v === '€' ? `€${t.amount}` : `${t.amount} din`;
-                    html += `<tr><td><strong>${t.title}</strong></td><td style="color:#ef4444;">-${iznosPrikaz}</td><td>${new Date(t.created_at).toLocaleDateString('sr-RS')}</td><td style="text-align:right;"><button class="btn-action-delete" onclick="obrisiTrosak('${t.id}')">X</button></td></tr>`; 
+                    
+                    if(v === '€') sumaEur += Number(t.amount);
+                    else sumaRsd += Number(t.amount);
+
+                    html += `<tr>
+                        <td><strong>${t.title}</strong></td>
+                        <td style="color:#ef4444;">-${iznosPrikaz}</td>
+                        <td>${new Date(t.created_at).toLocaleDateString('sr-RS')}</td>
+                        <td style="text-align:right;" class="no-print">
+                            <button class="btn-action-delete" onclick="obrisiTrosak('${t.id}')">X</button>
+                        </td>
+                    </tr>`; 
                 });
             }
             document.getElementById('expenses-list-body').innerHTML = html;
+            document.getElementById('total-expenses-sum').innerHTML = `€${sumaEur} / ${sumaRsd} RSD`;
         }
 
         async function obrisiTrosak(id) { if(confirm("Obriši trošak?")) { await supabaseClient.from('expenses').delete().eq('id', id); ucitajTroskove(); osveziPodatke(); } }
