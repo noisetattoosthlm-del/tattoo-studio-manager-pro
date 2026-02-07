@@ -239,6 +239,12 @@
 
     <div class="main" id="troskovi-section" style="display:none;">
         <h1>Troškovi Studija</h1>
+
+        <div class="filter-group">
+            <select id="exp-month-select" class="filter-select" onchange="ucitajTroskove()"></select>
+            <select id="exp-year-select" class="filter-select" onchange="ucitajTroskove()"></select>
+        </div>
+
         <div style="background: var(--card); padding: 30px; border-radius: 24px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.05);">
             <h3 style="margin-top:0; font-size: 1rem; color: var(--accent);">DODAJ NOVI TROŠAK</h3>
             <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
@@ -290,8 +296,9 @@
         let myChart = null;
 
         function popuniMeseceIGodine() {
-            const selects = ['month-select', 'cal-month-select'];
-            const yearSelects = ['year-select', 'cal-year-select'];
+            // DODATO: exp-month-select i exp-year-select na listu za popunjavanje
+            const selects = ['month-select', 'cal-month-select', 'exp-month-select'];
+            const yearSelects = ['year-select', 'cal-year-select', 'exp-year-select'];
             const meseci = ["Januar", "Februar", "Mart", "April", "Maj", "Jun", "Jul", "Avgust", "Septembar", "Oktobar", "Novembar", "Decembar"];
             const d = new Date();
 
@@ -607,20 +614,60 @@
             document.getElementById('payment_type').value = a.payment_type || 'Cash'; document.getElementById('bookingModal').style.display = 'block';
         }
 
+        // AZURIRANO: Dodaje trosak u odabrani mesec/godinu
         async function dodajTrosak() {
-            const title = document.getElementById('exp-title').value; const amount = parseFloat(document.getElementById('exp-amount').value);
-            const currency = document.getElementById('exp-currency').value; if(!title || !amount) return;
-            await supabaseClient.from('expenses').insert([{ studio_id: userProfile.studio_id, title, amount, currency }]);
-            document.getElementById('exp-title').value = ''; document.getElementById('exp-amount').value = ''; ucitajTroskove(); osveziPodatke();
+            const title = document.getElementById('exp-title').value; 
+            const amount = parseFloat(document.getElementById('exp-amount').value);
+            const currency = document.getElementById('exp-currency').value;
+            
+            const selectedMonth = document.getElementById('exp-month-select').value;
+            const selectedYear = document.getElementById('exp-year-select').value;
+
+            if(!title || !amount) return;
+
+            // Kreiramo timestamp za prvi dan u odabranom mesecu
+            const timestamp = `${selectedYear}-${selectedMonth}-01T12:00:00`;
+
+            await supabaseClient.from('expenses').insert([{ 
+                studio_id: userProfile.studio_id, 
+                title, 
+                amount, 
+                currency,
+                created_at: timestamp // Ovo osigurava da trosak ode u pravi mesec
+            }]);
+
+            document.getElementById('exp-title').value = ''; 
+            document.getElementById('exp-amount').value = ''; 
+            ucitajTroskove(); 
+            osveziPodatke();
         }
 
+        // AZURIRANO: Filtrira troskove prema selektorima u tabu troskovi
         async function ucitajTroskove() {
-            const { data } = await supabaseClient.from('expenses').select('*').eq('studio_id', userProfile.studio_id).order('created_at', {ascending: false});
+            const m = document.getElementById('exp-month-select').value;
+            const y = document.getElementById('exp-year-select').value;
+            const selectedMonthStr = `${y}-${m}`;
+
+            const { data } = await supabaseClient.from('expenses')
+                .select('*')
+                .eq('studio_id', userProfile.studio_id)
+                .order('created_at', {ascending: false});
+            
             let html = '';
-            if(data) data.forEach(t => { 
-                const v = t.currency || '€'; const iznosPrikaz = v === '€' ? `€${t.amount}` : `${t.amount} din`;
-                html += `<tr><td><strong>${t.title}</strong></td><td style="color:#ef4444;">-${iznosPrikaz}</td><td>${new Date(t.created_at).toLocaleDateString('sr-RS')}</td><td style="text-align:right;"><button class="btn-action-delete" onclick="obrisiTrosak('${t.id}')">X</button></td></tr>`; 
-            });
+            if(data) {
+                const filtrirani = data.filter(t => t.created_at.startsWith(selectedMonthStr));
+                
+                filtrirani.forEach(t => { 
+                    const v = t.currency || '€'; 
+                    const iznosPrikaz = v === '€' ? `€${t.amount}` : `${t.amount} din`;
+                    html += `<tr>
+                        <td><strong>${t.title}</strong></td>
+                        <td style="color:#ef4444;">-${iznosPrikaz}</td>
+                        <td>${new Date(t.created_at).toLocaleDateString('sr-RS')}</td>
+                        <td style="text-align:right;"><button class="btn-action-delete" onclick="obrisiTrosak('${t.id}')">X</button></td>
+                    </tr>`; 
+                });
+            }
             document.getElementById('expenses-list-body').innerHTML = html;
         }
 
