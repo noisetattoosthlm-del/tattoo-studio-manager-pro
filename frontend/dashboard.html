@@ -33,6 +33,17 @@
         .main { flex: 1; padding: 40px; overflow-y: auto; background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.05), transparent); }
         h1 { font-weight: 800; font-size: 2.8rem; margin-bottom: 40px; letter-spacing: -1px; }
 
+        /* NOVI STIL ZA DAILY BRIEFING */
+        .briefing-container {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 30px; padding: 25px; margin-bottom: 30px;
+            display: flex; align-items: center; gap: 20px;
+        }
+        .briefing-icon { font-size: 2.5rem; }
+        .briefing-content h2 { margin: 0; font-size: 1.2rem; font-weight: 800; }
+        .briefing-content p { margin: 5px 0 0 0; color: #94a3b8; font-size: 0.9rem; }
+
         .chart-container { 
             background: var(--card); border: 1px solid rgba(255,255,255,0.05); 
             padding: 25px; border-radius: 30px; margin-bottom: 30px; height: 300px;
@@ -111,7 +122,7 @@
         .day-detail-time { font-weight: 800; color: #64748b; font-size: 0.9rem; border-right: 1px solid rgba(255,255,255,0.1); padding-right: 15px; margin-right: 15px; }
 
         @media print {
-            .sidebar, .btn-add, .filter-group, .action-cell { display: none !important; }
+            .sidebar, .btn-add, .filter-group, .action-cell, .briefing-container { display: none !important; }
             .main { padding: 0; background: white; color: black !important; }
             .stat-card, .table-container { border: 1px solid #ccc; background: white; color: black; }
             h1, p, h3, td, th { color: black !important; }
@@ -160,6 +171,14 @@
                 <option value="all">Svi Artisti</option>
             </select>
             <button class="btn-export" onclick="window.print()">📄 IZVEŠTAJ (PDF)</button>
+        </div>
+
+        <div class="briefing-container" id="daily-briefing" style="display:none;">
+            <div class="briefing-icon">☕</div>
+            <div class="briefing-content">
+                <h2 id="briefing-title">Dobro jutro!</h2>
+                <p id="briefing-text">Učitavanje današnjeg plana...</p>
+            </div>
         </div>
 
         <div class="chart-container">
@@ -409,6 +428,30 @@
             }
         }
 
+        /* FUNKCIJA ZA DAILY BRIEFING */
+        function updateDailyBriefing(apps) {
+            const briefingDiv = document.getElementById('daily-briefing');
+            const briefingTitle = document.getElementById('briefing-title');
+            const briefingText = document.getElementById('briefing-text');
+            
+            const today = new Date().toISOString().split('T')[0];
+            const todayApps = apps.filter(a => a.appointment_time && a.appointment_time.startsWith(today) && a.status === 'zakazano');
+
+            if (todayApps.length > 0) {
+                briefingDiv.style.display = 'flex';
+                const count = todayApps.length;
+                if (userProfile.role === 'owner') {
+                    briefingTitle.innerText = `Danas u studiju: ${count} termina`;
+                    briefingText.innerText = "Srećan rad celoj ekipi!";
+                } else {
+                    briefingTitle.innerText = `Danas imaš ${count} termina`;
+                    briefingText.innerText = `Prvi termin ti je u ${todayApps[0].appointment_time.substring(11,16)}h.`;
+                }
+            } else {
+                briefingDiv.style.display = 'none';
+            }
+        }
+
         async function osveziPodatke() {
             try {
                 const { data: { user } } = await supabaseClient.auth.getUser();
@@ -426,6 +469,10 @@
 
                 if (allApps) {
                     globalApps = allApps;
+                    
+                    // Pokretanje briefinga pre filtriranja po mesecu da uhvati današnji dan
+                    updateDailyBriefing(allApps);
+
                     let filteredApps = allApps.filter(a => a.appointment_time && a.appointment_time.startsWith(selectedMonthStr));
                     const troskovi = (allTroskovi && userProfile.role === 'owner' && (artistFilter === 'all' || artistFilter === '')) 
                         ? allTroskovi.filter(t => t.created_at.startsWith(selectedMonthStr)) 
@@ -734,7 +781,7 @@
         }
 
         async function obrisiKlijenta(clientName) {
-            if(confirm(`Da li ste sigurni da želite da obrišete klijenta "${clientName}" i sve njegove zapise iz baze?`)) {
+            if(confirm(`Da i ste sigurni da želite da obrišete klijenta "${clientName}" i sve njegove zapise iz baze?`)) {
                 const { error } = await supabaseClient.from('appointments').delete().eq('client_name', clientName).eq('studio_id', userProfile.studio_id);
                 if(error) alert("Greška pri brisanju: " + error.message);
                 else ucitajKlijente();
