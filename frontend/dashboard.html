@@ -60,7 +60,7 @@
             transition: 0.3s; margin-left: auto;
         }
 
-        .table-container { background: var(--card); border-radius: 30px; padding: 15px; border: 1px solid rgba(255,255,255,0.05); overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .table-container { background: var(--card); border-radius: 30px; padding: 15px; border: 1px solid rgba(255,255,255,0.05); overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 600px; } 
         th { text-align: left; padding: 12px 15px; color: #64748b; font-size: 0.7rem; text-transform: uppercase; }
         td { padding: 12px 15px; border-top: 1px solid rgba(255,255,255,0.02); vertical-align: middle; }
@@ -119,34 +119,22 @@
             th, td { border: 1px solid #eee; }
         }
 
-        /* MOBILNA OPTIMIZACIJA - Ovde su ključne izmene */
         @media (max-width: 900px) {
             body { flex-direction: column; }
             .sidebar { 
                 width: 100%; padding: 15px; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.05);
-                flex-direction: row; align-items: center; overflow-x: auto; position: sticky; top: 0; box-sizing: border-box;
+                flex-direction: row; align-items: center; overflow-x: auto; position: sticky; top: 0;
             }
-            .logo { margin-bottom: 0; font-size: 0.7rem; min-width: 120px; margin-right: 20px; }
-            .nav-item { margin: 0 5px; padding: 8px 12px; font-size: 0.75rem; }
-            .main { padding: 15px; }
-            h1 { font-size: 1.6rem; margin-bottom: 20px; }
-            
-            /* Dve kolone za statistiku na mobilnom */
-            .stats-grid { 
-                grid-template-columns: 1fr 1fr; 
-                gap: 10px; 
-                margin-bottom: 25px; 
-            }
-            .stat-card { padding: 15px; border-radius: 20px; }
-            .stat-card h3 { font-size: 0.6rem; }
-            .stat-card p { font-size: 1.2rem; }
-            .currency-sub { font-size: 0.7rem; }
-
-            .chart-container { height: 220px; padding: 15px; border-radius: 20px; }
+            .logo { margin-bottom: 0; font-size: 0.8rem; min-width: 150px; margin-right: 20px; }
+            .nav-item { margin: 0 5px; padding: 10px 15px; font-size: 0.8rem; }
+            .main { padding: 20px; }
+            h1 { font-size: 1.8rem; margin-bottom: 25px; }
+            .stats-grid { grid-template-columns: 1fr; gap: 10px; margin-bottom: 30px; }
+            .stat-card { padding: 20px; }
+            .stat-card p { font-size: 1.8rem; }
+            .chart-container { height: 250px; }
             .calendar-days-container { grid-template-columns: repeat(2, 1fr); }
             .calendar-grid-header { display: none; }
-            
-            .btn-add { width: 100%; padding: 15px; font-size: 0.9rem; }
         }
     </style>
 </head>
@@ -307,7 +295,6 @@
         let globalApps = [];
         let myChart = null;
 
-        // SVE FUNKCIJE ISPOD OSTAJU ISTE KAO U TVOM FAJLU
         function syncDateFilters(el) {
             const val = el.value;
             const isMonth = el.id.includes('month');
@@ -715,16 +702,32 @@
 
         async function ucitajKlijente() {
             const { data: { user } } = await supabaseClient.auth.getUser();
+            
+            // FILTRIRANJE: Artist vidi samo svoje, Owner vidi sve
             let query = supabaseClient.from('appointments').select('*').eq('studio_id', userProfile.studio_id);
-            if (userProfile.role !== 'owner') query = query.eq('artist_id', user.id);
+            
+            if (userProfile.role !== 'owner') {
+                query = query.eq('artist_id', user.id);
+            }
+
             const { data } = await query.order('appointment_time', {ascending: false});
+            
             if (data) {
                 const map = {};
                 data.forEach(a => { if (!map[a.client_name]) map[a.client_name] = { phone: a.client_phone || '-', insta: a.client_instagram || '-', last: a.appointment_time }; });
                 let html = '';
                 Object.keys(map).forEach(n => {
                     const c = map[n]; 
-                    html += `<tr><td><strong>${n}</strong></td><td>${c.phone}</td><td>${c.insta}</td><td>${new Date(c.last).toLocaleDateString('sr-RS')}</td><td style="text-align:right; white-space:nowrap;"><button class="btn-action-done" onclick="otvoriModalNoviSaKlijentom('${n}', '${c.phone}', '${c.insta}')">+ NOVI</button><button class="btn-action-delete" onclick="obrisiKlijenta('${n}')" style="margin-left:5px;">X</button></td></tr>`;
+                    html += `<tr>
+                        <td><strong>${n}</strong></td>
+                        <td>${c.phone}</td>
+                        <td>${c.insta}</td>
+                        <td>${new Date(c.last).toLocaleDateString('sr-RS')}</td>
+                        <td style="text-align:right; white-space:nowrap;">
+                            <button class="btn-action-done" onclick="otvoriModalNoviSaKlijentom('${n}', '${c.phone}', '${c.insta}')">+ NOVI</button>
+                            <button class="btn-action-delete" onclick="obrisiKlijenta('${n}')" style="margin-left:5px;">X</button>
+                        </td>
+                    </tr>`;
                 });
                 document.getElementById('clients-list-body').innerHTML = html;
             }
