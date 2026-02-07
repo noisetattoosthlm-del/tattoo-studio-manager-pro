@@ -701,7 +701,17 @@
         }
 
         async function ucitajKlijente() {
-            const { data } = await supabaseClient.from('appointments').select('*').eq('studio_id', userProfile.studio_id).order('appointment_time', {ascending: false});
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            
+            // FILTRIRANJE: Artist vidi samo svoje, Owner vidi sve
+            let query = supabaseClient.from('appointments').select('*').eq('studio_id', userProfile.studio_id);
+            
+            if (userProfile.role !== 'owner') {
+                query = query.eq('artist_id', user.id);
+            }
+
+            const { data } = await query.order('appointment_time', {ascending: false});
+            
             if (data) {
                 const map = {};
                 data.forEach(a => { if (!map[a.client_name]) map[a.client_name] = { phone: a.client_phone || '-', insta: a.client_instagram || '-', last: a.appointment_time }; });
@@ -723,7 +733,6 @@
             }
         }
 
-        // NOVO: Brisanje klijenta iz liste (briše sve njegove termine iz baze)
         async function obrisiKlijenta(clientName) {
             if(confirm(`Da li ste sigurni da želite da obrišete klijenta "${clientName}" i sve njegove zapise iz baze?`)) {
                 const { error } = await supabaseClient.from('appointments').delete().eq('client_name', clientName).eq('studio_id', userProfile.studio_id);
