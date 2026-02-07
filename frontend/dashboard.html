@@ -154,8 +154,8 @@
         <h1 id="main-greeting">Statistika Studija</h1>
         
         <div class="filter-group">
-            <select id="month-select" class="filter-select" onchange="osveziPodatke()"></select>
-            <select id="year-select" class="filter-select" onchange="osveziPodatke()"></select>
+            <select id="month-select" class="filter-select" onchange="syncDateFilters(this)"></select>
+            <select id="year-select" class="filter-select" onchange="syncDateFilters(this)"></select>
             <select id="artist-filter" class="filter-select owner-only" onchange="osveziPodatke()">
                 <option value="all">Svi Artisti</option>
             </select>
@@ -179,8 +179,8 @@
     <div class="main" id="kalendar-section" style="display:none;">
         <h1>Kalendar Termina</h1>
         <div class="filter-group">
-            <select id="cal-month-select" class="filter-select" onchange="renderujKalendarTab()"></select>
-            <select id="cal-year-select" class="filter-select" onchange="renderujKalendarTab()"></select>
+            <select id="cal-month-select" class="filter-select" onchange="syncDateFilters(this)"></select>
+            <select id="cal-year-select" class="filter-select" onchange="syncDateFilters(this)"></select>
             <select id="cal-artist-filter" class="filter-select owner-only" onchange="renderujKalendarTab()">
                 <option value="all">Svi Artisti</option>
             </select>
@@ -241,8 +241,8 @@
         <h1>Troškovi Studija</h1>
 
         <div class="filter-group">
-            <select id="exp-month-select" class="filter-select" onchange="ucitajTroskove()"></select>
-            <select id="exp-year-select" class="filter-select" onchange="ucitajTroskove()"></select>
+            <select id="exp-month-select" class="filter-select" onchange="syncDateFilters(this)"></select>
+            <select id="exp-year-select" class="filter-select" onchange="syncDateFilters(this)"></select>
         </div>
 
         <div style="background: var(--card); padding: 30px; border-radius: 24px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.05);">
@@ -295,8 +295,28 @@
         let globalApps = [];
         let myChart = null;
 
+        // NOVO: Funkcija za sinhronizaciju svih meseci i godina kroz celu aplikaciju
+        function syncDateFilters(el) {
+            const val = el.value;
+            const isMonth = el.id.includes('month');
+            
+            if(isMonth) {
+                document.getElementById('month-select').value = val;
+                document.getElementById('cal-month-select').value = val;
+                document.getElementById('exp-month-select').value = val;
+            } else {
+                document.getElementById('year-select').value = val;
+                document.getElementById('cal-year-select').value = val;
+                document.getElementById('exp-year-select').value = val;
+            }
+            
+            // Nakon sinhronizacije, osveži podatke za trenutno vidljivu sekciju
+            osveziPodatke();
+            if(document.getElementById('kalendar-section').style.display === 'block') renderujKalendarTab();
+            if(document.getElementById('troskovi-section').style.display === 'block') ucitajTroskove();
+        }
+
         function popuniMeseceIGodine() {
-            // DODATO: exp-month-select i exp-year-select na listu za popunjavanje
             const selects = ['month-select', 'cal-month-select', 'exp-month-select'];
             const yearSelects = ['year-select', 'cal-year-select', 'exp-year-select'];
             const meseci = ["Januar", "Februar", "Mart", "April", "Maj", "Jun", "Jul", "Avgust", "Septembar", "Oktobar", "Novembar", "Decembar"];
@@ -465,7 +485,6 @@
             } catch (err) { console.error(err); }
         }
 
-        // NOVO: LOGIKA ZA KALENDAR TAB
         async function renderujKalendarTab() {
             const month = parseInt(document.getElementById('cal-month-select').value);
             const year = parseInt(document.getElementById('cal-year-select').value);
@@ -625,7 +644,7 @@
 
             if(!title || !amount) return;
 
-            // Kreiramo timestamp za prvi dan u odabranom mesecu
+            // KREIRAMO TIMESTAMP ZA ODABRANI MESEC
             const timestamp = `${selectedYear}-${selectedMonth}-01T12:00:00`;
 
             await supabaseClient.from('expenses').insert([{ 
@@ -633,7 +652,7 @@
                 title, 
                 amount, 
                 currency,
-                created_at: timestamp // Ovo osigurava da trosak ode u pravi mesec
+                created_at: timestamp 
             }]);
 
             document.getElementById('exp-title').value = ''; 
@@ -642,7 +661,7 @@
             osveziPodatke();
         }
 
-        // AZURIRANO: Filtrira troskove prema selektorima u tabu troskovi
+        // AZURIRANO: Filtrira troskove prema selektorima
         async function ucitajTroskove() {
             const m = document.getElementById('exp-month-select').value;
             const y = document.getElementById('exp-year-select').value;
@@ -655,6 +674,7 @@
             
             let html = '';
             if(data) {
+                // Filtriramo klijentski na osnovu odabranog meseca
                 const filtrirani = data.filter(t => t.created_at.startsWith(selectedMonthStr));
                 
                 filtrirani.forEach(t => { 
@@ -688,6 +708,7 @@
             if(sekcija === 'artisti') ucitajArtiste(); 
             if(sekcija === 'troskovi') ucitajTroskove();
             if(sekcija === 'kalendar') renderujKalendarTab();
+            if(sekcija === 'dashboard') osveziPodatke();
         }
 
         async function ucitajArtiste() {
