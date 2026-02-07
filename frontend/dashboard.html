@@ -38,11 +38,26 @@
             background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%);
             border: 1px solid rgba(59, 130, 246, 0.2);
             border-radius: 30px; padding: 25px; margin-bottom: 30px;
-            display: flex; align-items: center; gap: 20px;
+            display: flex; flex-direction: column; gap: 15px;
         }
+        .briefing-header { display: flex; align-items: center; gap: 20px; }
         .briefing-icon { font-size: 2.5rem; }
         .briefing-content h2 { margin: 0; font-size: 1.2rem; font-weight: 800; }
         .briefing-content p { margin: 5px 0 0 0; color: #94a3b8; font-size: 0.9rem; }
+        
+        /* Stil za listu termina unutar briefinga */
+        .briefing-agenda { 
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; 
+            width: 100%; margin-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 15px;
+        }
+        .agenda-item { 
+            background: rgba(0,0,0,0.2); padding: 12px 15px; border-radius: 15px; 
+            display: flex; align-items: center; gap: 12px; border: 1px solid rgba(255,255,255,0.05);
+        }
+        .agenda-time { font-weight: 800; color: var(--accent); font-size: 0.9rem; min-width: 50px; }
+        .agenda-info { font-size: 0.8rem; }
+        .agenda-name { font-weight: 600; display: block; }
+        .agenda-contact { color: #64748b; font-size: 0.7rem; }
 
         .chart-container { 
             background: var(--card); border: 1px solid rgba(255,255,255,0.05); 
@@ -174,11 +189,15 @@
         </div>
 
         <div class="briefing-container" id="daily-briefing" style="display:none;">
-            <div class="briefing-icon">☕</div>
-            <div class="briefing-content">
-                <h2 id="briefing-title">Dobro jutro!</h2>
-                <p id="briefing-text">Učitavanje današnjeg plana...</p>
+            <div class="briefing-header">
+                <div class="briefing-icon">☕</div>
+                <div class="briefing-content">
+                    <h2 id="briefing-title">Dobro jutro!</h2>
+                    <p id="briefing-text">Učitavanje današnjeg plana...</p>
+                </div>
             </div>
+            <div class="briefing-agenda" id="briefing-agenda-list">
+                </div>
         </div>
 
         <div class="chart-container">
@@ -428,11 +447,12 @@
             }
         }
 
-        /* FUNKCIJA ZA DAILY BRIEFING */
+        /* MODIFIKOVANA FUNKCIJA ZA DAILY BRIEFING SA LISTOM TERMINA */
         function updateDailyBriefing(apps) {
             const briefingDiv = document.getElementById('daily-briefing');
             const briefingTitle = document.getElementById('briefing-title');
             const briefingText = document.getElementById('briefing-text');
+            const agendaList = document.getElementById('briefing-agenda-list');
             
             const today = new Date().toISOString().split('T')[0];
             const todayApps = apps.filter(a => a.appointment_time && a.appointment_time.startsWith(today) && a.status === 'zakazano');
@@ -440,6 +460,7 @@
             if (todayApps.length > 0) {
                 briefingDiv.style.display = 'flex';
                 const count = todayApps.length;
+                
                 if (userProfile.role === 'owner') {
                     briefingTitle.innerText = `Danas u studiju: ${count} termina`;
                     briefingText.innerText = "Srećan rad celoj ekipi!";
@@ -447,6 +468,22 @@
                     briefingTitle.innerText = `Danas imaš ${count} termina`;
                     briefingText.innerText = `Prvi termin ti je u ${todayApps[0].appointment_time.substring(11,16)}h.`;
                 }
+
+                // Generisanje liste termina
+                let agendaHtml = '';
+                todayApps.forEach(a => {
+                    agendaHtml += `
+                        <div class="agenda-item">
+                            <div class="agenda-time">${a.appointment_time.substring(11,16)}h</div>
+                            <div class="agenda-info">
+                                <span class="agenda-name">${a.client_name}</span>
+                                <span class="agenda-contact">${a.client_phone || a.client_instagram || 'Nema kontakta'}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                agendaList.innerHTML = agendaHtml;
+
             } else {
                 briefingDiv.style.display = 'none';
             }
@@ -470,7 +507,6 @@
                 if (allApps) {
                     globalApps = allApps;
                     
-                    // Pokretanje briefinga pre filtriranja po mesecu da uhvati današnji dan
                     updateDailyBriefing(allApps);
 
                     let filteredApps = allApps.filter(a => a.appointment_time && a.appointment_time.startsWith(selectedMonthStr));
@@ -529,6 +565,8 @@
                 }
             } catch (err) { console.error(err); }
         }
+
+        // --- OSTALE FUNKCIJE SU IDENTIČNE ---
 
         async function renderujKalendarTab() {
             const month = parseInt(document.getElementById('cal-month-select').value);
@@ -749,32 +787,16 @@
 
         async function ucitajKlijente() {
             const { data: { user } } = await supabaseClient.auth.getUser();
-            
-            // FILTRIRANJE: Artist vidi samo svoje, Owner vidi sve
             let query = supabaseClient.from('appointments').select('*').eq('studio_id', userProfile.studio_id);
-            
-            if (userProfile.role !== 'owner') {
-                query = query.eq('artist_id', user.id);
-            }
-
+            if (userProfile.role !== 'owner') query = query.eq('artist_id', user.id);
             const { data } = await query.order('appointment_time', {ascending: false});
-            
             if (data) {
                 const map = {};
                 data.forEach(a => { if (!map[a.client_name]) map[a.client_name] = { phone: a.client_phone || '-', insta: a.client_instagram || '-', last: a.appointment_time }; });
                 let html = '';
                 Object.keys(map).forEach(n => {
                     const c = map[n]; 
-                    html += `<tr>
-                        <td><strong>${n}</strong></td>
-                        <td>${c.phone}</td>
-                        <td>${c.insta}</td>
-                        <td>${new Date(c.last).toLocaleDateString('sr-RS')}</td>
-                        <td style="text-align:right; white-space:nowrap;">
-                            <button class="btn-action-done" onclick="otvoriModalNoviSaKlijentom('${n}', '${c.phone}', '${c.insta}')">+ NOVI</button>
-                            <button class="btn-action-delete" onclick="obrisiKlijenta('${n}')" style="margin-left:5px;">X</button>
-                        </td>
-                    </tr>`;
+                    html += `<tr><td><strong>${n}</strong></td><td>${c.phone}</td><td>${c.insta}</td><td>${new Date(c.last).toLocaleDateString('sr-RS')}</td><td style="text-align:right; white-space:nowrap;"><button class="btn-action-done" onclick="otvoriModalNoviSaKlijentom('${n}', '${c.phone}', '${c.insta}')">+ NOVI</button><button class="btn-action-delete" onclick="obrisiKlijenta('${n}')" style="margin-left:5px;">X</button></td></tr>`;
                 });
                 document.getElementById('clients-list-body').innerHTML = html;
             }
