@@ -89,6 +89,17 @@
         .filter-group { display: flex; align-items: center; gap: 10px; margin-bottom: 30px; flex-wrap: wrap; }
         .filter-select { width: auto; margin: 0; padding: 10px 20px; border-radius: 15px; background: var(--card); border: 1px solid rgba(255,255,255,0.05); font-weight: 600; cursor: pointer; color: white; }
 
+        /* DODATO: Stilovi za Kalendar */
+        .calendar-wrapper { background: var(--card); border-radius: 30px; padding: 25px; border: 1px solid rgba(255,255,255,0.05); }
+        .calendar-controls { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; }
+        .cal-header { text-align: center; font-size: 0.7rem; color: #64748b; font-weight: 800; padding: 10px; text-transform: uppercase; }
+        .cal-cell { background: rgba(255,255,255,0.02); min-height: 120px; border-radius: 15px; padding: 10px; border: 1px solid rgba(255,255,255,0.03); transition: 0.3s; }
+        .cal-cell:hover { background: rgba(255,255,255,0.05); }
+        .cal-date { font-weight: 800; font-size: 0.85rem; margin-bottom: 8px; display: block; opacity: 0.5; }
+        .cal-entry { font-size: 0.65rem; padding: 5px 8px; border-radius: 8px; margin-bottom: 4px; color: white; font-weight: 600; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; border-left: 3px solid rgba(0,0,0,0.2); }
+        .today-cell { border: 1px solid var(--accent); background: rgba(59, 130, 246, 0.05); }
+
         @media print {
             .sidebar, .btn-add, .filter-group, .action-cell { display: none !important; }
             .main { padding: 0; background: white; color: black !important; }
@@ -112,6 +123,7 @@
             .stat-card { padding: 20px; }
             .stat-card p { font-size: 1.8rem; }
             .chart-container { height: 250px; }
+            .calendar-grid { grid-template-columns: repeat(1, 1fr); }
         }
     </style>
 </head>
@@ -120,6 +132,7 @@
     <div class="sidebar">
         <div class="logo">Tattoo Studio Management Pro</div>
         <div class="nav-item active" id="nav-dash" onclick="prikaziSekciju('dashboard')">Dashboard</div>
+        <div class="nav-item" id="nav-calendar" onclick="prikaziSekciju('calendar')">Kalendar</div>
         <div class="nav-item" id="nav-klijenti" onclick="prikaziSekciju('klijenti')">Klijenti</div>
         <div class="nav-item owner-only" id="nav-artisti" onclick="prikaziSekciju('artisti')">Artisti</div>
         <div class="nav-item owner-only" id="nav-troskovi" onclick="prikaziSekciju('troskovi')">Troškovi</div>
@@ -150,6 +163,18 @@
         </div>
         <button class="btn-add" onclick="otvoriModalNovi()">+ NOVI TERMIN</button>
         <div class="table-container" id="tabela-div">Učitavanje...</div>
+    </div>
+
+    <div class="main" id="calendar-section" style="display:none;">
+        <h1>Kalendar termina</h1>
+        <div class="calendar-wrapper">
+            <div class="calendar-controls">
+                <button class="btn-export" onclick="promeniMesecKal(-1)">← Prethodni</button>
+                <h2 id="cal-month-title" style="margin:0; font-size: 1.2rem;"></h2>
+                <button class="btn-export" onclick="promeniMesecKal(1)">Sledeći →</button>
+            </div>
+            <div class="calendar-grid" id="calendar-grid-body"></div>
+        </div>
     </div>
 
     <div class="main" id="klijenti-section" style="display:none;">
@@ -237,7 +262,10 @@
         let globalApps = [];
         let myChart = null;
 
-        // Inicijalne funkcije (popuniMesece, initDashboard, napraviArtista, popuniArtistFilter) ostaju iste...
+        // DODATO: Za kalendar
+        let currentCalDate = new Date();
+        const artistColorMap = {};
+
         function popuniMeseceIGodine() {
             const mFilter = document.getElementById('month-select');
             const yFilter = document.getElementById('year-select');
@@ -317,7 +345,6 @@
             }
         }
 
-        // IMPLEMENTACIJA DUGA U osveziPodatke
         async function osveziPodatke() {
             try {
                 const { data: { user } } = await supabaseClient.auth.getUser();
@@ -343,7 +370,7 @@
                     let ugovorenoEur = 0; let ugovorenoRsd = 0;
                     let profitEur = 0; let profitRsd = 0;
                     let depozitEur = 0; let depozitRsd = 0;
-                    let dugEur = 0; let dugRsd = 0; // NOVO
+                    let dugEur = 0; let dugRsd = 0;
 
                     filteredApps.forEach(a => {
                         if(a.status !== 'no-show') {
@@ -355,7 +382,6 @@
                         if (a.status === 'završeno') {
                             udeo = (userProfile.role === 'owner') ? a.studio_share : (a.total_price - a.studio_share);
                             
-                            // RAČUNANJE DUGA (samo ako nije isplaćeno)
                             if (a.payout_status !== 'isplaćeno') {
                                 let artistZarada = a.total_price - a.studio_share;
                                 if(a.currency === 'din') dugRsd += artistZarada; else dugEur += artistZarada;
@@ -394,7 +420,55 @@
             } catch (err) { console.error(err); }
         }
 
-        // Sve ostale funkcije (renderujTabelu, saveData, otvoriModal, troskovi, artisti, klijenti, grafikon) ostaju iste...
+        // DODATO: Kalendar Logika
+        function getArtistColor(id) {
+            if (!artistColorMap[id]) {
+                const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#14b8a6'];
+                artistColorMap[id] = colors[Object.keys(artistColorMap).length % colors.length];
+            }
+            return artistColorMap[id];
+        }
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendar-grid-body');
+            const title = document.getElementById('cal-month-title');
+            grid.innerHTML = '';
+            
+            const y = currentCalDate.getFullYear();
+            const m = currentCalDate.getMonth();
+            const monthNames = ["Januar", "Februar", "Mart", "April", "Maj", "Jun", "Jul", "Avgust", "Septembar", "Oktobar", "Novembar", "Decembar"];
+            title.innerText = `${monthNames[m]} ${y}`;
+
+            const days = ["Ned", "Pon", "Uto", "Sre", "Čet", "Pet", "Sub"];
+            days.forEach(d => grid.innerHTML += `<div class="cal-header">${d}</div>`);
+
+            const firstDay = new Date(y, m, 1).getDay();
+            const daysInMonth = new Date(y, m + 1, 0).getDate();
+
+            for (let i = 0; i < firstDay; i++) grid.innerHTML += `<div></div>`;
+
+            for (let d = 1; d <= daysInMonth; d++) {
+                const dateStr = `${y}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                const dailyApps = globalApps.filter(a => a.appointment_time && a.appointment_time.startsWith(dateStr));
+                
+                let appsHtml = dailyApps.map(a => `
+                    <div class="cal-entry" style="background: ${getArtistColor(a.artist_id)}" onclick="otvoriModalEdit('${a.id}')">
+                        ${a.appointment_time.substring(11,16)} ${a.client_name}
+                    </div>
+                `).join('');
+
+                const isToday = new Date().toISOString().split('T')[0] === dateStr;
+                grid.innerHTML += `<div class="cal-cell ${isToday ? 'today-cell' : ''}">
+                    <span class="cal-date">${d}</span>${appsHtml}
+                </div>`;
+            }
+        }
+
+        function promeniMesecKal(step) {
+            currentCalDate.setMonth(currentCalDate.getMonth() + step);
+            renderCalendar();
+        }
+
         function renderujTabelu(filteredApps) {
             let h = `<table><tr><th>Klijent</th><th style="text-align: center;">Status</th><th>Datum</th><th>Cena</th><th style="text-align:right;">Akcije</th></tr>`;
             filteredApps.forEach(a => {
@@ -483,13 +557,19 @@
 
         function prikaziSekciju(sekcija) {
             document.getElementById('dashboard-section').style.display = (sekcija === 'dashboard' ? 'block' : 'none');
+            document.getElementById('calendar-section').style.display = (sekcija === 'calendar' ? 'block' : 'none');
             document.getElementById('klijenti-section').style.display = (sekcija === 'klijenti' ? 'block' : 'none');
             document.getElementById('artisti-section').style.display = (sekcija === 'artisti' ? 'block' : 'none');
             document.getElementById('troskovi-section').style.display = (sekcija === 'troskovi' ? 'block' : 'none');
+            
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            const navId = sekcija === 'dashboard' ? 'nav-dash' : (sekcija === 'klijenti' ? 'nav-klijenti' : 'nav-' + sekcija);
+            const navId = (sekcija === 'dashboard') ? 'nav-dash' : (sekcija === 'calendar' ? 'nav-calendar' : (sekcija === 'klijenti' ? 'nav-klijenti' : 'nav-' + sekcija));
             if(document.getElementById(navId)) document.getElementById(navId).classList.add('active');
-            if(sekcija === 'klijenti') ucitajKlijente(); if(sekcija === 'artisti') ucitajArtiste(); if(sekcija === 'troskovi') ucitajTroskove();
+            
+            if(sekcija === 'calendar') renderCalendar();
+            if(sekcija === 'klijenti') ucitajKlijente(); 
+            if(sekcija === 'artisti') ucitajArtiste(); 
+            if(sekcija === 'troskovi') ucitajTroskove();
         }
 
         async function ucitajArtiste() {
