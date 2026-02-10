@@ -292,7 +292,7 @@
                 <input type="text" id="inv-type" placeholder="Tip (npr. Igle, Boje...)" style="flex:1;">
                 <input type="number" id="inv-stock" placeholder="Stanje" style="flex:0.5;">
                 <input type="number" id="inv-min" placeholder="Minimum" style="flex:0.5;">
-                <button class="btn-add" style="margin:0; width: 100%;" onclick="dodajUMagacin()">DODAJ NA STANJE</button>
+                <button class="btn-add" style="margin:0; width: 100%;" id="btn-save-inv" onclick="dodajUMagacin()">DODAJ NA STANJE</button>
             </div>
         </div>
         <div class="magacin-grid" id="magacin-list">
@@ -471,7 +471,7 @@
             }
             popuniMeseceIGodine();
             osveziPodatke();
-            renderujMagacin(); // NOVO: Inicijalizacija magacina
+            renderujMagacin(); // NOVO: Inicijalizacija magacina iz baze
         }
 
         async function napraviArtista() {
@@ -631,37 +631,51 @@
             } catch (err) { console.error(err); }
         }
 
-        /* --- NOVE FUNKCIJE ZA MAGACIN --- */
-        function dodajUMagacin() {
+        /* --- IZMENJENE FUNKCIJE ZA MAGACIN (SUPABASE) --- */
+        async function dodajUMagacin() {
             const name = document.getElementById('inv-name').value;
             const type = document.getElementById('inv-type').value;
             const stock = parseInt(document.getElementById('inv-stock').value);
             const min = parseInt(document.getElementById('inv-min').value);
+            const btn = document.getElementById('btn-save-inv');
 
             if(!name || isNaN(stock)) { alert("Naziv i stanje su obavezni!"); return; }
+            btn.disabled = true;
 
-            const artikal = { id: Date.now(), name, type, stock, min: min || 0 };
-            let inventory = JSON.parse(localStorage.getItem('studio_inventory') || '[]');
-            inventory.push(artikal);
-            localStorage.setItem('studio_inventory', JSON.stringify(inventory));
-            
-            document.getElementById('inv-name').value = '';
-            document.getElementById('inv-type').value = '';
-            document.getElementById('inv-stock').value = '';
-            document.getElementById('inv-min').value = '';
-            
-            renderujMagacin();
+            const { error } = await supabaseClient.from('inventory').insert([{
+                studio_id: userProfile.studio_id,
+                name: name,
+                type: type,
+                stock: stock,
+                min_stock: min || 0
+            }]);
+
+            if(error) { alert("Greška: " + error.message); }
+            else {
+                document.getElementById('inv-name').value = '';
+                document.getElementById('inv-type').value = '';
+                document.getElementById('inv-stock').value = '';
+                document.getElementById('inv-min').value = '';
+                renderujMagacin();
+            }
+            btn.disabled = false;
         }
 
-        function renderujMagacin() {
+        async function renderujMagacin() {
             const list = document.getElementById('magacin-list');
-            const inventory = JSON.parse(localStorage.getItem('studio_inventory') || '[]');
+            const { data: inventory, error } = await supabaseClient
+                .from('inventory')
+                .select('*')
+                .eq('studio_id', userProfile.studio_id)
+                .order('name', { ascending: true });
+
+            if(error) return;
             list.innerHTML = '';
 
             inventory.forEach(item => {
                 let statusClass = 'status-ok';
-                if(item.stock <= item.min) statusClass = 'status-danger';
-                else if(item.stock <= item.min * 2) statusClass = 'status-warning';
+                if(item.stock <= item.min_stock) statusClass = 'status-danger';
+                else if(item.stock <= item.min_stock * 2) statusClass = 'status-warning';
 
                 const card = document.createElement('div');
                 card.className = `item-card ${statusClass}`;
@@ -671,32 +685,30 @@
                     <div class="item-stock-area">
                         <div class="stock-num">${item.stock}</div>
                         <div class="stock-controls">
-                            <button class="btn-stock btn-minus" onclick="promeniStanje(${item.id}, -1)">-</button>
-                            <button class="btn-stock btn-plus" onclick="promeniStanje(${item.id}, 1)">+</button>
+                            <button class="btn-stock btn-minus" onclick="promeniStanje('${item.id}', -1)">-</button>
+                            <button class="btn-stock btn-plus" onclick="promeniStanje('${item.id}', 1)">+</button>
                         </div>
                     </div>
-                    ${item.stock <= item.min ? '<span class="danger-msg">DOPUNI ZALIHE!</span>' : ''}
-                    <button class="btn-action-delete" style="position:absolute; top:15px; right:15px; padding:5px 10px;" onclick="obrisiIzMagacina(${item.id})">X</button>
+                    ${item.stock <= item.min_stock ? '<span class="danger-msg">DOPUNI ZALIHE!</span>' : ''}
+                    <button class="btn-action-delete" style="position:absolute; top:15px; right:15px; padding:5px 10px;" onclick="obrisiIzMagacina('${item.id}')">X</button>
                 `;
                 list.appendChild(card);
             });
         }
 
-        function promeniStanje(id, diff) {
-            let inventory = JSON.parse(localStorage.getItem('studio_inventory') || '[]');
-            const item = inventory.find(i => i.id === id);
-            if(item) {
-                item.stock = Math.max(0, item.stock + diff);
-                localStorage.setItem('studio_inventory', JSON.stringify(inventory));
+        async function promeniStanje(id, diff) {
+            // Prvo dohvatimo trenutno stanje da bismo ga sigurno izmenili
+            const { data } = await supabaseClient.from('inventory').select('stock').eq('id', id).single();
+            if(data) {
+                const novoStanje = Math.max(0, data.stock + diff);
+                await supabaseClient.from('inventory').update({ stock: novoStanje }).eq('id', id);
                 renderujMagacin();
             }
         }
 
-        function obrisiIzMagacina(id) {
-            if(confirm("Obrisati artikal?")) {
-                let inventory = JSON.parse(localStorage.getItem('studio_inventory') || '[]');
-                inventory = inventory.filter(i => i.id !== id);
-                localStorage.setItem('studio_inventory', JSON.stringify(inventory));
+        async function obrisiIzMagacina(id) {
+            if(confirm("Obrisati artikal iz baze?")) {
+                await supabaseClient.from('inventory').delete().eq('id', id);
                 renderujMagacin();
             }
         }
@@ -816,7 +828,6 @@
             saveBtn.disabled = true; saveBtn.innerText = "ČUVANJE...";
             try {
                 const cena = parseFloat(document.getElementById('total_price').value) || 0;
-                // IZMENA: Dozvoljen procenat 0
                 const inputPercent = document.getElementById('artist_percent').value;
                 const procenat = inputPercent === "" ? 0 : parseFloat(inputPercent);
                 
@@ -837,7 +848,6 @@
             editingId = null; document.getElementById('modal-title').innerText = "Novi Termin";
             document.querySelectorAll('#bookingModal input').forEach(i => i.value = "");
             document.getElementById('deposit_amt').value = "0"; 
-            // IZMENA: Umesto fiksno 50, ostavljamo prazno ili 0 da owner može odmah da bira
             document.getElementById('artist_percent').value = ""; 
             document.getElementById('currency_choice').value = "€";
             if(document.getElementById('app_artist_id')) document.getElementById('app_artist_id').value = userProfile.id;
