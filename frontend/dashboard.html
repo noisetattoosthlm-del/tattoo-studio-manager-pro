@@ -379,7 +379,7 @@
             </div>
             <div style="display: flex; gap: 10px;">
                 <div style="flex:1"><label class="modal-label">Depozit</label><input type="number" id="deposit_amt" value="0"></div>
-                <div style="flex:1"><label class="modal-label">Artist %</label><input type="number" id="artist_percent" value="50"></div>
+                <div style="flex:1"><label class="modal-label">Artist %</label><input type="number" id="artist_percent" min="0" max="100" placeholder="0-100"></div>
             </div>
             <div style="display: flex; gap: 10px;">
                 <div style="flex:1"><label class="modal-label">Plaćanje</label><select id="payment_type"><option value="Cash">Cash 💵</option><option value="Card">Card 💳</option></select></div>
@@ -816,7 +816,10 @@
             saveBtn.disabled = true; saveBtn.innerText = "ČUVANJE...";
             try {
                 const cena = parseFloat(document.getElementById('total_price').value) || 0;
-                const procenat = parseFloat(document.getElementById('artist_percent').value) || 50;
+                // IZMENA: Dozvoljen procenat 0
+                const inputPercent = document.getElementById('artist_percent').value;
+                const procenat = inputPercent === "" ? 0 : parseFloat(inputPercent);
+                
                 const valuta = document.getElementById('currency_choice').value;
                 const depozit = parseFloat(document.getElementById('deposit_amt').value) || 0;
                 const payload = {
@@ -833,7 +836,9 @@
         function otvoriModalNovi() {
             editingId = null; document.getElementById('modal-title').innerText = "Novi Termin";
             document.querySelectorAll('#bookingModal input').forEach(i => i.value = "");
-            document.getElementById('deposit_amt').value = "0"; document.getElementById('artist_percent').value = "50";
+            document.getElementById('deposit_amt').value = "0"; 
+            // IZMENA: Umesto fiksno 50, ostavljamo prazno ili 0 da owner može odmah da bira
+            document.getElementById('artist_percent').value = ""; 
             document.getElementById('currency_choice').value = "€";
             if(document.getElementById('app_artist_id')) document.getElementById('app_artist_id').value = userProfile.id;
             document.getElementById('bookingModal').style.display = 'block';
@@ -846,7 +851,7 @@
             document.getElementById('c_name').value = a.client_name || ""; document.getElementById('c_phone').value = a.client_phone || "";
             document.getElementById('c_insta').value = a.client_instagram || ""; document.getElementById('app_time').value = a.appointment_time ? a.appointment_time.substring(0, 16) : "";
             document.getElementById('total_price').value = a.total_price || 0; document.getElementById('currency_choice').value = a.currency || "€";
-            document.getElementById('deposit_amt').value = a.deposit || 0; document.getElementById('artist_percent').value = a.artist_percentage || 50;
+            document.getElementById('deposit_amt').value = a.deposit || 0; document.getElementById('artist_percent').value = a.artist_percentage !== undefined ? a.artist_percentage : 0;
             document.getElementById('payment_type').value = a.payment_type || 'Cash'; document.getElementById('bookingModal').style.display = 'block';
         }
 
