@@ -2,12 +2,12 @@ const CACHE_NAME = 'dashboard-v1';
 const ASSETS = [
   '/',
   '/index.html',
-  '/dashboard.html',
-  '/style.css',
+  '/dashboard.html', 
+  '/style.css',      
   '/script.js'
 ];
 
-// --- POSTOJEĆI KOD ZA KEŠIRANJE ---
+// 1. KEŠIRANJE (Tvoj stari kod)
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
@@ -30,36 +30,29 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
-// --- NOVI KOD ZA NOTIFIKACIJE (Ovo ti fali) ---
-
-// Slušaj dolazne poruke (Push)
+// 2. NOTIFIKACIJE (Ovo mora biti tu da bi taster "Uključi" reagovao)
 self.addEventListener('push', (event) => {
-  let data = { title: 'Nova poruka', body: 'Imate novo obaveštenje.' };
-  
-  if (event.data) {
-    data = event.data.json();
+  let data = { title: 'Obaveštenje', body: 'Stigla je nova poruka.' };
+  try {
+    if (event.data) {
+      data = event.data.json();
+    }
+  } catch (e) {
+    console.log("Push podaci nisu JSON, koristim default.");
   }
 
   const options = {
     body: data.body,
-    icon: '/icon-192.png', // Putanja do ikonice koju si stavio u manifest
+    icon: '/icon-192.png', // Moraš imati ovu ikonicu u public folderu
     badge: '/icon-192.png',
-    vibrate: [100, 50, 100],
-    data: {
-      url: data.url || '/' // Adresa koju otvara klik na notifikaciju
-    }
+    vibrate: [100, 50, 100]
   };
 
-  event.waitUntil(
-    self.registration.showNotification(data.title, options)
-  );
+  event.waitUntil(self.registration.showNotification(data.title, options));
 });
 
-// Slušaj klik na samu notifikaciju
+// Otvaranje aplikacije na klik notifikacije
 self.addEventListener('notificationclick', (event) => {
-  event.notification.close(); // Zatvori obaveštenje
-  
-  event.waitUntil(
-    clients.openWindow(event.notification.data.url) // Otvori dashboard
-  );
+  event.notification.close();
+  event.waitUntil(clients.openWindow('/'));
 });
