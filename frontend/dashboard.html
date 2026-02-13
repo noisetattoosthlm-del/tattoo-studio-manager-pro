@@ -478,12 +478,12 @@
                     document.getElementById('main-greeting').innerText = 'Moji Termini';
                     if(document.getElementById('debt-card')) document.getElementById('debt-card').style.display = 'none';
                 }
-                // Registruj notifikacije za ulogovanog korisnika
+                // REGISTRACIJA NOTIFIKACIJA ZA SVAKOG KORISNIKA KOJI SE LOGUJE
                 registrujNotifikacije(user.id);
             }
             popuniMeseceIGodine();
             osveziPodatke();
-            renderujMagacin(); // NOVO: Inicijalizacija magacina iz baze
+            renderujMagacin(); 
         }
 
         async function napraviArtista() {
@@ -643,7 +643,6 @@
             } catch (err) { console.error(err); }
         }
 
-        /* --- IZMENJENE FUNKCIJE ZA MAGACIN (SUPABASE) --- */
         async function dodajUMagacin() {
             const name = document.getElementById('inv-name').value;
             const type = document.getElementById('inv-type').value;
@@ -709,7 +708,6 @@
         }
 
         async function promeniStanje(id, diff) {
-            // Prvo dohvatimo trenutno stanje da bismo ga sigurno izmenili
             const { data } = await supabaseClient.from('inventory').select('stock').eq('id', id).single();
             if(data) {
                 const novoStanje = Math.max(0, data.stock + diff);
@@ -724,7 +722,6 @@
                 renderujMagacin();
             }
         }
-        /* ------------------------------- */
 
         async function renderujKalendarTab() {
             const month = parseInt(document.getElementById('cal-month-select').value);
@@ -842,11 +839,8 @@
                 const cena = parseFloat(document.getElementById('total_price').value) || 0;
                 const inputPercent = document.getElementById('artist_percent').value;
                 const procenat = inputPercent === "" ? 0 : parseFloat(inputPercent);
-                
                 const valuta = document.getElementById('currency_choice').value;
                 const depozit = parseFloat(document.getElementById('deposit_amt').value) || 0;
-
-                // DODATO: Reminder minutes
                 const reminderVal = document.getElementById('reminder_minutes').value;
 
                 const payload = {
@@ -868,7 +862,7 @@
             document.getElementById('deposit_amt').value = "0"; 
             document.getElementById('artist_percent').value = ""; 
             document.getElementById('currency_choice').value = "€";
-            document.getElementById('reminder_minutes').value = ""; // Reset
+            document.getElementById('reminder_minutes').value = ""; 
             if(document.getElementById('app_artist_id')) document.getElementById('app_artist_id').value = userProfile.id;
             document.getElementById('bookingModal').style.display = 'block';
         }
@@ -882,7 +876,7 @@
             document.getElementById('total_price').value = a.total_price || 0; document.getElementById('currency_choice').value = a.currency || "€";
             document.getElementById('deposit_amt').value = a.deposit || 0; document.getElementById('artist_percent').value = a.artist_percentage !== undefined ? a.artist_percentage : 0;
             document.getElementById('payment_type').value = a.payment_type || 'Cash'; 
-            document.getElementById('reminder_minutes').value = a.reminder_minutes || ""; // Set reminder
+            document.getElementById('reminder_minutes').value = a.reminder_minutes || ""; 
             document.getElementById('bookingModal').style.display = 'block';
         }
 
@@ -1032,7 +1026,7 @@
         function zatvoriModal() { document.getElementById('bookingModal').style.display = 'none'; editingId = null; }
         async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
 
-        // --- PUSH NOTIFICATION LOGIKA ---
+        // --- PUSH NOTIFICATION LOGIKA (SADA POVEZANO SA TVOJIM KLJUČEM) ---
         async function registrujNotifikacije(userId) {
             if ('serviceWorker' in navigator && 'PushManager' in window) {
                 try {
@@ -1042,18 +1036,18 @@
                     if (permission === 'granted') {
                         const subscription = await registration.pushManager.subscribe({
                             userVisibleOnly: true,
-                            applicationServerKey: 'OVDE_IDE_TVOJ_VAPID_PUBLIC_KEY' // Kasnije ćemo ovo generisati
+                            applicationServerKey: 'BIDaGQ_tNOeFG_pa1-dpuC_Grcx1eeQ_RAoXqwaXgyYZVjQveCpZ_kXUTabl2kxF_I6EsN_Jd_VuVnnX0sevogl'
                         });
                         
-                        // Sačuvaj token u bazu
                         await supabaseClient.from('user_push_tokens').upsert({
                             user_id: userId,
                             token: JSON.stringify(subscription),
                             device_type: navigator.userAgent
                         }, { onConflict: 'user_id, token' });
+                        console.log("Notifikacije uspešno registrovane!");
                     }
                 } catch (error) {
-                    console.log('Service Worker/Push error:', error);
+                    console.log('Push error:', error);
                 }
             }
         }
