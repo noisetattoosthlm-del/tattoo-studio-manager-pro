@@ -374,6 +374,17 @@
             <label class="modal-label">Email klijenta (opciono)</label><input type="email" id="c_email">
             <label class="modal-label">Instagram (@)</label><input type="text" id="c_insta">
             <label class="modal-label">Datum i vreme</label><input type="datetime-local" id="app_time">
+            
+            <label class="modal-label">Podseti me pre termina</label>
+            <select id="reminder_before">
+                <option value="10">10 minuta</option>
+                <option value="30" selected>30 minuta</option>
+                <option value="60">1 sat</option>
+                <option value="120">2 sata</option>
+                <option value="180">3 sata</option>
+                <option value="1440">24 sata (1 dan)</option>
+            </select>
+
             <div style="display: flex; gap: 10px;">
                 <div style="flex:2"><label class="modal-label">Cena</label><input type="number" id="total_price"></div>
                 <div style="flex:1"><label class="modal-label">Valuta</label><select id="currency_choice"><option value="€">EUR (€)</option><option value="din">RSD (din)</option></select></div>
@@ -443,7 +454,9 @@
                 if (a.status === 'zakazano') {
                     const appTime = new Date(a.appointment_time);
                     const diffMin = (appTime - now) / (1000 * 60);
-                    if (diffMin > 29 && diffMin <= 30) {
+                    // Provera na osnovu sačuvanog reminder_before ili podrazumevano 30min
+                    const reminderTime = a.reminder_before || 30;
+                    if (diffMin > (reminderTime - 1) && diffMin <= reminderTime) {
                         new Notification("Podsetnik na termin!", {
                             body: `Klijent: ${a.client_name} u ${a.appointment_time.substring(11,16)}h`,
                             icon: 'https://cdn-icons-png.flaticon.com/512/833/833593.png'
@@ -889,10 +902,15 @@
                 
                 const valuta = document.getElementById('currency_choice').value;
                 const depozit = parseFloat(document.getElementById('deposit_amt').value) || 0;
+                
+                // IZMENA: Hvatanje vrednosti za podsetnik
+                const reminderValue = parseInt(document.getElementById('reminder_before').value);
+
                 const payload = {
                     client_name: name, client_phone: document.getElementById('c_phone').value || "", client_email: document.getElementById('c_email').value || "", client_instagram: document.getElementById('c_insta').value || "",
                     appointment_time: time, total_price: cena, currency: valuta, deposit: depozit, artist_percentage: procenat, 
-                    studio_share: cena * ((100 - procenat) / 100), payment_type: document.getElementById('payment_type').value, artist_id: chosenArtistId
+                    studio_share: cena * ((100 - procenat) / 100), payment_type: document.getElementById('payment_type').value, artist_id: chosenArtistId,
+                    reminder_before: reminderValue // Ovo šaljemo u bazu
                 };
                 if (editingId) { await supabaseClient.from('appointments').update(payload).eq('id', editingId); }
                 else { await supabaseClient.from('appointments').insert([{ ...payload, owner_id: userProfile.owner_id || userProfile.id, studio_id: userProfile.studio_id, status: 'zakazano', payout_status: 'nema' }]); }
@@ -906,6 +924,7 @@
             document.getElementById('deposit_amt').value = "0"; 
             document.getElementById('artist_percent').value = ""; 
             document.getElementById('currency_choice').value = "€";
+            document.getElementById('reminder_before').value = "30"; // Reset na 30min
             if(document.getElementById('app_artist_id')) document.getElementById('app_artist_id').value = userProfile.id;
             document.getElementById('bookingModal').style.display = 'block';
         }
@@ -918,7 +937,9 @@
             document.getElementById('c_insta').value = a.client_instagram || ""; document.getElementById('app_time').value = a.appointment_time ? a.appointment_time.substring(0, 16) : "";
             document.getElementById('total_price').value = a.total_price || 0; document.getElementById('currency_choice').value = a.currency || "€";
             document.getElementById('deposit_amt').value = a.deposit || 0; document.getElementById('artist_percent').value = a.artist_percentage !== undefined ? a.artist_percentage : 0;
-            document.getElementById('payment_type').value = a.payment_type || 'Cash'; document.getElementById('bookingModal').style.display = 'block';
+            document.getElementById('payment_type').value = a.payment_type || 'Cash';
+            document.getElementById('reminder_before').value = a.reminder_before || 30; // Učitaj postojeće
+            document.getElementById('bookingModal').style.display = 'block';
         }
 
         async function dodajTrosak() {
