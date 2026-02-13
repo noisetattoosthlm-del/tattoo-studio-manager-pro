@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tattoo Studio Management Pro</title>
+    <link rel="manifest" href="/manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -207,7 +208,7 @@
     <div class="main" id="dashboard-section">
         <h1 id="main-greeting">Statistika Studija</h1>
         
-        <div id="push-status-bar" style="display:none; background:rgba(59, 130, 246, 0.1); border:1px solid var(--accent); padding:15px; border-radius:20px; margin-bottom:20px; display:flex; align-items:center; justify-content:space-between;">
+        <div id="push-status-bar" style="display:none; background:rgba(59, 130, 246, 0.1); border:1px solid var(--accent); padding:15px; border-radius:20px; margin-bottom:20px; align-items:center; justify-content:space-between;">
             <span style="font-size:0.8rem; font-weight:600;">🔔 Omogući notifikacije za termine?</span>
             <button onclick="ponovoAktivirajNotifikacije()" style="background:var(--accent); color:white; border:none; padding:8px 15px; border-radius:10px; cursor:pointer; font-weight:800; font-size:0.7rem;">UKLJUČI</button>
         </div>
@@ -407,6 +408,83 @@
         let globalApps = [];
         let myChart = null;
 
+        // --- POPRAVLJENI DEO ZA NOTIFIKACIJE ---
+        async function ponovoAktivirajNotifikacije() {
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if (user) {
+                // Pozivamo direktno Apple/Android sistemsku dozvolu
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    await registrujNotifikacije(user.id);
+                    document.getElementById('push-status-bar').style.display = 'none';
+                    alert("Notifikacije su uspešno aktivirane!");
+                } else {
+                    alert("Morate odobriti notifikacije u podešavanjima telefona.");
+                }
+            }
+        }
+
+        async function registrujNotifikacije(userId) {
+            if ('serviceWorker' in navigator && 'PushManager' in window) {
+                try {
+                    // Čekamo da service worker bude 100% spreman pre nego tražimo token
+                    const registration = await navigator.serviceWorker.ready;
+                    
+                    const subscription = await registration.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        // Tvoj VAPID ključ koji smo ranije dogovorili
+                        applicationServerKey: 'BIDaGQ_tNOeFG_pa1-dpuC_Grcx1eeQ_RAoXqwAxgYYzVjQveCpZ_kXUTabl2kxF_l6EsN_Jd_VuVnnX0sevogI'
+                    });
+                    
+                    await supabaseClient.from('user_push_tokens').upsert({
+                        user_id: userId,
+                        token: JSON.stringify(subscription),
+                        device_type: navigator.userAgent
+                    });
+                } catch (error) {
+                    console.log('Push error:', error);
+                }
+            }
+        }
+
+        async function initDashboard() {
+            // Registracija SW odmah po učitavanju
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js');
+            }
+
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            if (!user) { window.location.href = 'index.html'; return; }
+            
+            const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', user.id).single();
+            if (profile) {
+                userProfile = profile;
+                if (profile.role === 'owner') {
+                    document.querySelectorAll('.owner-only').forEach(el => {
+                        if(el.classList.contains('stat-card')) el.style.display = 'block';
+                        else el.style.display = 'flex';
+                    });
+                    popuniArtistFilter();
+                } else {
+                    document.getElementById('profit-label').innerText = 'Moja Zarada';
+                    document.getElementById('main-greeting').innerText = 'Moji Termini';
+                    if(document.getElementById('debt-card')) document.getElementById('debt-card').style.display = 'none';
+                }
+                
+                // Provera da li već imamo dozvolu, ako nemamo - prikaži bar
+                if (Notification.permission !== 'granted') {
+                    document.getElementById('push-status-bar').style.display = 'flex';
+                } else {
+                    registrujNotifikacije(user.id);
+                }
+            }
+            popuniMeseceIGodine();
+            osveziPodatke();
+            renderujMagacin(); 
+            setupRealtime();
+        }
+        // --- KRAJ POPRAVKE ZA NOTIFIKACIJE ---
+
         function setupRealtime() {
             supabaseClient
                 .channel('schema-db-changes')
@@ -461,73 +539,6 @@
                     el.appendChild(opt);
                 }
             });
-        }
-
-        async function initDashboard() {
-            const { data: { user } } = await supabaseClient.auth.getUser();
-            if (!user) { window.location.href = 'index.html'; return; }
-            const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', user.id).single();
-            if (profile) {
-                userProfile = profile;
-                if (profile.role === 'owner') {
-                    document.querySelectorAll('.owner-only').forEach(el => {
-                        if(el.classList.contains('stat-card')) el.style.display = 'block';
-                        else el.style.display = 'flex';
-                    });
-                    popuniArtistFilter();
-                } else {
-                    document.getElementById('profit-label').innerText = 'Moja Zarada';
-                    document.getElementById('main-greeting').innerText = 'Moji Termini';
-                    if(document.getElementById('debt-card')) document.getElementById('debt-card').style.display = 'none';
-                }
-                
-                // Automatska provera notifikacija
-                if (Notification.permission !== 'granted') {
-                    document.getElementById('push-status-bar').style.display = 'flex';
-                } else {
-                    registrujNotifikacije(user.id);
-                }
-            }
-            popuniMeseceIGodine();
-            osveziPodatke();
-            renderujMagacin(); 
-            setupRealtime();
-        }
-
-        async function ponovoAktivirajNotifikacije() {
-            const { data: { user } } = await supabaseClient.auth.getUser();
-            if (user) {
-                await registrujNotifikacije(user.id);
-                if (Notification.permission === 'granted') {
-                    document.getElementById('push-status-bar').style.display = 'none';
-                    alert("Notifikacije su uspešno aktivirane!");
-                }
-            }
-        }
-
-        async function registrujNotifikacije(userId) {
-            if ('serviceWorker' in navigator && 'PushManager' in window) {
-                try {
-                    const registration = await navigator.serviceWorker.ready;
-                    const permission = await Notification.requestPermission();
-                    
-                    if (permission === 'granted') {
-                        const subscription = await registration.pushManager.subscribe({
-                            userVisibleOnly: true,
-                            applicationServerKey: 'BIDaGQ_tNOeFG_pa1-dpuC_Grcx1eeQ_RAoXqwAxgYYzVjQveCpZ_kXUTabl2kxF_l6EsN_Jd_VuVnnX0sevogI'
-                        });
-                        
-                        await supabaseClient.from('user_push_tokens').upsert({
-                            user_id: userId,
-                            token: JSON.stringify(subscription),
-                            device_type: navigator.userAgent
-                        });
-                        console.log("Token uspešno sačuvan u bazi!");
-                    }
-                } catch (error) {
-                    console.log('Push error:', error);
-                }
-            }
         }
 
         async function napraviArtista() {
@@ -829,7 +840,7 @@
             const { data } = await query.order('appointment_time', {ascending: false});
             if (data) {
                 const map = {};
-                data.forEach(a => { if (!map[a.client_name]) map[a.client_name] = { phone: a.client_phone || '-', insta: a.client_instagram || '-', last: a.appointment_time }; });
+                data.forEach(a => { if (!map[a.client_name]) map[n = a.client_name] = { phone: a.client_phone || '-', insta: a.client_instagram || '-', last: a.appointment_time }; });
                 let html = '';
                 Object.keys(map).forEach(n => {
                     const c = map[n]; 
