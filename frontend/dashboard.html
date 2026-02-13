@@ -409,6 +409,15 @@
         let globalApps = [];
         let myChart = null;
 
+        // --- REALTIME LISTENER (NOVO) ---
+        function setupRealtime() {
+            supabaseClient
+                .channel('schema-db-changes')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments' }, () => osveziPodatke())
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, () => renderujMagacin())
+                .subscribe();
+        }
+
         function syncDateFilters(el) {
             const val = el.value;
             const isMonth = el.id.includes('month');
@@ -478,12 +487,12 @@
                     document.getElementById('main-greeting').innerText = 'Moji Termini';
                     if(document.getElementById('debt-card')) document.getElementById('debt-card').style.display = 'none';
                 }
-                // REGISTRACIJA NOTIFIKACIJA ZA SVAKOG KORISNIKA KOJI SE LOGUJE
                 registrujNotifikacije(user.id);
             }
             popuniMeseceIGodine();
             osveziPodatke();
             renderujMagacin(); 
+            setupRealtime();
         }
 
         async function napraviArtista() {
@@ -1026,11 +1035,11 @@
         function zatvoriModal() { document.getElementById('bookingModal').style.display = 'none'; editingId = null; }
         async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
 
-        // --- PUSH NOTIFICATION LOGIKA (SADA POVEZANO SA TVOJIM KLJUČEM) ---
+        // --- PUSH NOTIFICATION LOGIKA (POVEZANO SA TVOJIM KLJUČEM) ---
         async function registrujNotifikacije(userId) {
             if ('serviceWorker' in navigator && 'PushManager' in window) {
                 try {
-                    const registration = await navigator.serviceWorker.register('sw.js');
+                    const registration = await navigator.serviceWorker.getRegistration();
                     const permission = await Notification.requestPermission();
                     
                     if (permission === 'granted') {
@@ -1041,7 +1050,7 @@
                         
                         await supabaseClient.from('user_push_tokens').upsert({
                             user_id: userId,
-                            token: JSON.stringify(subscription),
+                            token: subscription,
                             device_type: navigator.userAgent
                         }, { onConflict: 'user_id, token' });
                         console.log("Notifikacije uspešno registrovane!");
