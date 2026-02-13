@@ -383,6 +383,16 @@
             </div>
             <div style="display: flex; gap: 10px;">
                 <div style="flex:1"><label class="modal-label">Plaćanje</label><select id="payment_type"><option value="Cash">Cash 💵</option><option value="Card">Card 💳</option></select></div>
+                <div style="flex:1">
+                    <label class="modal-label">Podsetnik (Artistu)</label>
+                    <select id="reminder_minutes">
+                        <option value="">Bez podsetnika</option>
+                        <option value="30">30 minuta ranije</option>
+                        <option value="60">1 sat ranije</option>
+                        <option value="120">2 sata ranije</option>
+                        <option value="1440">24 sata ranije</option>
+                    </select>
+                </div>
             </div>
             <button id="save-btn" class="btn-add" style="width:100%; margin-top: 10px;" onclick="saveData()">SAČUVAJ</button>
             <button onclick="zatvoriModal()" style="background:none; border:none; color:#64748b; width:100%; cursor:pointer; margin-top:10px; font-weight:600;">Otkaži</button>
@@ -468,6 +478,8 @@
                     document.getElementById('main-greeting').innerText = 'Moji Termini';
                     if(document.getElementById('debt-card')) document.getElementById('debt-card').style.display = 'none';
                 }
+                // Registruj notifikacije za ulogovanog korisnika
+                registrujNotifikacije(user.id);
             }
             popuniMeseceIGodine();
             osveziPodatke();
@@ -833,11 +845,17 @@
                 
                 const valuta = document.getElementById('currency_choice').value;
                 const depozit = parseFloat(document.getElementById('deposit_amt').value) || 0;
+
+                // DODATO: Reminder minutes
+                const reminderVal = document.getElementById('reminder_minutes').value;
+
                 const payload = {
                     client_name: name, client_phone: document.getElementById('c_phone').value || "", client_email: document.getElementById('c_email').value || "", client_instagram: document.getElementById('c_insta').value || "",
                     appointment_time: time, total_price: cena, currency: valuta, deposit: depozit, artist_percentage: procenat, 
-                    studio_share: cena * ((100 - procenat) / 100), payment_type: document.getElementById('payment_type').value, artist_id: chosenArtistId
+                    studio_share: cena * ((100 - procenat) / 100), payment_type: document.getElementById('payment_type').value, artist_id: chosenArtistId,
+                    reminder_minutes: reminderVal === "" ? null : parseInt(reminderVal)
                 };
+
                 if (editingId) { await supabaseClient.from('appointments').update(payload).eq('id', editingId); }
                 else { await supabaseClient.from('appointments').insert([{ ...payload, owner_id: userProfile.owner_id || userProfile.id, studio_id: userProfile.studio_id, status: 'zakazano', payout_status: 'nema' }]); }
                 zatvoriModal(); await osveziPodatke();
@@ -850,6 +868,7 @@
             document.getElementById('deposit_amt').value = "0"; 
             document.getElementById('artist_percent').value = ""; 
             document.getElementById('currency_choice').value = "€";
+            document.getElementById('reminder_minutes').value = ""; // Reset
             if(document.getElementById('app_artist_id')) document.getElementById('app_artist_id').value = userProfile.id;
             document.getElementById('bookingModal').style.display = 'block';
         }
@@ -862,7 +881,9 @@
             document.getElementById('c_insta').value = a.client_instagram || ""; document.getElementById('app_time').value = a.appointment_time ? a.appointment_time.substring(0, 16) : "";
             document.getElementById('total_price').value = a.total_price || 0; document.getElementById('currency_choice').value = a.currency || "€";
             document.getElementById('deposit_amt').value = a.deposit || 0; document.getElementById('artist_percent').value = a.artist_percentage !== undefined ? a.artist_percentage : 0;
-            document.getElementById('payment_type').value = a.payment_type || 'Cash'; document.getElementById('bookingModal').style.display = 'block';
+            document.getElementById('payment_type').value = a.payment_type || 'Cash'; 
+            document.getElementById('reminder_minutes').value = a.reminder_minutes || ""; // Set reminder
+            document.getElementById('bookingModal').style.display = 'block';
         }
 
         async function dodajTrosak() {
@@ -1010,6 +1031,32 @@
         async function obrisiProfil(id) { if(confirm("Ukloniti artista?")) { await supabaseClient.from('profiles').delete().eq('id', id); ucitajArtiste(); } }
         function zatvoriModal() { document.getElementById('bookingModal').style.display = 'none'; editingId = null; }
         async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
+
+        // --- PUSH NOTIFICATION LOGIKA ---
+        async function registrujNotifikacije(userId) {
+            if ('serviceWorker' in navigator && 'PushManager' in window) {
+                try {
+                    const registration = await navigator.serviceWorker.register('sw.js');
+                    const permission = await Notification.requestPermission();
+                    
+                    if (permission === 'granted') {
+                        const subscription = await registration.pushManager.subscribe({
+                            userVisibleOnly: true,
+                            applicationServerKey: 'OVDE_IDE_TVOJ_VAPID_PUBLIC_KEY' // Kasnije ćemo ovo generisati
+                        });
+                        
+                        // Sačuvaj token u bazu
+                        await supabaseClient.from('user_push_tokens').upsert({
+                            user_id: userId,
+                            token: JSON.stringify(subscription),
+                            device_type: navigator.userAgent
+                        }, { onConflict: 'user_id, token' });
+                    }
+                } catch (error) {
+                    console.log('Service Worker/Push error:', error);
+                }
+            }
+        }
 
         initDashboard();
     </script>
