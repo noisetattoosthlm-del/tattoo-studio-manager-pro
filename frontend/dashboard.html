@@ -400,14 +400,40 @@
         let globalApps = [];
         let myChart = null;
 
-        // --- DODATO: NOTIFIKACIJE LOGIKA ---
+        // --- IZMENJENO: NOTIFIKACIJE LOGIKA (DA DUGME NE BUDE MRTVO) ---
         function requestNotifPermission() {
+            if (!("Notification" in window)) {
+                alert("Ovaj pretraživač ne podržava notifikacije.");
+                return;
+            }
+
+            if (Notification.permission === "denied") {
+                alert("Notifikacije su blokirane u vašem pretraživaču. Molimo kliknite na ikonicu KATANCA pored adrese sajta i dozvolite 'Notifications', a zatim osvežite stranicu.");
+                return;
+            }
+
             Notification.requestPermission().then(permission => {
                 if (permission === "granted") {
                     alert("Notifikacije su uspešno uključene!");
                     document.getElementById('btn-notif-req').style.display = 'none';
+                } else if (permission === "denied") {
+                    osveziStatusDugmetaZaNotifikacije();
                 }
             });
+        }
+
+        function osveziStatusDugmetaZaNotifikacije() {
+            const btn = document.getElementById('btn-notif-req');
+            if (!btn) return;
+
+            if (Notification.permission === "granted") {
+                btn.style.display = 'none';
+            } else if (Notification.permission === "denied") {
+                btn.style.background = "rgba(239, 68, 68, 0.1)";
+                btn.style.color = "#ef4444";
+                btn.style.borderColor = "#ef4444";
+                btn.innerText = "⚠️ NOTIFIKACIJE BLOKIRANE";
+            }
         }
 
         function proveriNotifikacije() {
@@ -417,7 +443,6 @@
                 if (a.status === 'zakazano') {
                     const appTime = new Date(a.appointment_time);
                     const diffMin = (appTime - now) / (1000 * 60);
-                    // Ako je termin za 30 minuta (dozvoljavamo odstupanje od 1 minut provere)
                     if (diffMin > 29 && diffMin <= 30) {
                         new Notification("Podsetnik na termin!", {
                             body: `Klijent: ${a.client_name} u ${a.appointment_time.substring(11,16)}h`,
@@ -427,7 +452,7 @@
                 }
             });
         }
-        setInterval(proveriNotifikacije, 60000); // Proveravaj svaki minut
+        setInterval(proveriNotifikacije, 60000);
         // ------------------------------------
 
         function syncDateFilters(el) {
@@ -502,11 +527,10 @@
             }
             popuniMeseceIGodine();
             osveziPodatke();
-            renderujMagacin(); // NOVO: Inicijalizacija magacina iz baze
+            renderujMagacin(); 
             
-            if (Notification.permission === "granted") {
-                document.getElementById('btn-notif-req').style.display = 'none';
-            }
+            // Provera statusa notifikacija pri startu
+            osveziStatusDugmetaZaNotifikacije();
         }
 
         async function napraviArtista() {
