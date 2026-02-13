@@ -383,13 +383,19 @@
             </div>
             <div style="display: flex; gap: 10px;">
                 <div style="flex:1"><label class="modal-label">Plaćanje</label><select id="payment_type"><option value="Cash">Cash 💵</option><option value="Card">Card 💳</option></select></div>
-                <div style="flex:1"><label class="modal-label">Podsetnik</label><select id="reminder_before">
-                    <option value="0">Bez podsetnika</option>
-                    <option value="30">30 min ranije</option>
-                    <option value="60">1 sat ranije</option>
-                    <option value="120">2 sata ranije</option>
-                    <option value="1440">24 sata ranije</option>
-                </select></div>
+                <div style="flex:1">
+                    <label class="modal-label">Podsetnik</label>
+                    <select id="reminder_option">
+                        <option value="0">Bez podsetnika</option>
+                        <option value="10">10 min pre</option>
+                        <option value="30">30 min pre</option>
+                        <option value="60">1 sat pre</option>
+                        <option value="120">2 sata pre</option>
+                        <option value="180">3 sata pre</option>
+                        <option value="300">5 sati pre</option>
+                        <option value="1440">24 sata pre</option>
+                    </select>
+                </div>
             </div>
             <button id="save-btn" class="btn-add" style="width:100%; margin-top: 10px;" onclick="saveData()">SAČUVAJ</button>
             <button onclick="zatvoriModal()" style="background:none; border:none; color:#64748b; width:100%; cursor:pointer; margin-top:10px; font-weight:600;">Otkaži</button>
@@ -638,6 +644,7 @@
             } catch (err) { console.error(err); }
         }
 
+        /* --- IZMENJENE FUNKCIJE ZA MAGACIN (SUPABASE) --- */
         async function dodajUMagacin() {
             const name = document.getElementById('inv-name').value;
             const type = document.getElementById('inv-type').value;
@@ -703,6 +710,7 @@
         }
 
         async function promeniStanje(id, diff) {
+            // Prvo dohvatimo trenutno stanje da bismo ga sigurno izmenili
             const { data } = await supabaseClient.from('inventory').select('stock').eq('id', id).single();
             if(data) {
                 const novoStanje = Math.max(0, data.stock + diff);
@@ -717,6 +725,7 @@
                 renderujMagacin();
             }
         }
+        /* ------------------------------- */
 
         async function renderujKalendarTab() {
             const month = parseInt(document.getElementById('cal-month-select').value);
@@ -841,8 +850,7 @@
                     client_name: name, client_phone: document.getElementById('c_phone').value || "", client_email: document.getElementById('c_email').value || "", client_instagram: document.getElementById('c_insta').value || "",
                     appointment_time: time, total_price: cena, currency: valuta, deposit: depozit, artist_percentage: procenat, 
                     studio_share: cena * ((100 - procenat) / 100), payment_type: document.getElementById('payment_type').value, artist_id: chosenArtistId,
-                    reminder_before: parseInt(document.getElementById('reminder_before').value) || 0,
-                    reminder_sent: false // Resetuj kod svake izmene/unosa
+                    reminder_before: parseInt(document.getElementById('reminder_option').value) || 0
                 };
                 if (editingId) { await supabaseClient.from('appointments').update(payload).eq('id', editingId); }
                 else { await supabaseClient.from('appointments').insert([{ ...payload, owner_id: userProfile.owner_id || userProfile.id, studio_id: userProfile.studio_id, status: 'zakazano', payout_status: 'nema' }]); }
@@ -856,7 +864,7 @@
             document.getElementById('deposit_amt').value = "0"; 
             document.getElementById('artist_percent').value = ""; 
             document.getElementById('currency_choice').value = "€";
-            document.getElementById('reminder_before').value = "0"; // Reset podsetnika
+            document.getElementById('reminder_option').value = "30"; 
             if(document.getElementById('app_artist_id')) document.getElementById('app_artist_id').value = userProfile.id;
             document.getElementById('bookingModal').style.display = 'block';
         }
@@ -869,8 +877,8 @@
             document.getElementById('c_insta').value = a.client_instagram || ""; document.getElementById('app_time').value = a.appointment_time ? a.appointment_time.substring(0, 16) : "";
             document.getElementById('total_price').value = a.total_price || 0; document.getElementById('currency_choice').value = a.currency || "€";
             document.getElementById('deposit_amt').value = a.deposit || 0; document.getElementById('artist_percent').value = a.artist_percentage !== undefined ? a.artist_percentage : 0;
-            document.getElementById('payment_type').value = a.payment_type || 'Cash';
-            document.getElementById('reminder_before').value = a.reminder_before || 0; // Učitaj podsetnik
+            document.getElementById('payment_type').value = a.payment_type || 'Cash'; 
+            document.getElementById('reminder_option').value = a.reminder_before || 0;
             document.getElementById('bookingModal').style.display = 'block';
         }
 
