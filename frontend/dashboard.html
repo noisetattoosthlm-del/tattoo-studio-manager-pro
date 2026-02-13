@@ -2,7 +2,7 @@
 <html lang="sr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Tattoo Studio Management Pro</title>
     <link rel="manifest" href="/manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
@@ -34,7 +34,6 @@
         .main { flex: 1; padding: 40px; overflow-y: auto; background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.05), transparent); }
         h1 { font-weight: 800; font-size: 2.8rem; margin-bottom: 40px; letter-spacing: -1px; }
 
-        /* NOVI STIL ZA DAILY BRIEFING */
         .briefing-container {
             background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.05) 100%);
             border: 1px solid rgba(59, 130, 246, 0.2);
@@ -256,7 +255,6 @@
                 <option value="all">Svi Artisti</option>
             </select>
         </div>
-
         <div class="calendar-grid-header">
             <div class="calendar-day-label">Pon</div><div class="calendar-day-label">Uto</div>
             <div class="calendar-day-label">Sre</div><div class="calendar-day-label">Čet</div>
@@ -264,7 +262,6 @@
             <div class="calendar-day-label">Ned</div>
         </div>
         <div class="calendar-days-container" id="cal-days"></div>
-
         <div id="day-details" class="day-details-container" style="display:none; margin-top:40px;">
             <h2 id="selected-date-title" style="margin:0 0 20px 0; color:var(--accent);"></h2>
             <div id="day-events-list"></div>
@@ -288,11 +285,11 @@
         <div style="background: var(--card); padding: 30px; border-radius: 24px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.05);">
             <h3 style="margin-top:0; font-size: 1rem; color: var(--accent);">DODAJ NOVI ARTIKAL</h3>
             <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                <input type="text" id="inv-name" placeholder="Naziv (npr. 1203RL Kertridž)" style="flex:2;">
-                <input type="text" id="inv-type" placeholder="Tip (npr. Igle, Boje...)" style="flex:1;">
-                <input type="number" id="inv-stock" placeholder="Stanje" style="flex:0.5;">
-                <input type="number" id="inv-min" placeholder="Minimum" style="flex:0.5;">
-                <button class="btn-add" style="margin:0; width: 100%;" id="btn-save-inv" onclick="dodajUMagacin()">DODAJ NA STANJE</button>
+                <input type="text" id="inv-name" placeholder="Naziv">
+                <input type="text" id="inv-type" placeholder="Tip">
+                <input type="number" id="inv-stock" placeholder="Stanje">
+                <input type="number" id="inv-min" placeholder="Minimum">
+                <button class="btn-add" style="margin:0; width: 100%;" onclick="dodajUMagacin()">DODAJ NA STANJE</button>
             </div>
         </div>
         <div class="magacin-grid" id="magacin-list"></div>
@@ -300,21 +297,18 @@
 
     <div class="main" id="artisti-section" style="display:none;">
         <h1>Upravljanje Artisti</h1>
-        <div style="background: var(--card); padding: 30px; border-radius: 24px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.05);">
+        <div class="owner-only" style="background: var(--card); padding: 30px; border-radius: 24px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.05);">
             <h3 style="margin-top:0; font-size: 1rem; color: var(--accent);">DODAJ NOVOG ARTISTA</h3>
             <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                <input type="text" id="new-artist-name" placeholder="Ime artista" style="flex:1;">
-                <input type="email" id="new-artist-email" placeholder="Email" style="flex:1;">
-                <input type="password" id="new-artist-pass" placeholder="Lozinka" style="flex:1;">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <label style="font-size:0.7rem; color:#64748b;">BOJA:</label>
-                    <input type="color" id="new-artist-color" value="#3b82f6" style="width:50px; height:50px; padding:2px; margin:0;">
-                </div>
-                <button class="btn-add" id="btn-create-artist" style="margin:0; width: 100%;" onclick="napraviArtista()">KREIRAJ NALOG</button>
+                <input type="text" id="new-artist-name" placeholder="Ime">
+                <input type="email" id="new-artist-email" placeholder="Email">
+                <input type="password" id="new-artist-pass" placeholder="Lozinka">
+                <input type="color" id="new-artist-color" value="#3b82f6" style="width:50px; height:50px;">
+                <button class="btn-add" style="margin:0; width: 100%;" onclick="napraviArtista()">KREIRAJ NALOG</button>
             </div>
         </div>
         <div class="table-container">
-            <table id="artists-table">
+            <table>
                 <thead>
                     <tr><th>Artist</th><th>Boja</th><th>Uloga</th><th>Termini</th><th>Ukupan Promet</th><th style="text-align:right;">Akcije</th></tr>
                 </thead>
@@ -324,77 +318,57 @@
     </div>
 
     <div class="main" id="troskovi-section" style="display:none;">
-        <div style="display: flex; align-items: center; margin-bottom: 40px;">
-            <h1>Troškovi Studija</h1>
-            <button class="btn-export" onclick="window.print()" style="margin-left: auto;">📄 IZVEŠTAJ TROŠKOVA (PDF)</button>
-        </div>
-
+        <h1>Troškovi Studija</h1>
         <div class="filter-group">
             <select id="exp-month-select" class="filter-select" onchange="syncDateFilters(this)"></select>
             <select id="exp-year-select" class="filter-select" onchange="syncDateFilters(this)"></select>
         </div>
-
         <div class="no-print" style="background: var(--card); padding: 30px; border-radius: 24px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.05);">
-            <h3 style="margin-top:0; font-size: 1rem; color: var(--accent);">DODAJ NOVI TROŠAK</h3>
-            <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;">
-                <input type="text" id="exp-title" placeholder="Opis" style="flex:2; margin-bottom:0;">
-                <input type="number" id="exp-amount" placeholder="Iznos" style="flex:1; margin-bottom:0;">
-                <select id="exp-currency" style="flex:0.5; min-width:80px; margin-bottom:0;"><option value="€">€</option><option value="din">din</option></select>
-                <button class="btn-add" style="margin:0; padding: 15px 30px;" onclick="dodajTrosak()">DODAJ</button>
+            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <input type="text" id="exp-title" placeholder="Opis" style="flex:2;">
+                <input type="number" id="exp-amount" placeholder="Iznos" style="flex:1;">
+                <select id="exp-currency" style="flex:0.5;"><option value="€">€</option><option value="din">din</option></select>
+                <button class="btn-add" style="margin:0;" onclick="dodajTrosak()">DODAJ</button>
             </div>
         </div>
-
         <div class="table-container">
             <table>
-                <thead>
-                    <tr><th>Opis</th><th>Iznos</th><th>Datum</th><th style="text-align:right;" class="no-print">Akcije</th></tr>
-                </thead>
+                <thead><tr><th>Opis</th><th>Iznos</th><th>Datum</th><th style="text-align:right;">Akcije</th></tr></thead>
                 <tbody id="expenses-list-body"></tbody>
-                <tfoot>
-                    <tr style="border-top: 2px solid var(--accent); font-weight: 800;">
-                        <td style="padding-top: 20px;">UKUPNO ZA IZABRANI PERIOD:</td>
-                        <td colspan="3" id="total-expenses-sum" style="padding-top: 20px; color: var(--accent); font-size: 1.2rem;">€0 / 0 RSD</td>
-                    </tr>
-                </tfoot>
+                <tfoot><tr><td colspan="4" id="total-expenses-sum" style="font-weight:800; color:var(--accent); padding:20px;"></td></tr></tfoot>
             </table>
         </div>
     </div>
 
     <div id="bookingModal" class="modal">
         <div class="modal-content">
-            <h2 id="modal-title" style="margin:0 0 25px 0;">Novi Termin</h2>
-            <div class="owner-only" id="artist-select-container" style="flex-direction:column; width:100%;">
-                <label class="modal-label">Dodeli artistu</label>
-                <select id="app_artist_id"><option value="">Učitavanje artista...</option></select>
+            <h2 id="modal-title">Novi Termin</h2>
+            <div id="artist-select-container">
+                <label class="modal-label">Artist</label>
+                <select id="app_artist_id"></select>
             </div>
-            <label class="modal-label">Ime klijenta</label><input type="text" id="c_name">
-            <label class="modal-label">Mobilni telefon</label><input type="text" id="c_phone" placeholder="Unesite broj telefona">
-            <label class="modal-label">Email klijenta (opciono)</label><input type="email" id="c_email">
-            <label class="modal-label">Instagram (@)</label><input type="text" id="c_insta">
-            <label class="modal-label">Datum i vreme</label><input type="datetime-local" id="app_time">
+            <label class="modal-label">Klijent</label><input type="text" id="c_name">
+            <label class="modal-label">Telefon</label><input type="text" id="c_phone">
+            <label class="modal-label">Instagram</label><input type="text" id="c_insta">
+            <label class="modal-label">Vreme</label><input type="datetime-local" id="app_time">
             <div style="display: flex; gap: 10px;">
-                <div style="flex:2"><label class="modal-label">Cena</label><input type="number" id="total_price"></div>
-                <div style="flex:1"><label class="modal-label">Valuta</label><select id="currency_choice"><option value="€">EUR (€)</option><option value="din">RSD (din)</option></select></div>
-            </div>
-            <div style="display: flex; gap: 10px;">
-                <div style="flex:1"><label class="modal-label">Depozit</label><input type="number" id="deposit_amt" value="0"></div>
-                <div style="flex:1"><label class="modal-label">Artist %</label><input type="number" id="artist_percent" min="0" max="100" placeholder="0-100"></div>
+                <input type="number" id="total_price" placeholder="Cena">
+                <select id="currency_choice"><option value="€">€</option><option value="din">din</option></select>
             </div>
             <div style="display: flex; gap: 10px;">
-                <div style="flex:1"><label class="modal-label">Plaćanje</label><select id="payment_type"><option value="Cash">Cash 💵</option><option value="Card">Card 💳</option></select></div>
-                <div style="flex:1">
-                    <label class="modal-label">Podsetnik (Artistu)</label>
-                    <select id="reminder_minutes">
-                        <option value="">Bez podsetnika</option>
-                        <option value="30">30 minuta ranije</option>
-                        <option value="60">1 sat ranije</option>
-                        <option value="120">2 sata ranije</option>
-                        <option value="1440">24 sata ranije</option>
-                    </select>
-                </div>
+                <input type="number" id="deposit_amt" placeholder="Depozit" value="0">
+                <input type="number" id="artist_percent" placeholder="Artist %">
             </div>
-            <button id="save-btn" class="btn-add" style="width:100%; margin-top: 10px;" onclick="saveData()">SAČUVAJ</button>
-            <button onclick="zatvoriModal()" style="background:none; border:none; color:#64748b; width:100%; cursor:pointer; margin-top:10px; font-weight:600;">Otkaži</button>
+            <select id="payment_type"><option value="Cash">Cash 💵</option><option value="Card">Card 💳</option></select>
+            <label class="modal-label">Podsetnik (min pre)</label>
+            <select id="reminder_minutes">
+                <option value="">Bez podsetnika</option>
+                <option value="30">30 min</option>
+                <option value="60">1 sat</option>
+                <option value="1440">24 sata</option>
+            </select>
+            <button id="save-btn" class="btn-add" style="width:100%;" onclick="saveData()">SAČUVAJ</button>
+            <button onclick="zatvoriModal()" style="background:none; border:none; color:#64748b; width:100%; cursor:pointer; margin-top:10px;">Odustani</button>
         </div>
     </div>
 
@@ -408,51 +382,17 @@
         let globalApps = [];
         let myChart = null;
 
-        // --- POPRAVLJENI DEO ZA NOTIFIKACIJE ---
-        async function ponovoAktivirajNotifikacije() {
-            const { data: { user } } = await supabaseClient.auth.getUser();
-            if (user) {
-                // Pozivamo direktno Apple/Android sistemsku dozvolu
-                const permission = await Notification.requestPermission();
-                if (permission === 'granted') {
-                    await registrujNotifikacije(user.id);
-                    document.getElementById('push-status-bar').style.display = 'none';
-                    alert("Notifikacije su uspešno aktivirane!");
-                } else {
-                    alert("Morate odobriti notifikacije u podešavanjima telefona.");
-                }
-            }
-        }
-
-        async function registrujNotifikacije(userId) {
-            if ('serviceWorker' in navigator && 'PushManager' in window) {
-                try {
-                    // Čekamo da service worker bude 100% spreman pre nego tražimo token
-                    const registration = await navigator.serviceWorker.ready;
-                    
-                    const subscription = await registration.pushManager.subscribe({
-                        userVisibleOnly: true,
-                        // Tvoj VAPID ključ koji smo ranije dogovorili
-                        applicationServerKey: 'BIDaGQ_tNOeFG_pa1-dpuC_Grcx1eeQ_RAoXqwAxgYYzVjQveCpZ_kXUTabl2kxF_l6EsN_Jd_VuVnnX0sevogI'
-                    });
-                    
-                    await supabaseClient.from('user_push_tokens').upsert({
-                        user_id: userId,
-                        token: JSON.stringify(subscription),
-                        device_type: navigator.userAgent
-                    });
-                } catch (error) {
-                    console.log('Push error:', error);
-                }
-            }
+        // POPRAVLJENO FORMATIRANJE VREMENA ZA DASHBOARD (Sprečava pomeranje sata)
+        function formatirajVreme(isoString) {
+            if (!isoString) return "-";
+            const date = new Date(isoString);
+            // Forsiramo lokalni prikaz bez obzira na zonu browsera
+            return date.toLocaleDateString('sr-RS', { day: '2-digit', month: '2-digit' }) + " " + 
+                   date.toLocaleTimeString('sr-RS', { hour: '2-digit', minute: '2-digit', hour12: false });
         }
 
         async function initDashboard() {
-            // Registracija SW odmah po učitavanju
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.register('/sw.js');
-            }
-
+            if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/sw.js'); }
             const { data: { user } } = await supabaseClient.auth.getUser();
             if (!user) { window.location.href = 'index.html'; return; }
             
@@ -460,43 +400,134 @@
             if (profile) {
                 userProfile = profile;
                 if (profile.role === 'owner') {
-                    document.querySelectorAll('.owner-only').forEach(el => {
-                        if(el.classList.contains('stat-card')) el.style.display = 'block';
-                        else el.style.display = 'flex';
-                    });
-                    popuniArtistFilter();
-                } else {
-                    document.getElementById('profit-label').innerText = 'Moja Zarada';
-                    document.getElementById('main-greeting').innerText = 'Moji Termini';
-                    if(document.getElementById('debt-card')) document.getElementById('debt-card').style.display = 'none';
+                    document.querySelectorAll('.owner-only').forEach(el => el.style.display = 'flex');
                 }
-                
-                // Provera da li već imamo dozvolu, ako nemamo - prikaži bar
                 if (Notification.permission !== 'granted') {
                     document.getElementById('push-status-bar').style.display = 'flex';
-                } else {
-                    registrujNotifikacije(user.id);
+                }
+                popuniMeseceIGodine(); 
+                await popuniArtistFilter();
+                osveziPodatke();
+                setupRealtime();
+            }
+        }
+
+        function popuniMeseceIGodine() {
+            const meseci = ["Januar", "Februar", "Mart", "April", "Maj", "Jun", "Jul", "Avgust", "Septembar", "Oktobar", "Novembar", "Decembar"];
+            const d = new Date();
+            const mSelects = ['month-select', 'cal-month-select', 'exp-month-select'];
+            const ySelects = ['year-select', 'cal-year-select', 'exp-year-select'];
+
+            mSelects.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.innerHTML = '';
+                    meseci.forEach((m, i) => {
+                        let opt = document.createElement('option');
+                        opt.value = String(i + 1).padStart(2, '0');
+                        opt.innerHTML = m;
+                        if (i === d.getMonth()) opt.selected = true;
+                        el.appendChild(opt);
+                    });
+                }
+            });
+
+            ySelects.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.innerHTML = '';
+                    for (let y = 2025; y <= 2030; y++) {
+                        let opt = document.createElement('option');
+                        opt.value = y; opt.innerHTML = y;
+                        if (y === d.getFullYear()) opt.selected = true;
+                        el.appendChild(opt);
+                    }
+                }
+            });
+        }
+
+        async function popuniArtistFilter() {
+            const { data } = await supabaseClient.from('profiles').select('id, full_name').eq('studio_id', userProfile.studio_id);
+            if (data) {
+                const filters = ['artist-filter', 'cal-artist-filter'];
+                filters.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        el.innerHTML = '<option value="all">Svi Artisti</option>';
+                        data.forEach(a => { el.innerHTML += `<option value="${a.id}">${a.full_name}</option>`; });
+                    }
+                });
+                const modalEl = document.getElementById('app_artist_id');
+                if (modalEl) {
+                    modalEl.innerHTML = '';
+                    data.forEach(a => { 
+                        let opt = document.createElement('option');
+                        opt.value = a.id; opt.innerText = a.full_name;
+                        if(a.id === userProfile.id) opt.selected = true;
+                        modalEl.appendChild(opt);
+                    });
                 }
             }
-            popuniMeseceIGodine();
-            osveziPodatke();
-            renderujMagacin(); 
-            setupRealtime();
         }
-        // --- KRAJ POPRAVKE ZA NOTIFIKACIJE ---
 
-        function setupRealtime() {
-            supabaseClient
-                .channel('schema-db-changes')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'appointments' }, () => osveziPodatke())
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'inventory' }, () => renderujMagacin())
-                .subscribe();
+        async function osveziPodatke() {
+            const m = document.getElementById('month-select').value;
+            const y = document.getElementById('year-select').value;
+            const artist = document.getElementById('artist-filter').value;
+            const filterStr = `${y}-${m}`;
+
+            let query = supabaseClient.from('appointments').select('*').eq('studio_id', userProfile.studio_id);
+            if (userProfile.role !== 'owner') query = query.eq('artist_id', userProfile.id);
+            else if (artist !== 'all') query = query.eq('artist_id', artist);
+
+            const { data: apps } = await query.order('appointment_time', {ascending: true});
+            if (apps) {
+                globalApps = apps;
+                const filtered = apps.filter(a => a.appointment_time && a.appointment_time.startsWith(filterStr));
+                
+                let uEur = 0, uRsd = 0, pEur = 0, pRsd = 0, dEur = 0, dRsd = 0;
+                filtered.forEach(a => {
+                    if (a.status !== 'no-show') {
+                        if (a.currency === 'din') uRsd += a.total_price; else uEur += a.total_price;
+                    }
+                    let share = userProfile.role === 'owner' ? a.studio_share : (a.total_price - a.studio_share);
+                    if (a.currency === 'din') pRsd += share; else pEur += share;
+                    if (a.status === 'zakazano') {
+                        if (a.currency === 'din') dRsd += a.deposit; else dEur += a.deposit;
+                    }
+                });
+
+                document.getElementById('total-sum').innerHTML = `€${uEur}<span class="currency-sub">${uRsd} RSD</span>`;
+                document.getElementById('studio-sum').innerHTML = `€${pEur.toFixed(0)}<span class="currency-sub">${pRsd.toFixed(0)} RSD</span>`;
+                document.getElementById('deposit-sum').innerHTML = `€${dEur}<span class="currency-sub">${dRsd} RSD</span>`;
+                
+                renderujTabelu(filtered);
+                inicijalizujGrafikon(filtered, y, m);
+            }
+        }
+
+        function renderujTabelu(apps) {
+            let html = `<table><tr><th>Klijent</th><th>Status</th><th>Datum</th><th>Cena</th><th style="text-align:right;">Akcije</th></tr>`;
+            apps.forEach(a => {
+                const statusBadge = a.status === 'završeno' ? '✓' : (a.status === 'no-show' ? 'X' : '⌛');
+                html += `<tr>
+                    <td><strong>${a.client_name}</strong></td>
+                    <td>${statusBadge}</td>
+                    <td>${formatirajVreme(a.appointment_time)}</td>
+                    <td>${a.total_price}${a.currency}</td>
+                    <td style="text-align:right;">
+                        <button class="btn-action-edit" onclick="otvoriModalEdit('${a.id}')">✏️</button>
+                        <button class="btn-action-delete" onclick="obrisiTermin('${a.id}')">🗑️</button>
+                    </td>
+                </tr>`;
+            });
+            document.getElementById('tabela-div').innerHTML = html + `</table>`;
         }
 
         function syncDateFilters(el) {
             const val = el.value;
-            const isMonth = el.id.includes('month');
-            if(isMonth) {
+            const type = el.id.includes('month') ? 'month' : 'year';
+            if (type === 'month') {
                 document.getElementById('month-select').value = val;
                 document.getElementById('cal-month-select').value = val;
                 document.getElementById('exp-month-select').value = val;
@@ -506,388 +537,64 @@
                 document.getElementById('exp-year-select').value = val;
             }
             osveziPodatke();
-            if(document.getElementById('kalendar-section').style.display === 'block') renderujKalendarTab();
-            if(document.getElementById('troskovi-section').style.display === 'block') ucitajTroskove();
+            if (document.getElementById('kalendar-section').style.display === 'block') renderujKalendarTab();
+            if (document.getElementById('troskovi-section').style.display === 'block') ucitajTroskove();
         }
 
-        function popuniMeseceIGodine() {
-            const selects = ['month-select', 'cal-month-select', 'exp-month-select'];
-            const yearSelects = ['year-select', 'cal-year-select', 'exp-year-select'];
-            const meseci = ["Januar", "Februar", "Mart", "April", "Maj", "Jun", "Jul", "Avgust", "Septembar", "Oktobar", "Novembar", "Decembar"];
-            const d = new Date();
-            selects.forEach(id => {
-                const el = document.getElementById(id);
-                if(!el) return;
-                el.innerHTML = '';
-                meseci.forEach((ime, i) => {
-                    let opt = document.createElement('option');
-                    opt.value = String(i + 1).padStart(2, '0');
-                    opt.innerHTML = ime;
-                    if(i === d.getMonth()) opt.selected = true;
-                    el.appendChild(opt);
-                });
+        function prikaziSekciju(s) {
+            const sekcije = ['dashboard', 'kalendar', 'klijenti', 'magacin', 'artisti', 'troskovi'];
+            sekcije.forEach(id => {
+                const el = document.getElementById(id + '-section');
+                if (el) el.style.display = (id === s) ? 'block' : 'none';
             });
-            yearSelects.forEach(id => {
-                const el = document.getElementById(id);
-                if(!el) return;
-                el.innerHTML = '';
-                for(let y = 2026; y <= 2030; y++) {
-                    let opt = document.createElement('option');
-                    opt.value = y;
-                    opt.innerHTML = y;
-                    if(y === d.getFullYear()) opt.selected = true;
-                    el.appendChild(opt);
-                }
-            });
-        }
-
-        async function napraviArtista() {
-            const name = document.getElementById('new-artist-name').value;
-            const email = document.getElementById('new-artist-email').value;
-            const pass = document.getElementById('new-artist-pass').value;
-            const color = document.getElementById('new-artist-color').value;
-            const btn = document.getElementById('btn-create-artist');
-            if(!name || !email || !pass) { alert("Sva polja su obavezna!"); return; }
-            btn.disabled = true; btn.innerText = "KREIRANJE...";
-            try {
-                const { data, error } = await supabaseClient.auth.signUp({ email, password: pass, options: { data: { full_name: name } } });
-                if (error) throw error;
-                if (data.user) {
-                    const { error: profileError } = await supabaseClient.from('profiles').insert([{ id: data.user.id, full_name: name, role: 'artist', studio_id: userProfile.studio_id, owner_id: userProfile.id, color: color }]);
-                    if (profileError) throw profileError;
-                    alert("Artist uspešno kreiran!");
-                    document.getElementById('new-artist-name').value = ""; document.getElementById('new-artist-email').value = ""; document.getElementById('new-artist-pass').value = "";
-                    popuniArtistFilter(); ucitajArtiste();
-                }
-            } catch (err) { alert("Greška: " + err.message); } finally { btn.disabled = false; btn.innerText = "KREIRAJ NALOG"; }
-        }
-
-        async function popuniArtistFilter() {
-            const { data } = await supabaseClient.from('profiles').select('id, full_name').eq('studio_id', userProfile.studio_id);
-            const filters = ['artist-filter', 'cal-artist-filter'];
-            const modalSelect = document.getElementById('app_artist_id');
-            if(data) {
-                filters.forEach(fid => {
-                    const filter = document.getElementById(fid);
-                    if(filter) {
-                        filter.innerHTML = '<option value="all">Svi Artisti</option>';
-                        data.forEach(a => { let opt = document.createElement('option'); opt.value = a.id; opt.innerHTML = a.full_name; filter.appendChild(opt); });
-                    }
-                });
-                if(modalSelect) {
-                    modalSelect.innerHTML = '';
-                    data.forEach(a => { let opt = document.createElement('option'); opt.value = a.id; opt.innerHTML = a.full_name; if(a.id === userProfile.id) opt.selected = true; modalSelect.appendChild(opt); });
-                }
-            }
-        }
-
-        function updateDailyBriefing(apps) {
-            const briefingDiv = document.getElementById('daily-briefing');
-            const briefingTitle = document.getElementById('briefing-title');
-            const briefingText = document.getElementById('briefing-text');
-            const agendaList = document.getElementById('briefing-agenda-list');
-            const today = new Date().toISOString().split('T')[0];
-            const todayApps = apps.filter(a => a.appointment_time && a.appointment_time.startsWith(today) && a.status === 'zakazano');
-            if (todayApps.length > 0) {
-                briefingDiv.style.display = 'flex';
-                if (userProfile.role === 'owner') {
-                    briefingTitle.innerText = `Danas u studiju: ${todayApps.length} termina`;
-                    briefingText.innerText = "Srećan rad celoj ekipi!";
-                } else {
-                    briefingTitle.innerText = `Danas imaš ${todayApps.length} termina`;
-                    briefingText.innerText = `Prvi termin ti je u ${todayApps[0].appointment_time.substring(11,16)}h.`;
-                }
-                let agendaHtml = '';
-                todayApps.forEach(a => {
-                    agendaHtml += `<div class="agenda-item"><div class="agenda-time">${a.appointment_time.substring(11,16)}h</div><div class="agenda-info"><span class="agenda-name">${a.client_name}</span><span class="agenda-contact">${a.client_phone || a.client_instagram || 'Nema kontakta'}</span></div></div>`;
-                });
-                agendaList.innerHTML = agendaHtml;
-            } else { briefingDiv.style.display = 'none'; }
-        }
-
-        async function osveziPodatke() {
-            try {
-                const { data: { user } } = await supabaseClient.auth.getUser();
-                const m = document.getElementById('month-select').value;
-                const y = document.getElementById('year-select').value;
-                const artistFilter = document.getElementById('artist-filter').value;
-                const selectedMonthStr = `${y}-${m}`;
-                let query = supabaseClient.from('appointments').select('*').eq('studio_id', userProfile.studio_id);
-                if (userProfile.role !== 'owner') query = query.eq('artist_id', user.id);
-                else if (artistFilter !== 'all') query = query.eq('artist_id', artistFilter);
-                const { data: allApps } = await query.order('appointment_time', {ascending: true});
-                const { data: allTroskovi } = await supabaseClient.from('expenses').select('*').eq('studio_id', userProfile.studio_id);
-                if (allApps) {
-                    globalApps = allApps;
-                    updateDailyBriefing(allApps);
-                    let filteredApps = allApps.filter(a => a.appointment_time && a.appointment_time.startsWith(selectedMonthStr));
-                    const troskovi = (allTroskovi && userProfile.role === 'owner' && (artistFilter === 'all' || artistFilter === '')) ? allTroskovi.filter(t => t.created_at.startsWith(selectedMonthStr)) : [];
-                    let ugovorenoEur = 0; let ugovorenoRsd = 0; let profitEur = 0; let profitRsd = 0; let depozitEur = 0; let depozitRsd = 0; let dugEur = 0; let dugRsd = 0;
-                    filteredApps.forEach(a => {
-                        if(a.status !== 'no-show') {
-                            if(a.currency === 'din') ugovorenoRsd += (Number(a.total_price) || 0); else ugovorenoEur += (Number(a.total_price) || 0);
-                        }
-                        let udeo = 0;
-                        if (a.status === 'završeno') {
-                            udeo = (userProfile.role === 'owner') ? a.studio_share : (a.total_price - a.studio_share);
-                            if (a.payout_status !== 'isplaćeno') {
-                                let artistZarada = a.total_price - a.studio_share;
-                                if(a.currency === 'din') dugRsd += artistZarada; else dugEur += artistZarada;
-                            }
-                        } else if (a.status === 'no-show' && a.deposit > 0) { udeo = (userProfile.role === 'owner') ? a.deposit : 0; }
-                        if(a.currency === 'din') profitRsd += udeo; else profitEur += udeo;
-                        if(a.status === 'zakazano') { if(a.currency === 'din') depozitRsd += (Number(a.deposit) || 0); else depozitEur += (Number(a.deposit) || 0); }
-                    });
-                    if(userProfile.role === 'owner' && (artistFilter === 'all' || artistFilter === '')) {
-                        troskovi.forEach(t => { if(t.currency === 'din') profitRsd -= (Number(t.amount) || 0); else profitEur -= (Number(t.amount) || 0); });
-                    }
-                    document.getElementById('total-sum').innerHTML = `€${ugovorenoEur}<span class="currency-sub">${ugovorenoRsd} RSD</span>`;
-                    document.getElementById('studio-sum').innerHTML = `€${profitEur.toFixed(0)}<span class="currency-sub">${profitRsd.toFixed(0)} RSD</span>`;
-                    document.getElementById('deposit-sum').innerHTML = `€${depozitEur}<span class="currency-sub">${depozitRsd} RSD</span>`;
-                    if(document.getElementById('debt-sum')) document.getElementById('debt-sum').innerHTML = `€${dugEur.toFixed(0)}<span class="currency-sub">${dugRsd.toFixed(0)} RSD</span>`;
-                    inicijalizujGrafikon(filteredApps, y, m); renderujTabelu(filteredApps);
-                }
-            } catch (err) { console.error(err); }
-        }
-
-        async function dodajUMagacin() {
-            const name = document.getElementById('inv-name').value;
-            const type = document.getElementById('inv-type').value;
-            const stock = parseInt(document.getElementById('inv-stock').value);
-            const min = parseInt(document.getElementById('inv-min').value);
-            const btn = document.getElementById('btn-save-inv');
-            if(!name || isNaN(stock)) { alert("Naziv i stanje su obavezni!"); return; }
-            btn.disabled = true;
-            const { error } = await supabaseClient.from('inventory').insert([{ studio_id: userProfile.studio_id, name: name, type: type, stock: stock, min_stock: min || 0 }]);
-            if(error) { alert("Greška: " + error.message); } else {
-                document.getElementById('inv-name').value = ''; document.getElementById('inv-type').value = ''; document.getElementById('inv-stock').value = ''; document.getElementById('inv-min').value = '';
-                renderujMagacin();
-            }
-            btn.disabled = false;
-        }
-
-        async function renderujMagacin() {
-            const list = document.getElementById('magacin-list');
-            const { data: inventory, error } = await supabaseClient.from('inventory').select('*').eq('studio_id', userProfile.studio_id).order('name', { ascending: true });
-            if(error) return; list.innerHTML = '';
-            inventory.forEach(item => {
-                let statusClass = item.stock <= item.min_stock ? 'status-danger' : (item.stock <= item.min_stock * 2 ? 'status-warning' : 'status-ok');
-                const card = document.createElement('div');
-                card.className = `item-card ${statusClass}`;
-                card.innerHTML = `<div class="item-type">${item.type || 'Ostalo'}</div><div class="item-name">${item.name}</div><div class="item-stock-area"><div class="stock-num">${item.stock}</div><div class="stock-controls"><button class="btn-stock btn-minus" onclick="promeniStanje('${item.id}', -1)">-</button><button class="btn-stock btn-plus" onclick="promeniStanje('${item.id}', 1)">+</button></div></div>${item.stock <= item.min_stock ? '<span class="danger-msg">DOPUNI ZALIHE!</span>' : ''}<button class="btn-action-delete" style="position:absolute; top:15px; right:15px; padding:5px 10px;" onclick="obrisiIzMagacina('${item.id}')">X</button>`;
-                list.appendChild(card);
-            });
-        }
-
-        async function promeniStanje(id, diff) {
-            const { data } = await supabaseClient.from('inventory').select('stock').eq('id', id).single();
-            if(data) {
-                const novoStanje = Math.max(0, data.stock + diff);
-                await supabaseClient.from('inventory').update({ stock: novoStanje }).eq('id', id);
-                renderujMagacin();
-            }
-        }
-
-        async function obrisiIzMagacina(id) { if(confirm("Obrisati artikal iz baze?")) { await supabaseClient.from('inventory').delete().eq('id', id); renderujMagacin(); } }
-
-        async function renderujKalendarTab() {
-            const month = parseInt(document.getElementById('cal-month-select').value);
-            const year = parseInt(document.getElementById('cal-year-select').value);
-            const artistFilter = document.getElementById('cal-artist-filter').value;
-            const { data: artists } = await supabaseClient.from('profiles').select('id, color, full_name').eq('studio_id', userProfile.studio_id);
-            const colorMap = {}; if(artists) artists.forEach(a => colorMap[a.id] = a.color || '#3b82f6');
-            const firstDay = new Date(year, month - 1, 1).getDay();
-            const daysInMonth = new Date(year, month, 0).getDate();
-            const startOffset = firstDay === 0 ? 6 : firstDay - 1;
-            const daysContainer = document.getElementById('cal-days');
-            daysContainer.innerHTML = ''; document.getElementById('day-details').style.display = 'none';
-            for (let i = 0; i < startOffset; i++) { daysContainer.innerHTML += `<div class="cal-day-box" style="opacity:0; pointer-events:none;"></div>`; }
-            for (let d = 1; d <= daysInMonth; d++) {
-                const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                const dailyApps = globalApps.filter(a => a.appointment_time && a.appointment_time.startsWith(dateStr));
-                const filteredApps = artistFilter === 'all' ? dailyApps : dailyApps.filter(a => a.artist_id === artistFilter);
-                let eventsHtml = '';
-                filteredApps.slice(0, 3).forEach(a => { eventsHtml += `<div class="cal-event-tag" style="background:${colorMap[a.artist_id] || '#3b82f6'}">${a.appointment_time.substring(11,16)} ${a.client_name}</div>`; });
-                if(filteredApps.length > 3) eventsHtml += `<div style="font-size:0.55rem; color:#64748b; font-weight:800;">+ još ${filteredApps.length - 3}</div>`;
-                daysContainer.innerHTML += `<div class="cal-day-box ${filteredApps.length > 0 ? 'has-apps' : ''}" onclick="prikaziDetaljeDana('${dateStr}', '${artistFilter}')"><span class="cal-day-num">${d}</span>${eventsHtml}</div>`;
-            }
-        }
-
-        async function prikaziDetaljeDana(date, artistFilter) {
-            const { data: artists } = await supabaseClient.from('profiles').select('id, color, full_name').eq('studio_id', userProfile.studio_id);
-            const colorMap = {}; if(artists) artists.forEach(a => colorMap[a.id] = a.color || '#3b82f6');
-            const dailyApps = globalApps.filter(a => a.appointment_time && a.appointment_time.startsWith(date));
-            const apps = artistFilter === 'all' ? dailyApps : dailyApps.filter(a => a.artist_id === artistFilter);
-            const container = document.getElementById('day-details');
-            const list = document.getElementById('day-events-list');
-            const title = document.getElementById('selected-date-title');
-            title.innerText = new Date(date).toLocaleDateString('sr-RS', { day: 'numeric', month: 'long', year: 'numeric' });
-            list.innerHTML = apps.length === 0 ? '<p style="color:#64748b;">Nema zakazanih termina za ovaj dan.</p>' : '';
-            apps.forEach(a => {
-                list.innerHTML += `<div class="day-detail-item" style="border-left: 5px solid ${colorMap[a.artist_id] || '#3b82f6'}"><div style="display:flex; align-items:center;"><div class="day-detail-time">${a.appointment_time.substring(11,16)}</div><div><div style="font-weight:800; font-size:1.1rem;">${a.client_name}</div><div style="font-size:0.75rem; color:#64748b;">${a.client_instagram || 'Bez Instagrama'} • ${a.client_phone || 'Bez telefona'}</div></div></div><div style="text-align:right;"><div style="font-weight:800; color:var(--accent); font-size:1.2rem;">${a.total_price}${a.currency}</div><button class="btn-action-edit" onclick="otvoriModalEdit('${a.id}')" style="margin-top:5px;">DETALJI</button></div></div>`;
-            });
-            container.style.display = 'block'; container.scrollIntoView({ behavior: 'smooth' });
-        }
-
-        function renderujTabelu(filteredApps) {
-            let h = `<table><tr><th>Klijent</th><th style="text-align: center;">Status</th><th>Datum</th><th>Cena</th><th style="text-align:right;">Akcije</th></tr>`;
-            filteredApps.forEach(a => {
-                const datum = new Date(a.appointment_time).toLocaleString('sr-RS', {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'});
-                const isPayed = a.payout_status === 'isplaćeno';
-                const pIcon = a.payment_type === 'Card' ? '💳' : '💵';
-                const valuta = a.currency || '€';
-                const statusBadge = (a.status === 'završeno') ? '<div class="check-badge">✓</div>' : (a.status === 'no-show') ? '<span class="status-noshow">NO-SHOW</span>' : '<span class="status-zakazano">ZAKAZANO</span>';
-                h += `<tr><td><div style="font-weight:800;">${a.client_name}</div><div style="font-size:0.65rem; color:#64748b;">${a.client_instagram || '-'}</div></td><td style="text-align:center;">${statusBadge}${isPayed ? '<div class="pay-badge" title="Isplaćeno">💸</div>' : ''}</td><td>${datum}h</td><td>${valuta === '€' ? '€'+a.total_price : a.total_price+' din'} <span title="${a.payment_type || 'Cash'}">${pIcon}</span></td><td style="text-align:right;"><div class="action-cell">${a.status === 'zakazano' ? `<button class="btn-action-done" onclick="updateStatus('${a.id}', 'završeno')">Završi</button><button class="btn-action-noshow" onclick="updateStatus('${a.id}', 'no-show')">No-Show</button>` : ''}<button class="btn-action-edit" onclick="otvoriModalEdit('${a.id}')">✏️</button>${a.status === 'završeno' && !isPayed && userProfile.role === 'owner' ? `<button class="btn-action-pay" onclick="updatePayout('${a.id}')">Isplati</button>` : ''}<button class="btn-action-delete" onclick="obrisiTermin('${a.id}')">Obriši</button></div></td></tr>`;
-            });
-            document.getElementById('tabela-div').innerHTML = h + `</table>`;
+            if (s === 'kalendar') renderujKalendarTab();
+            if (s === 'troskovi') ucitajTroskove();
+            if (s === 'magacin') renderujMagacin();
+            if (s === 'artisti') ucitajArtiste();
         }
 
         async function saveData() {
-            const saveBtn = document.getElementById('save-btn');
-            const name = document.getElementById('c_name').value;
-            const time = document.getElementById('app_time').value;
-            let chosenArtistId = (userProfile.role === 'owner') ? document.getElementById('app_artist_id').value : userProfile.id;
-            if(!name || !time || !chosenArtistId) { alert("Ime, datum i artist su obavezni!"); return; }
-            saveBtn.disabled = true;
-            try {
-                const cena = parseFloat(document.getElementById('total_price').value) || 0;
-                const procenat = parseFloat(document.getElementById('artist_percent').value) || 0;
-                const reminderVal = document.getElementById('reminder_minutes').value;
-                const payload = {
-                    client_name: name, client_phone: document.getElementById('c_phone').value || "", client_email: document.getElementById('c_email').value || "", client_instagram: document.getElementById('c_insta').value || "",
-                    appointment_time: time, total_price: cena, currency: document.getElementById('currency_choice').value, deposit: parseFloat(document.getElementById('deposit_amt').value) || 0, artist_percentage: procenat, 
-                    studio_share: cena * ((100 - procenat) / 100), payment_type: document.getElementById('payment_type').value, artist_id: chosenArtistId,
-                    reminder_minutes: reminderVal === "" ? null : parseInt(reminderVal)
-                };
-                if (editingId) { await supabaseClient.from('appointments').update(payload).eq('id', editingId); }
-                else { await supabaseClient.from('appointments').insert([{ ...payload, owner_id: userProfile.owner_id || userProfile.id, studio_id: userProfile.studio_id, status: 'zakazano', payout_status: 'nema' }]); }
-                zatvoriModal(); osveziPodatke();
-            } catch (err) { alert("Greška: " + err.message); } finally { saveBtn.disabled = false; }
+            const payload = {
+                client_name: document.getElementById('c_name').value,
+                appointment_time: document.getElementById('app_time').value,
+                total_price: parseFloat(document.getElementById('total_price').value) || 0,
+                currency: document.getElementById('currency_choice').value,
+                deposit: parseFloat(document.getElementById('deposit_amt').value) || 0,
+                artist_percentage: parseFloat(document.getElementById('artist_percent').value) || 0,
+                artist_id: userProfile.role === 'owner' ? document.getElementById('app_artist_id').value : userProfile.id,
+                studio_id: userProfile.studio_id
+            };
+            payload.studio_share = payload.total_price * ((100 - payload.artist_percentage) / 100);
+
+            if (editingId) {
+                await supabaseClient.from('appointments').update(payload).eq('id', editingId);
+            } else {
+                await supabaseClient.from('appointments').insert([payload]);
+            }
+            zatvoriModal(); osveziPodatke();
         }
 
         function otvoriModalNovi() {
-            editingId = null; document.getElementById('modal-title').innerText = "Novi Termin";
-            document.querySelectorAll('#bookingModal input').forEach(i => i.value = "");
-            document.getElementById('deposit_amt').value = "0"; document.getElementById('currency_choice').value = "€";
-            if(document.getElementById('app_artist_id')) document.getElementById('app_artist_id').value = userProfile.id;
+            editingId = null;
+            document.querySelectorAll('#bookingModal input').forEach(i => i.value = '');
             document.getElementById('bookingModal').style.display = 'block';
         }
 
         function otvoriModalEdit(id) {
-            const a = globalApps.find(app => app.id === id); if (!a) return;
-            editingId = id; document.getElementById('modal-title').innerText = "Izmeni Termin";
-            if(document.getElementById('app_artist_id')) document.getElementById('app_artist_id').value = a.artist_id || "";
-            document.getElementById('c_name').value = a.client_name || ""; document.getElementById('c_phone').value = a.client_phone || "";
-            document.getElementById('c_insta').value = a.client_instagram || ""; document.getElementById('app_time').value = a.appointment_time ? a.appointment_time.substring(0, 16) : "";
-            document.getElementById('total_price').value = a.total_price || 0; document.getElementById('currency_choice').value = a.currency || "€";
-            document.getElementById('deposit_amt').value = a.deposit || 0; document.getElementById('artist_percent').value = a.artist_percentage || 0;
-            document.getElementById('payment_type').value = a.payment_type || 'Cash'; document.getElementById('reminder_minutes').value = a.reminder_minutes || ""; 
-            document.getElementById('bookingModal').style.display = 'block';
-        }
-
-        async function dodajTrosak() {
-            const title = document.getElementById('exp-title').value; 
-            const amount = parseFloat(document.getElementById('exp-amount').value);
-            if(!title || !amount) return;
-            const timestamp = `${document.getElementById('exp-year-select').value}-${document.getElementById('exp-month-select').value}-01T12:00:00`;
-            await supabaseClient.from('expenses').insert([{ studio_id: userProfile.studio_id, title, amount, currency: document.getElementById('exp-currency').value, created_at: timestamp }]);
-            document.getElementById('exp-title').value = ''; document.getElementById('exp-amount').value = ''; ucitajTroskove(); osveziPodatke();
-        }
-
-        async function ucitajTroskove() {
-            const m = document.getElementById('exp-month-select').value;
-            const y = document.getElementById('exp-year-select').value;
-            const { data } = await supabaseClient.from('expenses').select('*').eq('studio_id', userProfile.studio_id).order('created_at', {ascending: false});
-            let html = ''; let sumaEur = 0; let sumaRsd = 0;
-            if(data) {
-                data.filter(t => t.created_at.startsWith(`${y}-${m}`)).forEach(t => { 
-                    if(t.currency === 'din') sumaRsd += Number(t.amount); else sumaEur += Number(t.amount);
-                    html += `<tr><td><strong>${t.title}</strong></td><td style="color:#ef4444;">-${t.currency === 'din' ? t.amount+' din' : '€'+t.amount}</td><td>${new Date(t.created_at).toLocaleDateString('sr-RS')}</td><td style="text-align:right;" class="no-print"><button class="btn-action-delete" onclick="obrisiTrosak('${t.id}')">X</button></td></tr>`; 
-                });
-            }
-            document.getElementById('expenses-list-body').innerHTML = html;
-            document.getElementById('total-expenses-sum').innerHTML = `€${sumaEur} / ${sumaRsd} RSD`;
-        }
-
-        async function obrisiTrosak(id) { if(confirm("Obriši trošak?")) { await supabaseClient.from('expenses').delete().eq('id', id); ucitajTroskove(); osveziPodatke(); } }
-
-        function prikaziSekciju(sekcija) {
-            ['dashboard', 'kalendar', 'klijenti', 'artisti', 'troskovi', 'magacin'].forEach(s => {
-                if(document.getElementById(s + '-section')) document.getElementById(s + '-section').style.display = (s === sekcija ? 'block' : 'none');
-            });
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            if(document.getElementById('nav-' + (sekcija === 'magacin' ? 'magacin' : sekcija))) document.getElementById('nav-' + (sekcija === 'magacin' ? 'magacin' : sekcija)).classList.add('active');
-            if(sekcija === 'klijenti') ucitajKlijente(); if(sekcija === 'artisti') ucitajArtiste(); if(sekcija === 'troskovi') ucitajTroskove(); if(sekcija === 'kalendar') renderujKalendarTab(); if(sekcija === 'dashboard') osveziPodatke(); if(sekcija === 'magacin') renderujMagacin();
-        }
-
-        async function ucitajArtiste() {
-            const { data: artisti } = await supabaseClient.from('profiles').select('*').eq('studio_id', userProfile.studio_id);
-            const { data: sviTermini } = await supabaseClient.from('appointments').select('artist_id, total_price, status, currency').eq('studio_id', userProfile.studio_id);
-            let html = '';
-            if (artisti) artisti.forEach(a => { 
-                const termini = sviTermini ? sviTermini.filter(t => t.artist_id === a.id && t.status === 'završeno') : [];
-                let pEur = 0; let pRsd = 0;
-                termini.forEach(t => { if(t.currency === 'din') pRsd += Number(t.total_price); else pEur += Number(t.total_price); });
-                html += `<tr><td><strong>${a.full_name}</strong></td><td><div style="width:20px; height:20px; border-radius:5px; background:${a.color || '#3b82f6'};"></div></td><td>${a.role}</td><td>${termini.length}</td><td style="color:var(--accent); font-weight:800;">€${pEur} <span style="font-size:0.7rem; color:#64748b;">/ ${pRsd} RSD</span></td><td style="text-align:right;"><button class="btn-action-delete" onclick="obrisiProfil('${a.id}')">Ukloni</button></td></tr>`; 
-            });
-            document.getElementById('artists-list-body').innerHTML = html;
-        }
-
-        async function ucitajKlijente() {
-            const { data: { user } } = await supabaseClient.auth.getUser();
-            let query = supabaseClient.from('appointments').select('*').eq('studio_id', userProfile.studio_id);
-            if (userProfile.role !== 'owner') query = query.eq('artist_id', user.id);
-            const { data } = await query.order('appointment_time', {ascending: false});
-            if (data) {
-                const map = {};
-                data.forEach(a => { if (!map[a.client_name]) map[n = a.client_name] = { phone: a.client_phone || '-', insta: a.client_instagram || '-', last: a.appointment_time }; });
-                let html = '';
-                Object.keys(map).forEach(n => {
-                    const c = map[n]; 
-                    html += `<tr><td><strong>${n}</strong></td><td>${c.phone}</td><td>${c.insta}</td><td>${new Date(c.last).toLocaleDateString('sr-RS')}</td><td style="text-align:right; white-space:nowrap;"><button class="btn-action-done" onclick="otvoriModalNoviSaKlijentom('${n}', '${c.phone}', '${c.insta}')">+ NOVI</button><button class="btn-action-delete" onclick="obrisiKlijenta('${n}')" style="margin-left:5px;">X</button></td></tr>`;
-                });
-                document.getElementById('clients-list-body').innerHTML = html;
+            const a = globalApps.find(x => x.id === id);
+            if (a) {
+                editingId = id;
+                document.getElementById('c_name').value = a.client_name;
+                document.getElementById('app_time').value = a.appointment_time.substring(0, 16);
+                document.getElementById('total_price').value = a.total_price;
+                document.getElementById('bookingModal').style.display = 'block';
             }
         }
 
-        async function obrisiKlijenta(clientName) {
-            if(confirm(`Obrisati klijenta "${clientName}" i sve zapise?`)) {
-                await supabaseClient.from('appointments').delete().eq('client_name', clientName).eq('studio_id', userProfile.studio_id);
-                ucitajKlijente();
-            }
+        function zatvoriModal() { document.getElementById('bookingModal').style.display = 'none'; }
+        function setupRealtime() {
+            supabaseClient.channel('any').on('postgres_changes', { event: '*', schema: 'public', table: 'appointments' }, () => osveziPodatke()).subscribe();
         }
-
-        function otvoriModalNoviSaKlijentom(name, phone, insta) {
-            otvoriModalNovi(); document.getElementById('c_name').value = name;
-            document.getElementById('c_phone').value = phone === '-' ? '' : phone;
-            document.getElementById('c_insta').value = insta === '-' ? '' : insta;
-            prikaziSekciju('dashboard');
-        }
-
-        function inicijalizujGrafikon(apps, year, month) {
-            const daysInMonth = new Date(year, month, 0).getDate();
-            const revEur = Array(daysInMonth).fill(0); const revRsd = Array(daysInMonth).fill(0);
-            apps.forEach(a => { 
-                if(a.status === 'završeno') {
-                    let iznos = (userProfile.role === 'owner' ? a.studio_share : a.total_price - a.studio_share);
-                    let dan = new Date(a.appointment_time).getDate() - 1;
-                    if(a.currency === 'din') revRsd[dan] += iznos; else revEur[dan] += iznos;
-                }
-            });
-            const ctx = document.getElementById('revenueChart').getContext('2d');
-            if (myChart) myChart.destroy();
-            myChart = new Chart(ctx, { 
-                type: 'line', 
-                data: { labels: Array.from({length: daysInMonth}, (_, i) => i + 1), datasets: [{ label: 'Zarada (EUR)', data: revEur, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.4, yAxisID: 'y' }, { label: 'Zarada (RSD)', data: revRsd, borderColor: '#f97316', backgroundColor: 'rgba(249, 115, 22, 0.1)', fill: true, tension: 0.4, yAxisID: 'y1' }] }, 
-                options: { responsive: true, maintainAspectRatio: false, scales: { y: { type: 'linear', display: true, position: 'left', grid: { color: 'rgba(255,255,255,0.05)' } }, y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false } } } } 
-            });
-        }
-
-        async function updateStatus(id, newStatus) { await supabaseClient.from('appointments').update({ status: newStatus }).eq('id', id); osveziPodatke(); }
-        async function updatePayout(id) { if(confirm("Isplaćeno?")) { await supabaseClient.from('appointments').update({ payout_status: 'isplaćeno' }).eq('id', id); osveziPodatke(); } }
-        async function obrisiTermin(id) { if(confirm("Obriši?")) { await supabaseClient.from('appointments').delete().eq('id', id); osveziPodatke(); } }
-        async function obrisiProfil(id) { if(confirm("Ukloniti artista?")) { await supabaseClient.from('profiles').delete().eq('id', id); ucitajArtiste(); } }
-        function zatvoriModal() { document.getElementById('bookingModal').style.display = 'none'; editingId = null; }
         async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
 
         initDashboard();
