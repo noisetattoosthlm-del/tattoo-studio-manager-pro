@@ -563,7 +563,7 @@ async function napraviArtista() {
             const briefingText = document.getElementById('briefing-text');
             const agendaList = document.getElementById('briefing-agenda-list');
             
-            const today = new Date().toISOString().split('T')[0];
+            const today = new Date().toLocaleDateString('sv-SE');
             const todayApps = apps.filter(a => a.appointment_time && a.appointment_time.startsWith(today) && a.status === 'zakazano');
 
             if (todayApps.length > 0) {
@@ -575,14 +575,14 @@ async function napraviArtista() {
                     briefingText.innerText = "Srećan rad celoj ekipi!";
                 } else {
                     briefingTitle.innerText = `Danas imaš ${count} termina`;
-                    briefingText.innerText = `Prvi termin ti je u ${todayApps[0].appointment_time.substring(11,16)}h.`;
+                    briefingText.innerText = `Prvi termin ti je u ${new Date(todayApps[0].appointment_time).toLocaleTimeString('sr-RS',{hour:'2-digit',minute:'2-digit'})}h.`;
                 }
 
                 let agendaHtml = '';
                 todayApps.forEach(a => {
                     agendaHtml += `
                         <div class="agenda-item">
-                            <div class="agenda-time">${a.appointment_time.substring(11,16)}h</div>
+                            <div class="agenda-time">${new Date(a.appointment_time).toLocaleTimeString('sr-RS',{hour:'2-digit',minute:'2-digit'})}h</div>
                             <div class="agenda-info">
                                 <span class="agenda-name">${a.client_name}</span>
                                 <span class="agenda-contact">${a.client_phone || a.client_instagram || 'Nema kontakta'}</span>
