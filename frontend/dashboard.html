@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="sr">
 <head>
+    <link rel="manifest" href="/manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tattoo Studio Management Pro</title>
@@ -1012,6 +1013,39 @@
         async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
 
         initDashboard();
+        if ('serviceWorker' in navigator) {
+ navigator.serviceWorker.register('/sw.js');
+}
+  const PUBLIC_VAPID_KEY = 'BIDaGQ_tNOeFG_pa1-dpuC_Grcx1eeQ_RAoXqwAxgYYzVjQveCpZ_kXUTabl2kxF_l6EsN_Jd_VuVnnX0sevogI';
+        async function enableNotifications() {
+
+ const { data:{user} } = await supabaseClient.auth.getUser();
+ if(!user) return alert("Nisi ulogovan");
+
+ const permission = await Notification.requestPermission();
+ if(permission !== "granted") return;
+
+ const reg = await navigator.serviceWorker.ready;
+
+ const sub = await reg.pushManager.subscribe({
+  userVisibleOnly:true,
+  applicationServerKey:urlBase64ToUint8Array(PUBLIC_VAPID_KEY)
+ });
+
+ await supabaseClient.from("push_subscriptions").insert([{
+  user_id:user.id,
+  subscription:sub
+ }]);
+
+ alert("Push aktiviran");
+}
+        function urlBase64ToUint8Array(base64String) {
+ const padding = '='.repeat((4 - base64String.length % 4) % 4);
+ const base64 = (base64String + padding).replace(/-/g,'+').replace(/_/g,'/');
+ const rawData = atob(base64);
+ return Uint8Array.from([...rawData].map(c=>c.charCodeAt(0)));
+}
+        <button onclick="enableNotifications()">🔔 Aktiviraj notifikacije</button>
     </script>
 </body>
 </html>
