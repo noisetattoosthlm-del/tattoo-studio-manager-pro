@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="sr">
 <head>
-    <link rel="manifest" href="/manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tattoo Studio Management Pro</title>
+    <link rel="manifest" href="/manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -374,6 +374,16 @@
             <label class="modal-label">Email klijenta (opciono)</label><input type="email" id="c_email">
             <label class="modal-label">Instagram (@)</label><input type="text" id="c_insta">
             <label class="modal-label">Datum i vreme</label><input type="datetime-local" id="app_time">
+            <label class="modal-label">Podsetnik</label>
+<select id="reminder_minutes">
+  <option value="">Bez podsetnika</option>
+  <option value="10">10 min</option>
+  <option value="30">30 min</option>
+  <option value="60">1h</option>
+  <option value="120">2h</option>
+  <option value="180">3h</option>
+  <option value="1440">24h</option>
+</select>
             <div style="display: flex; gap: 10px;">
                 <div style="flex:2"><label class="modal-label">Cena</label><input type="number" id="total_price"></div>
                 <div style="flex:1"><label class="modal-label">Valuta</label><select id="currency_choice"><option value="€">EUR (€)</option><option value="din">RSD (din)</option></select></div>
@@ -391,6 +401,11 @@
     </div>
 
     <script>
+        <script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js');
+}
+</script>
         const supabaseUrl = 'https://yunuwkjydqzgkqtbgwup.supabase.co'; 
         const supabaseKey = 'sb_publishable_J66CdYuykkwjyulPJp2O1Q_e0ZZLXe7'; 
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
@@ -835,6 +850,7 @@
                 const valuta = document.getElementById('currency_choice').value;
                 const depozit = parseFloat(document.getElementById('deposit_amt').value) || 0;
                 const payload = {
+                reminder_minutes: document.getElementById('reminder_minutes').value || null,
                     client_name: name, client_phone: document.getElementById('c_phone').value || "", client_email: document.getElementById('c_email').value || "", client_instagram: document.getElementById('c_insta').value || "",
                     appointment_time: time, total_price: cena, currency: valuta, deposit: depozit, artist_percentage: procenat, 
                     studio_share: cena * ((100 - procenat) / 100), payment_type: document.getElementById('payment_type').value, artist_id: chosenArtistId
@@ -1012,40 +1028,37 @@
         function zatvoriModal() { document.getElementById('bookingModal').style.display = 'none'; editingId = null; }
         async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
 
+                const PUBLIC_VAPID_KEY = "BIDaGQ_tNOeFG_pa1-dpuC_Grcx1eeQ_RAoXqwAxgYYzVjQveCpZ_kXUTabl2kxF_l6EsN_Jd_VuVnnX0sevogI";
+
+async function enableNotifications() {
+
+  const permission = await Notification.requestPermission();
+  if (permission !== 'granted') return alert("Dozvoli notifikacije.");
+
+  const reg = await navigator.serviceWorker.ready;
+
+  const sub = await reg.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY)
+  });
+
+  const { data:{user} } = await supabaseClient.auth.getUser();
+
+  await supabaseClient.from('push_subscriptions').insert([{
+    user_id: user.id,
+    subscription: sub
+  }]);
+
+  alert("Push aktiviran");
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw = atob(base64);
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+}
         initDashboard();
-        if ('serviceWorker' in navigator) {
- navigator.serviceWorker.register('/sw.js');
-}
-  const PUBLIC_VAPID_KEY = 'BIDaGQ_tNOeFG_pa1-dpuC_Grcx1eeQ_RAoXqwAxgYYzVjQveCpZ_kXUTabl2kxF_l6EsN_Jd_VuVnnX0sevogI';
-        async function enableNotifications() {
-
- const { data:{user} } = await supabaseClient.auth.getUser();
- if(!user) return alert("Nisi ulogovan");
-
- const permission = await Notification.requestPermission();
- if(permission !== "granted") return;
-
- const reg = await navigator.serviceWorker.ready;
-
- const sub = await reg.pushManager.subscribe({
-  userVisibleOnly:true,
-  applicationServerKey:urlBase64ToUint8Array(PUBLIC_VAPID_KEY)
- });
-
- await supabaseClient.from("push_subscriptions").insert([{
-  user_id:user.id,
-  subscription:sub
- }]);
-
- alert("Push aktiviran");
-}
-        function urlBase64ToUint8Array(base64String) {
- const padding = '='.repeat((4 - base64String.length % 4) % 4);
- const base64 = (base64String + padding).replace(/-/g,'+').replace(/_/g,'/');
- const rawData = atob(base64);
- return Uint8Array.from([...rawData].map(c=>c.charCodeAt(0)));
-}
-        <button onclick="enableNotifications()">🔔 Aktiviraj notifikacije</button>
     </script>
 </body>
 </html>
