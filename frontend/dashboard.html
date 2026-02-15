@@ -1048,6 +1048,9 @@ a.appointment_time
 
 async function enableNotifications() {
 
+  const { data:{user} } = await supabaseClient.auth.getUser();
+  if(!user) return alert("Niste ulogovani");
+
   const permission = await Notification.requestPermission();
   if (permission !== 'granted') return alert("Dozvoli notifikacije.");
 
@@ -1058,17 +1061,19 @@ async function enableNotifications() {
     applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY)
   });
 
-  const { data:{user} } = await supabaseClient.auth.getUser();
-
-  await supabaseClient.from('push_subscriptions').insert([{
+  const { error } = await supabaseClient.from('push_subscriptions').insert([{
     user_id: user.id,
     subscription: sub
   }]);
 
-  alert("Push aktiviran");
-document.getElementById('push-btn').style.display = 'none';
-}
+  if(error) {
+    alert("Push greška: " + error.message);
+    return;
+  }
 
+  alert("Push aktiviran");
+  document.getElementById('push-btn').style.display = 'none';
+}
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
