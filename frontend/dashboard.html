@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tattoo Studio Management Pro</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="theme-color" content="#3b82f6">
+
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -205,6 +209,11 @@
 
     <div class="main" id="dashboard-section">
         <h1 id="main-greeting">Statistika Studija</h1>
+
+        <div id="notification-banner" style="display:none; background: rgba(59, 130, 246, 0.1); border: 1px dashed var(--accent); padding: 15px; border-radius: 20px; margin-bottom: 20px; text-align: center;">
+            <p style="margin: 0 0 10px 0; font-size: 0.85rem; color: #94a3b8;">🔔 Želite li da primate podsetnike za termine na ovom uređaju?</p>
+            <button class="btn-action-pay" onclick="enableNotifications()" style="padding: 8px 20px;">OMOGUĆI OBAVEŠTENJA</button>
+        </div>
         
         <div class="filter-group">
             <select id="month-select" class="filter-select" onchange="syncDateFilters(this)"></select>
@@ -398,6 +407,31 @@
         let globalApps = [];
         let myChart = null;
 
+        // --- NOVO: LOGIKA ZA NOTIFIKACIJE ---
+        function checkNotificationStatus() {
+            if (!('Notification' in window)) return;
+            if (Notification.permission === 'default') {
+                document.getElementById('notification-banner').style.display = 'block';
+            }
+        }
+
+        async function enableNotifications() {
+            const permission = await Notification.requestPermission();
+            if (permission === 'granted') {
+                document.getElementById('notification-banner').style.display = 'none';
+                // Registracija Service Workera
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.register('/sw.js').then(() => {
+                        console.log("Service Worker registrovan.");
+                    });
+                }
+                alert("Obaveštenja su uspešno uključena!");
+            } else {
+                alert("Blokirali ste obaveštenja. Morate ih ručno uključiti u podešavanjima pretraživača.");
+            }
+        }
+        // ------------------------------------
+
         function syncDateFilters(el) {
             const val = el.value;
             const isMonth = el.id.includes('month');
@@ -467,6 +501,7 @@
             popuniMeseceIGodine();
             osveziPodatke();
             renderujMagacin();
+            checkNotificationStatus(); // Pozivamo proveru notifikacija
         }
 
         async function napraviArtista() {
@@ -597,15 +632,13 @@
                 const procenat = inputPercent === "" ? 0 : parseFloat(inputPercent);
                 const valuta = document.getElementById('currency_choice').value;
                 const depozit = parseFloat(document.getElementById('deposit_amt').value) || 0;
-                
-                // NOVO: Dohvatanje minuta podsetnika
                 const remMin = parseInt(document.getElementById('reminder_minutes').value) || 0;
 
                 const payload = {
                     client_name: name, client_phone: document.getElementById('c_phone').value || "", client_email: document.getElementById('c_email').value || "", client_instagram: document.getElementById('c_insta').value || "",
                     appointment_time: time, total_price: cena, currency: valuta, deposit: depozit, artist_percentage: procenat, 
                     studio_share: cena * ((100 - procenat) / 100), payment_type: document.getElementById('payment_type').value, artist_id: chosenArtistId,
-                    reminder_minutes: remMin, notification_sent: false // Resetujemo status notifikacije pri svakom čuvanju
+                    reminder_minutes: remMin, notification_sent: false
                 };
                 if (editingId) { await supabaseClient.from('appointments').update(payload).eq('id', editingId); }
                 else { await supabaseClient.from('appointments').insert([{ ...payload, owner_id: userProfile.owner_id || userProfile.id, studio_id: userProfile.studio_id, status: 'zakazano', payout_status: 'nema' }]); }
@@ -619,7 +652,7 @@
             document.getElementById('deposit_amt').value = "0"; 
             document.getElementById('artist_percent').value = ""; 
             document.getElementById('currency_choice').value = "€";
-            document.getElementById('reminder_minutes').value = "0"; // Reset podsetnika
+            document.getElementById('reminder_minutes').value = "0";
             if(document.getElementById('app_artist_id')) document.getElementById('app_artist_id').value = userProfile.id;
             document.getElementById('bookingModal').style.display = 'block';
         }
@@ -633,11 +666,10 @@
             document.getElementById('total_price').value = a.total_price || 0; document.getElementById('currency_choice').value = a.currency || "€";
             document.getElementById('deposit_amt').value = a.deposit || 0; document.getElementById('artist_percent').value = a.artist_percentage !== undefined ? a.artist_percentage : 0;
             document.getElementById('payment_type').value = a.payment_type || 'Cash';
-            document.getElementById('reminder_minutes').value = a.reminder_minutes || 0; // Učitavanje podsetnika
+            document.getElementById('reminder_minutes').value = a.reminder_minutes || 0;
             document.getElementById('bookingModal').style.display = 'block';
         }
 
-        // --- OSTALE FUNKCIJE (MAGACIN, KALENDAR, TABELA, TROSKOVI) ---
         async function dodajUMagacin() {
             const n = document.getElementById('inv-name').value; const t = document.getElementById('inv-type').value; const s = parseInt(document.getElementById('inv-stock').value); const m = parseInt(document.getElementById('inv-min').value);
             if(!n || isNaN(s)) { alert("Naziv i stanje su obavezni!"); return; }
