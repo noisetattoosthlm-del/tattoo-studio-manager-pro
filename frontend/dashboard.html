@@ -509,8 +509,11 @@ if ('serviceWorker' in navigator) {
             osveziPodatke();
             renderujMagacin(); // NOVO: Inicijalizacija magacina iz baze
             await proveriPush();
-        }
-
+        
+if (Notification.permission === 'granted') {
+  const btn = document.getElementById('push-btn');
+  if (btn) btn.style.display = 'none';
+}
         async function napraviArtista() {
             const name = document.getElementById('new-artist-name').value;
             const email = document.getElementById('new-artist-email').value;
