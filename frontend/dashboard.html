@@ -403,6 +403,16 @@
         </div>
     </div>
     <script>
+        async function proveriPush() {
+  const { data:{user} } = await supabaseClient.auth.getUser();
+  const { data } = await supabaseClient
+    .from('push_subscriptions')
+    .select('id')
+    .eq('user_id', user.id)
+    .single();
+
+  if(data) document.querySelector('.btn-action-pay').style.display = 'none';
+}
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js');
 }
@@ -1060,6 +1070,7 @@ function urlBase64ToUint8Array(base64String) {
   return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
 }
         initDashboard();
+        proveriPush();
     </script>
 </body>
 </html>
