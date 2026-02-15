@@ -405,11 +405,11 @@
     <script>async function proveriPush() {
   const { data:{user} } = await supabaseClient.auth.getUser();
 
-  const { data } = await supabaseClient
-    .from('push_subscriptions')
-    .select('id')
-    .eq('user_id', user.id)
-    .single();
+const { data } = await supabaseClient
+  .from('push_subscriptions')
+  .select('id')
+  .eq('user_id', user.id)
+  .maybeSingle();
 
   if(data && document.getElementById('push-btn')) {
     document.getElementById('push-btn').style.display = 'none';
