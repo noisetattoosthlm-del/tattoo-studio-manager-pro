@@ -1116,6 +1116,13 @@ function urlBase64ToUint8Array(base64String) {
   return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
 }
         initDashboard();
+setInterval(async () => {
+  await fetch("https://yunuwkjydqzgkqtbgwup.supabase.co/functions/v1/send-reminders", {
+    headers: {
+      Authorization: "Bearer " + supabaseKey
+    }
+  });
+}, 60000);        
     </script>
 </body>
 </html>            
