@@ -506,6 +506,7 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey, {
             popuniMeseceIGodine();
             osveziPodatke();
             renderujMagacin(); // NOVO: Inicijalizacija magacina iz baze
+            await proveriPush();
         }
 
         async function napraviArtista() {
