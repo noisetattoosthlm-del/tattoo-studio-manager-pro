@@ -398,6 +398,38 @@
         let editingId = null;
         let globalApps = [];
         let myChart = null;
+        let notifiedApps = new Set(); // Prati koji su termini već "iskočili" da te ne smara stalno
+
+        // --- NOVO: LOGIKA ZA OBAVEŠTENJA (KAO GOOGLE CALENDAR) ---
+        async function setupNotifications() {
+            if (!("Notification" in window)) return;
+            if (Notification.permission !== "granted") {
+                await Notification.requestPermission();
+            }
+        }
+
+        function proveriTermineZaNotifikaciju() {
+            if (Notification.permission !== "granted") return;
+
+            const now = new Date();
+            globalApps.forEach(a => {
+                if (a.status !== 'zakazano' || notifiedApps.has(a.id)) return;
+
+                const appTime = new Date(a.appointment_time);
+                const diffMs = appTime - now;
+                const diffMins = Math.floor(diffMs / 60000);
+
+                // Ako je termin za tačno 15 minuta (ili manje, ali nismo još poslali)
+                if (diffMins <= 15 && diffMins > 0) {
+                    new Notification("Podsetnik za termin", {
+                        body: `Klijent: ${a.client_name} u ${a.appointment_time.substring(11,16)}h`,
+                        icon: 'https://cdn-icons-png.flaticon.com/512/3652/3652191.png'
+                    });
+                    notifiedApps.add(a.id);
+                }
+            });
+        }
+        // --------------------------------------------------------
 
         function syncDateFilters(el) {
             const val = el.value;
@@ -471,7 +503,11 @@
             }
             popuniMeseceIGodine();
             osveziPodatke();
-            renderujMagacin(); // NOVO: Inicijalizacija magacina iz baze
+            renderujMagacin(); 
+            
+            // Pokretanje sistema za obaveštenja
+            setupNotifications();
+            setInterval(proveriTermineZaNotifikaciju, 60000); // Proveravaj svaki minut
         }
 
         async function napraviArtista() {
@@ -573,6 +609,7 @@
                     globalApps = allApps;
                     
                     updateDailyBriefing(allApps);
+                    proveriTermineZaNotifikaciju(); // Odmah proveri kad učitaš nove podatke
 
                     let filteredApps = allApps.filter(a => a.appointment_time && a.appointment_time.startsWith(selectedMonthStr));
                     const troskovi = (allTroskovi && userProfile.role === 'owner' && (artistFilter === 'all' || artistFilter === '')) 
@@ -631,7 +668,6 @@
             } catch (err) { console.error(err); }
         }
 
-        /* --- IZMENJENE FUNKCIJE ZA MAGACIN (SUPABASE) --- */
         async function dodajUMagacin() {
             const name = document.getElementById('inv-name').value;
             const type = document.getElementById('inv-type').value;
@@ -697,7 +733,6 @@
         }
 
         async function promeniStanje(id, diff) {
-            // Prvo dohvatimo trenutno stanje da bismo ga sigurno izmenili
             const { data } = await supabaseClient.from('inventory').select('stock').eq('id', id).single();
             if(data) {
                 const novoStanje = Math.max(0, data.stock + diff);
@@ -712,7 +747,6 @@
                 renderujMagacin();
             }
         }
-        /* ------------------------------- */
 
         async function renderujKalendarTab() {
             const month = parseInt(document.getElementById('cal-month-select').value);
