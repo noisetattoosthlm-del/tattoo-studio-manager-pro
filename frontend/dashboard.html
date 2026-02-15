@@ -1049,7 +1049,7 @@ a.appointment_time
 async function enableNotifications() {
 
   const { data:{user} } = await supabaseClient.auth.getUser();
-  if(!user) return alert("Niste ulogovani");
+  if(!user) return alert("Niste ulogovani.");
 
   const permission = await Notification.requestPermission();
   if (permission !== 'granted') return alert("Dozvoli notifikacije.");
