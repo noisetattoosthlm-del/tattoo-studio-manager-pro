@@ -864,6 +864,7 @@ if ('serviceWorker' in navigator) {
         function otvoriModalNovi() {
             editingId = null; document.getElementById('modal-title').innerText = "Novi Termin";
             document.querySelectorAll('#bookingModal input').forEach(i => i.value = "");
+            document.getElementById('reminder_minutes').value = "";
             document.getElementById('deposit_amt').value = "0"; 
             document.getElementById('artist_percent').value = ""; 
             document.getElementById('currency_choice').value = "€";
