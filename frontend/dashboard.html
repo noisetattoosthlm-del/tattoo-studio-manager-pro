@@ -887,7 +887,10 @@ if ('serviceWorker' in navigator) {
             editingId = id; document.getElementById('modal-title').innerText = "Izmeni Termin";
             if(document.getElementById('app_artist_id')) document.getElementById('app_artist_id').value = a.artist_id || "";
             document.getElementById('c_name').value = a.client_name || ""; document.getElementById('c_phone').value = a.client_phone || "";
-            document.getElementById('c_insta').value = a.client_instagram || ""; document.getElementById('app_time').value = a.appointment_time ? a.appointment_time.substring(0, 16) : "";
+            document.getElementById('c_insta').value = a.client_instagram || ""; document.getElementById('app_time').value =
+a.appointment_time
+? new Date(a.appointment_time).toISOString().slice(0,16)
+: "";
             document.getElementById('total_price').value = a.total_price || 0; document.getElementById('currency_choice').value = a.currency || "€";
             document.getElementById('deposit_amt').value = a.deposit || 0; document.getElementById('artist_percent').value = a.artist_percentage !== undefined ? a.artist_percentage : 0;
             document.getElementById('payment_type').value = a.payment_type || 'Cash'; document.getElementById('bookingModal').style.display = 'block';
