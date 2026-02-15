@@ -410,8 +410,7 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true,
-    storage: window.indexedDB
+    detectSessionInUrl: true
   }
 });
 async function proveriPush() {
