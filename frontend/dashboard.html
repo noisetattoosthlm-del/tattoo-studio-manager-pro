@@ -874,16 +874,22 @@ if (Notification.permission === 'granted') {
                 const valuta = document.getElementById('currency_choice').value;
                 const depozit = parseFloat(document.getElementById('deposit_amt').value) || 0;
                 const payload = {
-                reminder_minutes: document.getElementById('reminder_minutes').value || null,
-                    client_name: name, client_phone: document.getElementById('c_phone').value || "", client_email: document.getElementById('c_email').value || "", client_instagram: document.getElementById('c_insta').value || "",
-                    appointment_time: new Date(time).toISOString(), total_price: cena, currency: valuta, deposit: depozit, artist_percentage: procenat, 
-                    studio_share: cena * ((100 - procenat) / 100), payment_type: document.getElementById('payment_type').value, artist_id: chosenArtistId
-                };
-                if (editingId) { await supabaseClient.from('appointments').update(payload).eq('id', editingId); }
-                else { await supabaseClient.from('appointments').insert([{ ...payload, owner_id: userProfile.owner_id || userProfile.id, studio_id: userProfile.studio_id, status: 'zakazano', payout_status: 'nema' }]); }
-                zatvoriModal(); await osveziPodatke();
-            } catch (err) { alert("Greška: " + err.message); } finally { saveBtn.disabled = false; saveBtn.innerText = originalText; }
-        }
+  reminder_minutes: document.getElementById('reminder_minutes').value || null,
+  reminder_sent: null,
+
+  client_name: name,
+  client_phone: document.getElementById('c_phone').value || "",
+  client_email: document.getElementById('c_email').value || "",
+  client_instagram: document.getElementById('c_insta').value || "",
+  appointment_time: new Date(time).toISOString(),
+  total_price: cena,
+  currency: valuta,
+  deposit: depozit,
+  artist_percentage: procenat,
+  studio_share: cena * ((100 - procenat) / 100),
+  payment_type: document.getElementById('payment_type').value,
+  artist_id: chosenArtistId
+};
 
         function otvoriModalNovi() {
             editingId = null; document.getElementById('modal-title').innerText = "Novi Termin";
