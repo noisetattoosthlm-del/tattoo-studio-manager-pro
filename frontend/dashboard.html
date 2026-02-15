@@ -638,7 +638,7 @@
                     client_name: name, client_phone: document.getElementById('c_phone').value || "", client_email: document.getElementById('c_email').value || "", client_instagram: document.getElementById('c_insta').value || "",
                     appointment_time: time, total_price: cena, currency: valuta, deposit: depozit, artist_percentage: procenat, 
                     studio_share: cena * ((100 - procenat) / 100), payment_type: document.getElementById('payment_type').value, artist_id: chosenArtistId,
-                    reminder_minutes: remMin, notification_sent: false
+                    reminder_minutes: remMin, notification_sent: false, notified: false // Podrazumevano nije odobreno dok se ne klikne dugme
                 };
                 if (editingId) { await supabaseClient.from('appointments').update(payload).eq('id', editingId); }
                 else { await supabaseClient.from('appointments').insert([{ ...payload, owner_id: userProfile.owner_id || userProfile.id, studio_id: userProfile.studio_id, status: 'zakazano', payout_status: 'nema' }]); }
@@ -733,8 +733,12 @@
             filteredApps.forEach(a => {
                 const datum = new Date(a.appointment_time).toLocaleString('sr-RS', {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'});
                 const isPayed = a.payout_status === 'isplaćeno'; const pIcon = a.payment_type === 'Card' ? '💳' : '💵'; const v = a.currency || '€'; const cp = v === '€' ? `€${a.total_price}` : `${a.total_price} din`;
+                
+                // Izmenjen status bedž - dodata ikonica za notifikaciju ako je odobrena
                 let statusBadge = (a.status === 'završeno') ? '<div class="check-badge">✓</div>' : (a.status === 'no-show') ? '<span class="status-noshow">NO-SHOW</span>' : '<span class="status-zakazano">ZAKAZANO</span>';
-                h += `<tr><td><div style="font-weight:800;">${a.client_name}</div><div style="font-size:0.65rem; color:#64748b;">${a.client_instagram || '-'}</div></td><td style="text-align:center;">${statusBadge}${isPayed ? '<div class="pay-badge">💸</div>' : ''}</td><td>${datum}h</td><td>${cp} <span>${pIcon}</span></td><td style="text-align:right;"><div class="action-cell">${a.status === 'zakazano' ? `<button class="btn-action-done" onclick="updateStatus('${a.id}', 'završeno')">Završi</button><button class="btn-action-noshow" onclick="updateStatus('${a.id}', 'no-show')">No-Show</button>` : ''}<button class="btn-action-edit" onclick="otvoriModalEdit('${a.id}')">✏️</button>${a.status === 'završeno' && !isPayed && userProfile.role === 'owner' ? `<button class="btn-action-pay" onclick="updatePayout('${a.id}')">Isplati</button>` : ''}<button class="btn-action-delete" onclick="obrisiTermin('${a.id}')">Obriši</button></div></td></tr>`;
+                let notifyBadge = a.notified ? '<div class="pay-badge" title="Odobreno slanje" style="background:rgba(16, 185, 129, 0.1); color:#10b981; border-color:#10b981;">🔔</div>' : '';
+
+                h += `<tr><td><div style="font-weight:800;">${a.client_name}</div><div style="font-size:0.65rem; color:#64748b;">${a.client_instagram || '-'}</div></td><td style="text-align:center;">${statusBadge}${notifyBadge}${isPayed ? '<div class="pay-badge">💸</div>' : ''}</td><td>${datum}h</td><td>${cp} <span>${pIcon}</span></td><td style="text-align:right;"><div class="action-cell">${a.status === 'zakazano' ? `<button class="btn-action-done" onclick="updateStatus('${a.id}', 'završeno')">Završi</button><button class="btn-action-noshow" onclick="updateStatus('${a.id}', 'no-show')">No-Show</button>${!a.notified ? `<button class="btn-action-pay" style="background: rgba(59, 130, 246, 0.2); border-color: #3b82f6; color: #3b82f6;" onclick="odobriObavestenje('${a.id}')">Odobri 🔔</button>` : ''}` : ''}<button class="btn-action-edit" onclick="otvoriModalEdit('${a.id}')">✏️</button>${a.status === 'završeno' && !isPayed && userProfile.role === 'owner' ? `<button class="btn-action-pay" onclick="updatePayout('${a.id}')">Isplati</button>` : ''}<button class="btn-action-delete" onclick="obrisiTermin('${a.id}')">Obriši</button></div></td></tr>`;
             });
             document.getElementById('tabela-div').innerHTML = h + `</table>`;
         }
@@ -818,6 +822,16 @@
             const ctx = document.getElementById('revenueChart').getContext('2d'); if (myChart) myChart.destroy();
             myChart = new Chart(ctx, { type: 'line', data: { labels: Array.from({length: daysInMonth}, (_, i) => i + 1), datasets: [{ label: 'EUR', data: dE, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.4, yAxisID: 'y' }, { label: 'RSD', data: dR, borderColor: '#f97316', backgroundColor: 'rgba(249, 115, 22, 0.1)', fill: true, tension: 0.4, yAxisID: 'y1' }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { type: 'linear', display: true, position: 'left', grid: { color: 'rgba(255,255,255,0.05)' } }, y1: { type: 'linear', display: true, position: 'right', grid: { drawOnChartArea: false } } } } });
         }
+
+        // --- NOVA FUNKCIJA ZA ODOBRAVANJE OBAVEŠTENJA ---
+        async function odobriObavestenje(id) {
+            if(confirm("Odobriti slanje automatskog podsetnika klijentu?")) {
+                const { error } = await supabaseClient.from('appointments').update({ notified: true }).eq('id', id);
+                if (error) alert("Greška: " + error.message);
+                else osveziPodatke();
+            }
+        }
+        // -------------------------------------------------
 
         async function updateStatus(id, newStatus) { await supabaseClient.from('appointments').update({ status: newStatus }).eq('id', id); osveziPodatke(); }
         async function updatePayout(id) { if(confirm("Isplaćeno?")) { await supabaseClient.from('appointments').update({ payout_status: 'isplaćeno' }).eq('id', id); osveziPodatke(); } }
