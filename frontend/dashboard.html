@@ -421,14 +421,6 @@
             }
         }
 
-        async function enableNotifications() {
-            const permission = await Notification.requestPermission();
-            if (permission === 'granted') {
-                document.getElementById('notification-banner').style.display = 'none';
-                alert("Obaveštenja su uključena!");
-            }
-        }
-
         async function odobriObavestenje(id) {
             if(confirm("Odobriti slanje automatskog podsetnika klijentu?")) {
                 const { error } = await supabaseClient.from('appointments').update({ notified: true }).eq('id', id);
