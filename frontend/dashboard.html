@@ -372,7 +372,17 @@
             <label class="modal-label">Mobilni telefon</label><input type="text" id="c_phone" placeholder="Unesite broj telefona">
             <label class="modal-label">Email klijenta (opciono)</label><input type="email" id="c_email">
             <label class="modal-label">Instagram (@)</label><input type="text" id="c_insta">
-            <label class="modal-label">Datum i vreme</label><input type="datetime-local" id="app_time">
+            
+            <label class="modal-label">Datum i vreme</label>
+            <input type="datetime-local" id="app_time">
+
+            <label class="modal-label" style="color: #3b82f6;">⏰ Obavesti me pre (na telefonu)</label>
+            <select id="reminder_minutes" style="border-color: #3b82f6;">
+                <option value="0">Bez obaveštenja</option>
+                <option value="15">15 minuta ranije</option>
+                <option value="30">30 minuta ranije</option>
+                <option value="60">1 sat ranije</option>
+            </select>
             <div style="display: flex; gap: 10px;">
                 <div style="flex:2"><label class="modal-label">Cena</label><input type="number" id="total_price"></div>
                 <div style="flex:1"><label class="modal-label">Valuta</label><select id="currency_choice"><option value="€">EUR (€)</option><option value="din">RSD (din)</option></select></div>
@@ -398,38 +408,6 @@
         let editingId = null;
         let globalApps = [];
         let myChart = null;
-        let notifiedApps = new Set(); // Prati koji su termini već "iskočili" da te ne smara stalno
-
-        // --- NOVO: LOGIKA ZA OBAVEŠTENJA (KAO GOOGLE CALENDAR) ---
-        async function setupNotifications() {
-            if (!("Notification" in window)) return;
-            if (Notification.permission !== "granted") {
-                await Notification.requestPermission();
-            }
-        }
-
-        function proveriTermineZaNotifikaciju() {
-            if (Notification.permission !== "granted") return;
-
-            const now = new Date();
-            globalApps.forEach(a => {
-                if (a.status !== 'zakazano' || notifiedApps.has(a.id)) return;
-
-                const appTime = new Date(a.appointment_time);
-                const diffMs = appTime - now;
-                const diffMins = Math.floor(diffMs / 60000);
-
-                // Ako je termin za tačno 15 minuta (ili manje, ali nismo još poslali)
-                if (diffMins <= 15 && diffMins > 0) {
-                    new Notification("Podsetnik za termin", {
-                        body: `Klijent: ${a.client_name} u ${a.appointment_time.substring(11,16)}h`,
-                        icon: 'https://cdn-icons-png.flaticon.com/512/3652/3652191.png'
-                    });
-                    notifiedApps.add(a.id);
-                }
-            });
-        }
-        // --------------------------------------------------------
 
         function syncDateFilters(el) {
             const val = el.value;
@@ -503,11 +481,7 @@
             }
             popuniMeseceIGodine();
             osveziPodatke();
-            renderujMagacin(); 
-            
-            // Pokretanje sistema za obaveštenja
-            setupNotifications();
-            setInterval(proveriTermineZaNotifikaciju, 60000); // Proveravaj svaki minut
+            renderujMagacin(); // NOVO: Inicijalizacija magacina iz baze
         }
 
         async function napraviArtista() {
@@ -609,7 +583,6 @@
                     globalApps = allApps;
                     
                     updateDailyBriefing(allApps);
-                    proveriTermineZaNotifikaciju(); // Odmah proveri kad učitaš nove podatke
 
                     let filteredApps = allApps.filter(a => a.appointment_time && a.appointment_time.startsWith(selectedMonthStr));
                     const troskovi = (allTroskovi && userProfile.role === 'owner' && (artistFilter === 'all' || artistFilter === '')) 
@@ -668,6 +641,7 @@
             } catch (err) { console.error(err); }
         }
 
+        /* --- IZMENJENE FUNKCIJE ZA MAGACIN (SUPABASE) --- */
         async function dodajUMagacin() {
             const name = document.getElementById('inv-name').value;
             const type = document.getElementById('inv-type').value;
@@ -733,6 +707,7 @@
         }
 
         async function promeniStanje(id, diff) {
+            // Prvo dohvatimo trenutno stanje da bismo ga sigurno izmenili
             const { data } = await supabaseClient.from('inventory').select('stock').eq('id', id).single();
             if(data) {
                 const novoStanje = Math.max(0, data.stock + diff);
@@ -747,6 +722,7 @@
                 renderujMagacin();
             }
         }
+        /* ------------------------------- */
 
         async function renderujKalendarTab() {
             const month = parseInt(document.getElementById('cal-month-select').value);
@@ -1044,6 +1020,31 @@
         async function obrisiProfil(id) { if(confirm("Ukloniti artista?")) { await supabaseClient.from('profiles').delete().eq('id', id); ucitajArtiste(); } }
         function zatvoriModal() { document.getElementById('bookingModal').style.display = 'none'; editingId = null; }
         async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
+
+        // --- SKRIPTA ZA OBAVEŠTENJA ---
+        document.addEventListener('DOMContentLoaded', function() {
+            const selectPolje = document.getElementById('reminder_minutes');
+            
+            if (selectPolje) {
+                selectPolje.addEventListener('change', function() {
+                    if (this.value !== "0") {
+                        // Ako korisnik izabere bilo šta osim "Bez obaveštenja", tražimo dozvolu
+                        if (!("Notification" in window)) {
+                            alert("Tvoj telefon ne podržava web notifikacije.");
+                        } else if (Notification.permission !== "granted") {
+                            Notification.requestPermission().then(permission => {
+                                if (permission === "granted") {
+                                    alert('Super! Obaveštenja su uključena.');
+                                    new Notification("Test Notifikacija", { body: "Ovako će izgledati podsetnik za termin." });
+                                } else {
+                                    alert('Moraš dozvoliti obaveštenja u podešavanjima telefona.');
+                                }
+                            });
+                        }
+                    }
+                });
+            }
+        });
 
         initDashboard();
     </script>
