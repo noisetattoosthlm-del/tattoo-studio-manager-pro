@@ -419,9 +419,14 @@ if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js');
 }
         const supabaseUrl = 'https://yunuwkjydqzgkqtbgwup.supabase.co'; 
-        const supabaseKey = 'sb_publishable_J66CdYuykkwjyulPJp2O1Q_e0ZZLXe7'; 
-        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-
+const supabaseKey = 'sb_publishable_J66CdYuykkwjyulPJp2O1Q_e0ZZLXe7'; 
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true
+  }
+});
         let userProfile = null;
         let editingId = null;
         let globalApps = [];
