@@ -209,6 +209,9 @@
 
     <div class="main" id="dashboard-section">
         <h1 id="main-greeting">Statistika Studija</h1>
+        <button class="btn-action-pay" onclick="enableNotifications()" style="margin-bottom:20px;">
+🔔 Aktiviraj Push Obaveštenja
+</button>
 
         <div id="notification-banner" style="display:none; background: rgba(59, 130, 246, 0.1); border: 1px dashed var(--accent); padding: 15px; border-radius: 20px; margin-bottom: 20px; text-align: center;">
             <p style="margin: 0 0 10px 0; font-size: 0.85rem; color: #94a3b8;">🔔 Želite li da primate podsetnike za termine na ovom uređaju?</p>
@@ -398,11 +401,17 @@
         const supabaseUrl = 'https://yunuwkjydqzgkqtbgwup.supabase.co'; 
         const supabaseKey = 'sb_publishable_J66CdYuykkwjyulPJp2O1Q_e0ZZLXe7'; 
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+        if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js')
+    .then(() => console.log('Service Worker registered'))
+    .catch(err => console.error('SW error', err));
+}
 
         let userProfile = null;
         let editingId = null;
         let globalApps = [];
         let myChart = null;
+        const PUBLIC_VAPID_KEY = 'BIDaGQ_tNOeFG_pa1-dpuC_Grcx1eeQ_RAoXqwAxgYYzVjQveCpZ_kXUTabl2kxF_l6EsN_Jd_VuVnnX0sevogI';
 
         // --- NOVO: LOGIKA ZA OBAVEŠTENJA ---
         function checkNotificationStatus() {
@@ -730,6 +739,35 @@
         async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
 
         initDashboard();
+        async function enableNotifications() {
+
+  const { data: { user } } = await supabaseClient.auth.getUser();
+  if (!user) return alert("Niste ulogovani.");
+
+  const permission = await Notification.requestPermission();
+  if (permission !== 'granted') return alert("Morate dozvoliti notifikacije.");
+
+  const registration = await navigator.serviceWorker.ready;
+
+  const subscription = await registration.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY)
+  });
+
+  await supabaseClient.from('push_subscriptions').insert([{
+    user_id: user.id,
+    subscription: subscription
+  }]);
+
+  alert("Push notifikacije aktivirane!");
+}
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = atob(base64);
+  return Uint8Array.from([...rawData].map(char => char.charCodeAt(0)));
+}
     </script>
 </body>
 </html>
