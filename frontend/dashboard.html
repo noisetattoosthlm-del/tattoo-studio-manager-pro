@@ -402,7 +402,19 @@
             <button onclick="zatvoriModal()" style="background:none; border:none; color:#64748b; width:100%; cursor:pointer; margin-top:10px; font-weight:600;">Otkaži</button>
         </div>
     </div>
-    <script>async function proveriPush() {
+    <script>
+        const supabaseUrl = 'https://yunuwkjydqzgkqtbgwup.supabase.co';
+const supabaseKey = 'sb_publishable_J66CdYuykkwjyulPJp2O1Q_e0ZZLXe7';
+
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storage: window.indexedDB
+  }
+});
+async function proveriPush() {
   const { data:{user} } = await supabaseClient.auth.getUser();
 
 const { data } = await supabaseClient
@@ -418,17 +430,7 @@ const { data } = await supabaseClient
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js');
 }
-       const supabaseUrl = 'https://yunuwkjydqzgkqtbgwup.supabase.co';
-const supabaseKey = 'sb_publishable_J66CdYuykkwjyulPJp2O1Q_e0ZZLXe7';
-
-const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-    storage: window.indexedDB
-  }
-});
+       
         let userProfile = null;
         let editingId = null;
         let globalApps = [];
