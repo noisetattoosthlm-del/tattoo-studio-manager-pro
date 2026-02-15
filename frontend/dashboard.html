@@ -413,16 +413,6 @@ const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey, {
     detectSessionInUrl: true
   }
 });
-supabaseClient.auth.onAuthStateChange((event, session) => {
-  if (session) {
-    localStorage.setItem("sb-session", JSON.stringify(session));
-  }
-});
-
-const savedSession = localStorage.getItem("sb-session");
-if (savedSession) {
-  supabaseClient.auth.setSession(JSON.parse(savedSession));
-}        
 async function proveriPush() {
   const { data:{user} } = await supabaseClient.auth.getUser();
 
