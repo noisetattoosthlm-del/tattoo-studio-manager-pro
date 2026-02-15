@@ -402,16 +402,18 @@
             <button onclick="zatvoriModal()" style="background:none; border:none; color:#64748b; width:100%; cursor:pointer; margin-top:10px; font-weight:600;">Otkaži</button>
         </div>
     </div>
-    <script>
-        async function proveriPush() {
+    <script>async function proveriPush() {
   const { data:{user} } = await supabaseClient.auth.getUser();
+
   const { data } = await supabaseClient
     .from('push_subscriptions')
     .select('id')
     .eq('user_id', user.id)
     .single();
 
-  if(data) document.querySelector('.btn-action-pay').style.display = 'none';
+  if(data && document.getElementById('push-btn')) {
+    document.getElementById('push-btn').style.display = 'none';
+  }
 }
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/sw.js');
