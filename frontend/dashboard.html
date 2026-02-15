@@ -1116,14 +1116,7 @@ function urlBase64ToUint8Array(base64String) {
   const raw = atob(base64);
   return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
 }
-        initDashboard();
-setInterval(async () => {
-  await fetch("https://yunuwkjydqzgkqtbgwup.supabase.co/functions/v1/send-reminders", {
-    headers: {
-      Authorization: "Bearer " + supabaseKey
-    }
-  });
-}, 60000);        
+        initDashboard();      
     </script>
 </body>
 </html>            
