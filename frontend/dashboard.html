@@ -860,37 +860,72 @@ if (Notification.permission === 'granted') {
             document.getElementById('tabela-div').innerHTML = h + `</table>`;
         }
 
-        async function saveData() {
-            const saveBtn = document.getElementById('save-btn'); const originalText = saveBtn.innerText;
-            const name = document.getElementById('c_name').value; const time = document.getElementById('app_time').value;
-            let chosenArtistId = (userProfile.role === 'owner') ? document.getElementById('app_artist_id').value : userProfile.id;
-            if(!name || !time || !chosenArtistId) { alert("Ime, datum i artist su obavezni!"); return; }
-            saveBtn.disabled = true; saveBtn.innerText = "ČUVANJE...";
-            try {
-                const cena = parseFloat(document.getElementById('total_price').value) || 0;
-                const inputPercent = document.getElementById('artist_percent').value;
-                const procenat = inputPercent === "" ? 0 : parseFloat(inputPercent);
-                
-                const valuta = document.getElementById('currency_choice').value;
-                const depozit = parseFloat(document.getElementById('deposit_amt').value) || 0;
-                const payload = {
-  reminder_minutes: document.getElementById('reminder_minutes').value || null,
-  reminder_sent: null,
+       async function saveData() {
+  const saveBtn = document.getElementById('save-btn');
+  const originalText = saveBtn.innerText;
 
-  client_name: name,
-  client_phone: document.getElementById('c_phone').value || "",
-  client_email: document.getElementById('c_email').value || "",
-  client_instagram: document.getElementById('c_insta').value || "",
-  appointment_time: new Date(time).toISOString(),
-  total_price: cena,
-  currency: valuta,
-  deposit: depozit,
-  artist_percentage: procenat,
-  studio_share: cena * ((100 - procenat) / 100),
-  payment_type: document.getElementById('payment_type').value,
-  artist_id: chosenArtistId
-};
+  const name = document.getElementById('c_name').value;
+  const time = document.getElementById('app_time').value;
 
+  let chosenArtistId = (userProfile.role === 'owner')
+    ? document.getElementById('app_artist_id').value
+    : userProfile.id;
+
+  if (!name || !time || !chosenArtistId) {
+    alert("Ime, datum i artist su obavezni!");
+    return;
+  }
+
+  saveBtn.disabled = true;
+  saveBtn.innerText = "ČUVANJE...";
+
+  try {
+    const cena = parseFloat(document.getElementById('total_price').value) || 0;
+    const inputPercent = document.getElementById('artist_percent').value;
+    const procenat = inputPercent === "" ? 0 : parseFloat(inputPercent);
+    const valuta = document.getElementById('currency_choice').value;
+    const depozit = parseFloat(document.getElementById('deposit_amt').value) || 0;
+
+    const payload = {
+      reminder_minutes: document.getElementById('reminder_minutes').value || null,
+      reminder_sent: null,
+
+      client_name: name,
+      client_phone: document.getElementById('c_phone').value || "",
+      client_email: document.getElementById('c_email').value || "",
+      client_instagram: document.getElementById('c_insta').value || "",
+      appointment_time: new Date(time).toISOString(),
+      total_price: cena,
+      currency: valuta,
+      deposit: depozit,
+      artist_percentage: procenat,
+      studio_share: cena * ((100 - procenat) / 100),
+      payment_type: document.getElementById('payment_type').value,
+      artist_id: chosenArtistId
+    };
+
+    if (editingId) {
+      await supabaseClient.from('appointments').update(payload).eq('id', editingId);
+    } else {
+      await supabaseClient.from('appointments').insert([{
+        ...payload,
+        owner_id: userProfile.owner_id || userProfile.id,
+        studio_id: userProfile.studio_id,
+        status: 'zakazano',
+        payout_status: 'nema'
+      }]);
+    }
+
+    zatvoriModal();
+    await osveziPodatke();
+
+  } catch (err) {
+    alert("Greška: " + err.message);
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.innerText = originalText;
+  }
+}
         function otvoriModalNovi() {
             editingId = null; document.getElementById('modal-title').innerText = "Novi Termin";
             document.querySelectorAll('#bookingModal input').forEach(i => i.value = "");
