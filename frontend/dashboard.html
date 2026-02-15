@@ -786,7 +786,9 @@ async function napraviArtista() {
                 let eventsHtml = '';
                 filteredApps.slice(0, 3).forEach(a => {
                     const color = colorMap[a.artist_id] || '#3b82f6';
-                    eventsHtml += `<div class="cal-event-tag" style="background:${color}">${a.appointment_time.substring(11,16)} ${a.client_name}</div>`;
+                    eventsHtml += `<div class="cal-event-tag" style="background:${color}">
+${new Date(a.appointment_time).toLocaleTimeString('sr-RS',{hour:'2-digit',minute:'2-digit'})} ${a.client_name}
+</div>`;
                 });
                 if(filteredApps.length > 3) eventsHtml += `<div style="font-size:0.55rem; color:#64748b; font-weight:800;">+ još ${filteredApps.length - 3}</div>`;
 
@@ -821,7 +823,9 @@ async function napraviArtista() {
                     list.innerHTML += `
                         <div class="day-detail-item" style="border-left: 5px solid ${color}">
                             <div style="display:flex; align-items:center;">
-                                <div class="day-detail-time">${a.appointment_time.substring(11,16)}</div>
+                                <div class="day-detail-time">
+${new Date(a.appointment_time).toLocaleTimeString('sr-RS',{hour:'2-digit',minute:'2-digit'})}
+</div>
                                 <div>
                                     <div style="font-weight:800; font-size:1.1rem;">${a.client_name}</div>
                                     <div style="font-size:0.75rem; color:#64748b;">${a.client_instagram || 'Bez Instagrama'} • ${a.client_phone || 'Bez telefona'}</div>
