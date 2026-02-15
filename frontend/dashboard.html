@@ -878,6 +878,7 @@ async function saveData() {
       client_phone: document.getElementById('c_phone').value || "",
       client_email: document.getElementById('c_email').value || "",
       client_instagram: document.getElementById('c_insta').value || "",
+      reminder_minutes: document.getElementById('reminder_minutes').value || null,
       appointment_time: new Date(document.getElementById('app_time').value).toISOString(),
       total_price: Number(document.getElementById('total_price').value || 0),
       currency: document.getElementById('currency_choice').value,
