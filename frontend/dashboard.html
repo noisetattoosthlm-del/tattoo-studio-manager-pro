@@ -884,6 +884,10 @@ async function saveData() {
       currency: document.getElementById('currency_choice').value,
       deposit: Number(document.getElementById('deposit_amt').value || 0),
       artist_percentage: Number(document.getElementById('artist_percent').value || 0),
+   studio_share: Math.round(
+  Number(document.getElementById('total_price').value || 0) *
+  (1 - (Number(document.getElementById('artist_percent').value || 0) / 100))
+),     
       payment_type: document.getElementById('payment_type').value,
       artist_id: userProfile.role === 'owner'
         ? document.getElementById('app_artist_id').value
