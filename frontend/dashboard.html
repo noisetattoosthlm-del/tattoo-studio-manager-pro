@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tattoo Studio Management Pro</title>
-    <link rel="manifest" href="/manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -212,9 +211,6 @@
 
     <div class="main" id="dashboard-section">
         <h1 id="main-greeting">Statistika Studija</h1>
-      <button id="push-btn" class="btn-action-pay" onclick="enableNotifications()" style="margin-bottom:25px;">
-🔔 Aktiviraj Push Obaveštenja
-</button>
         
         <div class="filter-group">
             <select id="month-select" class="filter-select" onchange="syncDateFilters(this)"></select>
@@ -377,16 +373,6 @@
             <label class="modal-label">Email klijenta (opciono)</label><input type="email" id="c_email">
             <label class="modal-label">Instagram (@)</label><input type="text" id="c_insta">
             <label class="modal-label">Datum i vreme</label><input type="datetime-local" id="app_time">
-            <label class="modal-label">Podsetnik</label>
-<select id="reminder_minutes">
-  <option value="">Bez podsetnika</option>
-  <option value="10">10 min</option>
-  <option value="30">30 min</option>
-  <option value="60">1h</option>
-  <option value="120">2h</option>
-  <option value="180">3h</option>
-  <option value="1440">24h</option>
-</select>
             <div style="display: flex; gap: 10px;">
                 <div style="flex:2"><label class="modal-label">Cena</label><input type="number" id="total_price"></div>
                 <div style="flex:1"><label class="modal-label">Valuta</label><select id="currency_choice"><option value="€">EUR (€)</option><option value="din">RSD (din)</option></select></div>
@@ -402,34 +388,12 @@
             <button onclick="zatvoriModal()" style="background:none; border:none; color:#64748b; width:100%; cursor:pointer; margin-top:10px; font-weight:600;">Otkaži</button>
         </div>
     </div>
+
     <script>
-        const supabaseUrl = 'https://yunuwkjydqzgkqtbgwup.supabase.co';
-const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1bnV3a2p5ZHF6Z2txdGJnd3VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyMzk1NjksImV4cCI6MjA4NTgxNTU2OX0.ogZt8LVk8i15_-eutFTVir9rX4Kt7iU5yeDs3WCH2uA';
+        const supabaseUrl = 'https://yunuwkjydqzgkqtbgwup.supabase.co'; 
+        const supabaseKey = 'sb_publishable_J66CdYuykkwjyulPJp2O1Q_e0ZZLXe7'; 
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
 
-const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true
-  }
-});
-async function proveriPush() {
-  const { data:{user} } = await supabaseClient.auth.getUser();
-
-const { data } = await supabaseClient
-  .from('push_subscriptions')
-  .select('id')
-  .eq('user_id', user.id)
-  .maybeSingle();
-
-  if(data && document.getElementById('push-btn')) {
-    document.getElementById('push-btn').style.display = 'none';
-  }
-}
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/sw.js');
-}
-       
         let userProfile = null;
         let editingId = null;
         let globalApps = [];
@@ -508,16 +472,9 @@ if ('serviceWorker' in navigator) {
             popuniMeseceIGodine();
             osveziPodatke();
             renderujMagacin(); // NOVO: Inicijalizacija magacina iz baze
-            await proveriPush();
-        
-if (Notification.permission === 'granted') {
-  const btn = document.getElementById('push-btn');
-  if (btn) btn.style.display = 'none';
-}
+        }
 
-} // <<< OVO DODAJEŠ – zatvara initDashboard()
-
-async function napraviArtista() {
+        async function napraviArtista() {
             const name = document.getElementById('new-artist-name').value;
             const email = document.getElementById('new-artist-email').value;
             const pass = document.getElementById('new-artist-pass').value;
@@ -563,7 +520,7 @@ async function napraviArtista() {
             const briefingText = document.getElementById('briefing-text');
             const agendaList = document.getElementById('briefing-agenda-list');
             
-            const today = new Date().toLocaleDateString('sv-SE');
+            const today = new Date().toISOString().split('T')[0];
             const todayApps = apps.filter(a => a.appointment_time && a.appointment_time.startsWith(today) && a.status === 'zakazano');
 
             if (todayApps.length > 0) {
@@ -575,14 +532,14 @@ async function napraviArtista() {
                     briefingText.innerText = "Srećan rad celoj ekipi!";
                 } else {
                     briefingTitle.innerText = `Danas imaš ${count} termina`;
-                    briefingText.innerText = `Prvi termin ti je u ${new Date(todayApps[0].appointment_time).toLocaleTimeString('sr-RS',{hour:'2-digit',minute:'2-digit'})}h.`;
+                    briefingText.innerText = `Prvi termin ti je u ${todayApps[0].appointment_time.substring(11,16)}h.`;
                 }
 
                 let agendaHtml = '';
                 todayApps.forEach(a => {
                     agendaHtml += `
                         <div class="agenda-item">
-                            <div class="agenda-time">${new Date(a.appointment_time).toLocaleTimeString('sr-RS',{hour:'2-digit',minute:'2-digit'})}h</div>
+                            <div class="agenda-time">${a.appointment_time.substring(11,16)}h</div>
                             <div class="agenda-info">
                                 <span class="agenda-name">${a.client_name}</span>
                                 <span class="agenda-contact">${a.client_phone || a.client_instagram || 'Nema kontakta'}</span>
@@ -786,9 +743,7 @@ async function napraviArtista() {
                 let eventsHtml = '';
                 filteredApps.slice(0, 3).forEach(a => {
                     const color = colorMap[a.artist_id] || '#3b82f6';
-                    eventsHtml += `<div class="cal-event-tag" style="background:${color}">
-${new Date(a.appointment_time).toLocaleTimeString('sr-RS',{hour:'2-digit',minute:'2-digit'})} ${a.client_name}
-</div>`;
+                    eventsHtml += `<div class="cal-event-tag" style="background:${color}">${a.appointment_time.substring(11,16)} ${a.client_name}</div>`;
                 });
                 if(filteredApps.length > 3) eventsHtml += `<div style="font-size:0.55rem; color:#64748b; font-weight:800;">+ još ${filteredApps.length - 3}</div>`;
 
@@ -823,9 +778,7 @@ ${new Date(a.appointment_time).toLocaleTimeString('sr-RS',{hour:'2-digit',minute
                     list.innerHTML += `
                         <div class="day-detail-item" style="border-left: 5px solid ${color}">
                             <div style="display:flex; align-items:center;">
-                                <div class="day-detail-time">
-${new Date(a.appointment_time).toLocaleTimeString('sr-RS',{hour:'2-digit',minute:'2-digit'})}
-</div>
+                                <div class="day-detail-time">${a.appointment_time.substring(11,16)}</div>
                                 <div>
                                     <div style="font-weight:800; font-size:1.1rem;">${a.client_name}</div>
                                     <div style="font-size:0.75rem; color:#64748b;">${a.client_instagram || 'Bez Instagrama'} • ${a.client_phone || 'Bez telefona'}</div>
@@ -867,60 +820,33 @@ ${new Date(a.appointment_time).toLocaleTimeString('sr-RS',{hour:'2-digit',minute
             document.getElementById('tabela-div').innerHTML = h + `</table>`;
         }
 
-async function saveData() {
+        async function saveData() {
+            const saveBtn = document.getElementById('save-btn'); const originalText = saveBtn.innerText;
+            const name = document.getElementById('c_name').value; const time = document.getElementById('app_time').value;
+            let chosenArtistId = (userProfile.role === 'owner') ? document.getElementById('app_artist_id').value : userProfile.id;
+            if(!name || !time || !chosenArtistId) { alert("Ime, datum i artist su obavezni!"); return; }
+            saveBtn.disabled = true; saveBtn.innerText = "ČUVANJE...";
+            try {
+                const cena = parseFloat(document.getElementById('total_price').value) || 0;
+                const inputPercent = document.getElementById('artist_percent').value;
+                const procenat = inputPercent === "" ? 0 : parseFloat(inputPercent);
+                
+                const valuta = document.getElementById('currency_choice').value;
+                const depozit = parseFloat(document.getElementById('deposit_amt').value) || 0;
+                const payload = {
+                    client_name: name, client_phone: document.getElementById('c_phone').value || "", client_email: document.getElementById('c_email').value || "", client_instagram: document.getElementById('c_insta').value || "",
+                    appointment_time: time, total_price: cena, currency: valuta, deposit: depozit, artist_percentage: procenat, 
+                    studio_share: cena * ((100 - procenat) / 100), payment_type: document.getElementById('payment_type').value, artist_id: chosenArtistId
+                };
+                if (editingId) { await supabaseClient.from('appointments').update(payload).eq('id', editingId); }
+                else { await supabaseClient.from('appointments').insert([{ ...payload, owner_id: userProfile.owner_id || userProfile.id, studio_id: userProfile.studio_id, status: 'zakazano', payout_status: 'nema' }]); }
+                zatvoriModal(); await osveziPodatke();
+            } catch (err) { alert("Greška: " + err.message); } finally { saveBtn.disabled = false; saveBtn.innerText = originalText; }
+        }
 
-  const saveBtn = document.getElementById('save-btn');
-  saveBtn.disabled = true;
-
-  try {
-
-    const { data:{ user } } = await supabaseClient.auth.getUser();
-    if(!user) throw new Error("Nisi ulogovan");
-
-    const payload = {
-      client_name: document.getElementById('c_name').value,
-      client_phone: document.getElementById('c_phone').value || "",
-      client_email: document.getElementById('c_email').value || "",
-      client_instagram: document.getElementById('c_insta').value || "",
-      reminder_minutes: document.getElementById('reminder_minutes').value || null,
-      appointment_time: new Date(document.getElementById('app_time').value).toISOString(),
-      total_price: Number(document.getElementById('total_price').value || 0),
-      currency: document.getElementById('currency_choice').value,
-      deposit: Number(document.getElementById('deposit_amt').value || 0),
-      artist_percentage: Number(document.getElementById('artist_percent').value || 0),
-   studio_share: Math.round(
-  Number(document.getElementById('total_price').value || 0) *
-  (1 - (Number(document.getElementById('artist_percent').value || 0) / 100))
-),     
-      payment_type: document.getElementById('payment_type').value,
-      artist_id: userProfile.role === 'owner'
-        ? document.getElementById('app_artist_id').value
-        : user.id,
-      studio_id: userProfile.studio_id,
-      owner_id: userProfile.owner_id || user.id,
-      status: 'zakazano',
-      payout_status: 'nema'
-    };
-
-    const { error } = await supabaseClient
-      .from('appointments')
-      .insert([payload]);
-
-    if(error) throw error;
-
-    zatvoriModal();
-    await osveziPodatke();
-
-  } catch(err) {
-    alert(err.message);
-  }
-
-  saveBtn.disabled = false;
-}
         function otvoriModalNovi() {
             editingId = null; document.getElementById('modal-title').innerText = "Novi Termin";
             document.querySelectorAll('#bookingModal input').forEach(i => i.value = "");
-            document.getElementById('reminder_minutes').value = "";
             document.getElementById('deposit_amt').value = "0"; 
             document.getElementById('artist_percent').value = ""; 
             document.getElementById('currency_choice').value = "€";
@@ -933,10 +859,7 @@ async function saveData() {
             editingId = id; document.getElementById('modal-title').innerText = "Izmeni Termin";
             if(document.getElementById('app_artist_id')) document.getElementById('app_artist_id').value = a.artist_id || "";
             document.getElementById('c_name').value = a.client_name || ""; document.getElementById('c_phone').value = a.client_phone || "";
-            document.getElementById('c_insta').value = a.client_instagram || ""; document.getElementById('app_time').value =
-a.appointment_time
-? new Date(a.appointment_time).toISOString().slice(0,16)
-: "";
+            document.getElementById('c_insta').value = a.client_instagram || ""; document.getElementById('app_time').value = a.appointment_time ? a.appointment_time.substring(0, 16) : "";
             document.getElementById('total_price').value = a.total_price || 0; document.getElementById('currency_choice').value = a.currency || "€";
             document.getElementById('deposit_amt').value = a.deposit || 0; document.getElementById('artist_percent').value = a.artist_percentage !== undefined ? a.artist_percentage : 0;
             document.getElementById('payment_type').value = a.payment_type || 'Cash'; document.getElementById('bookingModal').style.display = 'block';
@@ -1088,43 +1011,7 @@ a.appointment_time
         function zatvoriModal() { document.getElementById('bookingModal').style.display = 'none'; editingId = null; }
         async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
 
-                const PUBLIC_VAPID_KEY = "BIDaGQ_tNOeFG_pa1-dpuC_Grcx1eeQ_RAoXqwAxgYYzVjQveCpZ_kXUTabl2kxF_l6EsN_Jd_VuVnnX0sevogI";
-
-async function enableNotifications() {
-
-  const { data:{user} } = await supabaseClient.auth.getUser();
-  if(!user) return alert("Niste ulogovani.");
-
-  const permission = await Notification.requestPermission();
-  if (permission !== 'granted') return alert("Dozvoli notifikacije.");
-
-  const reg = await navigator.serviceWorker.ready;
-
-  const sub = await reg.pushManager.subscribe({
-    userVisibleOnly: true,
-    applicationServerKey: urlBase64ToUint8Array(PUBLIC_VAPID_KEY)
-  });
-
-  const { error } = await supabaseClient.from('push_subscriptions').insert([{
-    user_id: user.id,
-    subscription: sub
-  }]);
-
-  if(error) {
-    alert("Push greška: " + error.message);
-    return;
-  }
-
-  alert("Push aktiviran");
-  document.getElementById('push-btn').style.display = 'none';
-}
-function urlBase64ToUint8Array(base64String) {
-  const padding = '='.repeat((4 - base64String.length % 4) % 4);
-  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-  const raw = atob(base64);
-  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
-}
-        initDashboard();      
+        initDashboard();
     </script>
 </body>
-</html>            
+</html>
