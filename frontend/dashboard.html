@@ -501,7 +501,16 @@
         let globalApps = [];
         let myChart = null;
         let deleteId = null;
+let deleteAction = null;
+        function otvoriConfirmModal(id, action, message) {
+    deleteId = id;
+    deleteAction = action;
 
+    document.querySelector('#confirmModal h3').innerText = "Da li ste sigurni?";
+    document.querySelector('#confirmModal p').innerText = message;
+
+    document.getElementById('confirmModal').style.display = 'block';
+}
         function syncDateFilters(el) {
             const val = el.value;
             const isMonth = el.id.includes('month');
@@ -817,9 +826,8 @@ setTimeout(() => {
             }
         }
 
-       async function obrisiIzMagacina(id) {
-    await supabaseClient.from('inventory').delete().eq('id', id);
-    renderujMagacin();
+       function obrisiIzMagacina(id) {
+    otvoriConfirmModal(id, 'inventory', 'Artikal će biti trajno obrisan.');
 }
         /* ------------------------------- */
 
@@ -1035,12 +1043,9 @@ ${a.status === 'završeno' && !isPayed && userProfile.role === 'owner' ? `<butto
             document.getElementById('total-expenses-sum').innerHTML = `€${sumaEur} / ${sumaRsd} RSD`;
         }
 
-        async function obrisiTrosak(id) {
-    await supabaseClient.from('expenses').delete().eq('id', id);
-    ucitajTroskove();
-    osveziPodatke();
+     function obrisiTrosak(id) {
+    otvoriConfirmModal(id, 'expense', 'Ovaj trošak će biti trajno obrisan.');
 }
-
         function prikaziSekciju(sekcija) {
             const sekcije = ['dashboard', 'kalendar', 'klijenti', 'artisti', 'troskovi', 'magacin'];
             sekcije.forEach(s => {
@@ -1089,7 +1094,9 @@ ${a.status === 'završeno' && !isPayed && userProfile.role === 'owner' ? `<butto
             }
         }
 
-        async function obrisiKlijenta(clientName) {
+        function obrisiKlijenta(clientName) {
+    otvoriConfirmModal(clientName, 'client', 'Svi termini ovog klijenta biće obrisani.');
+}
     await supabaseClient
         .from('appointments')
         .delete()
@@ -1135,8 +1142,7 @@ ${a.status === 'završeno' && !isPayed && userProfile.role === 'owner' ? `<butto
     osveziPodatke();
 }
         function obrisiTermin(id) {
-    deleteId = id;
-    document.getElementById('confirmModal').style.display = 'block';
+    otvoriConfirmModal(id, 'appointment', 'Ovaj termin će biti trajno obrisan.');
 }
 
 function zatvoriConfirm() {
@@ -1151,7 +1157,9 @@ async function potvrdiBrisanje() {
     document.getElementById('confirmModal').style.display = 'none';
     osveziPodatke();
 }
-        async function obrisiProfil(id) {
+        function obrisiProfil(id) {
+    otvoriConfirmModal(id, 'artist', 'Artist će biti uklonjen iz sistema.');
+}
     await supabaseClient.from('profiles').delete().eq('id', id);
     ucitajArtiste();
 }
