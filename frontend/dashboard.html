@@ -210,6 +210,9 @@
     border-left: 4px solid #3b82f6;
     background: rgba(59,130,246,0.08);
 }
+       tr {
+    cursor: pointer;
+} 
     </style>
 </head>
 <body>
@@ -842,16 +845,16 @@ const isToday = a.appointment_time && a.appointment_time.startsWith(todayStr);
                 const cenaPrikaz = valuta === '€' ? `€${a.total_price}` : `${a.total_price} din`;
                 let statusBadge = (a.status === 'završeno') ? '<div class="check-badge">✓</div>' : (a.status === 'no-show') ? '<span class="status-noshow">NO-SHOW</span>' : '<span class="status-zakazano">ZAKAZANO</span>';
 
-                h += `<tr class="${isToday ? 'today-highlight' : ''}">
+                h += `<tr class="${isToday ? 'today-highlight' : ''}" onclick="otvoriModalEdit('${a.id}')">
                     <td><div style="font-weight:800;">${a.client_name}</div><div style="font-size:0.65rem; color:#64748b;">${a.client_instagram || '-'}</div></td>
                     <td style="text-align:center;">${statusBadge}${isPayed ? '<div class="pay-badge" title="Isplaćeno">💸</div>' : ''}</td>
                     <td>${datum}h</td>
                     <td>${cenaPrikaz} <span title="${a.payment_type || 'Cash'}">${pIcon}</span></td>
                     <td style="text-align:right;"><div class="action-cell">
-                        ${a.status === 'zakazano' ? `<button class="btn-action-done" onclick="updateStatus('${a.id}', 'završeno')">Završi</button><button class="btn-action-noshow" onclick="updateStatus('${a.id}', 'no-show')">No-Show</button>` : ''}
-                        <button class="btn-action-edit" onclick="otvoriModalEdit('${a.id}')">✏️</button>
-                        ${a.status === 'završeno' && !isPayed && userProfile.role === 'owner' ? `<button class="btn-action-pay" onclick="updatePayout('${a.id}')">Isplati</button>` : ''}
-                        <button class="btn-action-delete" onclick="obrisiTermin('${a.id}')">Obriši</button>
+                        ${a.status === 'zakazano' ? `<button class="btn-action-done" onclick="event.stopPropagation(); updateStatus('${a.id}', 'završeno')">Završi</button><button class="btn-action-noshow" onclick="event.stopPropagation(); updateStatus('${a.id}', 'no-show')">No-Show</button>` : ''}
+<button class="btn-action-edit" onclick="event.stopPropagation(); otvoriModalEdit('${a.id}')">✏️</button>
+${a.status === 'završeno' && !isPayed && userProfile.role === 'owner' ? `<button class="btn-action-pay" onclick="event.stopPropagation(); updatePayout('${a.id}')">Isplati</button>` : ''}
+<button class="btn-action-delete" onclick="event.stopPropagation(); obrisiTermin('${a.id}')">Obriši</button>
                     </div></td></tr>`;
             });
             document.getElementById('tabela-div').innerHTML = h + `</table>`;
