@@ -1305,7 +1305,9 @@ async function potvrdiBrisanje() {
 
         initDashboard();
         function setQuickRange(type) {
-
+            document.querySelectorAll('.quick-filters button').forEach(b=>b.classList.remove('active'));
+event.target.classList.add('active');
+            
     const today = new Date();
     let startDate;
     let endDate;
