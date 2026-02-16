@@ -342,28 +342,6 @@ tr:active td {
 .section-troskovi {
     background: radial-gradient(circle at top right, rgba(239,68,68,0.22), transparent);
 }
-       .quick-filters {
-    display:flex;
-    gap:10px;
-    margin-bottom:25px;
-}
-
-.quick-filters button {
-    background: rgba(255,255,255,0.05);
-    border:1px solid rgba(255,255,255,0.1);
-    color:#94a3b8;
-    padding:10px 18px;
-    border-radius:14px;
-    cursor:pointer;
-    font-weight:700;
-    transition:.2s;
-}
-
-.quick-filters button.active {
-    background:#3b82f6;
-    color:white;
-    box-shadow:0 0 20px rgba(59,130,246,.5);
-} 
     </style>
 </head>
 <body>
@@ -413,12 +391,6 @@ tr:active td {
             <div class="stat-card owner-only" id="debt-card"><h3>Dug Artistima</h3><p id="debt-sum" style="color:#ef4444;">€0</p></div>
             <div class="stat-card"><h3>Depoziti</h3><p id="deposit-sum">€0</p></div>
         </div>
-          <div class="quick-filters">
-    <button onclick="setQuickRange(event,'today')">Danas</button>
-    <button onclick="setQuickRange(event,'tomorrow')">Sutra</button>
-    <button onclick="setQuickRange(event,'week')">7 dana</button>
-    <button onclick="setQuickRange(event,'month')">Mesec</button>
-</div>
         <button class="btn-add" onclick="otvoriModalNovi()">+ NOVI TERMIN</button>
         <div class="table-container" id="tabela-div">Učitavanje...</div>
     </div>
@@ -601,10 +573,6 @@ let deleteAction = null;
     document.getElementById('confirmModal').style.display = 'block';
 }
         function syncDateFilters(el) {
-            window.quickRange = null;
-
-document.querySelectorAll('.quick-filters button')
-    .forEach(b=>b.classList.remove('active'));
             const val = el.value;
             const isMonth = el.id.includes('month');
             
@@ -784,20 +752,10 @@ setTimeout(() => {
 
                 if (allApps) {
                     globalApps = allApps;
+                    
+                    updateDailyBriefing(allApps);
 
-                   let filteredApps = allApps;
-
-if(window.quickRange){
-    filteredApps = filteredApps.filter(a=>{
-        if(!a.appointment_time) return false;
-        const d = a.appointment_time.substring(0,10);
-        return d >= window.quickRange.start && d <= window.quickRange.end;
-    });
-} else {
-    filteredApps = filteredApps.filter(a =>
-        a.appointment_time && a.appointment_time.startsWith(selectedMonthStr)
-    );
-}
+                    let filteredApps = allApps.filter(a => a.appointment_time && a.appointment_time.startsWith(selectedMonthStr));
                     const troskovi = (allTroskovi && userProfile.role === 'owner' && (artistFilter === 'all' || artistFilter === '')) 
                         ? allTroskovi.filter(t => t.created_at.startsWith(selectedMonthStr)) 
                         : [];
@@ -849,8 +807,7 @@ if(window.quickRange){
                     }
                     
                     inicijalizujGrafikon(filteredApps, y, m);
-updateDailyBriefing(filteredApps);
-renderujTabelu(filteredApps);
+                    renderujTabelu(filteredApps);
                 }
             } catch (err) { console.error(err); }
         }
@@ -1307,46 +1264,6 @@ async function potvrdiBrisanje() {
         async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
 
         initDashboard();
-       function setQuickRange(e,type) {
-
-    document.querySelectorAll('.quick-filters button')
-        .forEach(b=>b.classList.remove('active'));
-
-    if(e) e.target.classList.add('active');
-const y = document.getElementById('year-select').value;
-const m = document.getElementById('month-select').value;
-
-const today = new Date(`${y}-${m}-01`);
-
-    let startDate;
-    let endDate;
-
-    if(type === 'today') {
-        startDate = endDate = today;
-    }
-
-    if(type === 'tomorrow') {
-        startDate = endDate = new Date(today.getTime() + 86400000);
-    }
-
-    if(type === 'week') {
-        startDate = today;
-        endDate = new Date(today.getTime() + 7 * 86400000);
-    }
-
-   if(type === 'month') {
-    startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-    endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-}
-
-    window.quickRange = {
-        start: startDate.toISOString().substring(0,10),
-        end: endDate.toISOString().substring(0,10)
-    };
-
-    osveziPodatke();
-}
-   
     </script>
     <button class="fab-add" onclick="otvoriModalNovi()">+</button>
     <div id="confirmModal" class="modal">
