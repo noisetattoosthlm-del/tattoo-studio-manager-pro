@@ -413,11 +413,11 @@ tr:active td {
             <div class="stat-card owner-only" id="debt-card"><h3>Dug Artistima</h3><p id="debt-sum" style="color:#ef4444;">€0</p></div>
             <div class="stat-card"><h3>Depoziti</h3><p id="deposit-sum">€0</p></div>
         </div>
-           <div class="quick-filters">
-    <button onclick="setQuickRange('today')">Danas</button>
-    <button onclick="setQuickRange('tomorrow')">Sutra</button>
-    <button onclick="setQuickRange('week')">7 dana</button>
-    <button onclick="setQuickRange('month')">Mesec</button>
+          <div class="quick-filters">
+    <button onclick="setQuickRange(event,'today')">Danas</button>
+    <button onclick="setQuickRange(event,'tomorrow')">Sutra</button>
+    <button onclick="setQuickRange(event,'week')">7 dana</button>
+    <button onclick="setQuickRange(event,'month')">Mesec</button>
 </div>
         <button class="btn-add" onclick="otvoriModalNovi()">+ NOVI TERMIN</button>
         <div class="table-container" id="tabela-div">Učitavanje...</div>
@@ -1304,9 +1304,43 @@ async function potvrdiBrisanje() {
         async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
 
         initDashboard();
-        function setQuickRange(type) {
-            document.querySelectorAll('.quick-filters button').forEach(b=>b.classList.remove('active'));
-event.target.classList.add('active');
+        
+       function setQuickRange(e,type) {
+
+    document.querySelectorAll('.quick-filters button')
+        .forEach(b=>b.classList.remove('active'));
+
+    if(e) e.target.classList.add('active');
+
+    const today = new Date();
+    let startDate;
+    let endDate;
+
+    if(type === 'today') {
+        startDate = endDate = today;
+    }
+
+    if(type === 'tomorrow') {
+        startDate = endDate = new Date(today.getTime() + 86400000);
+    }
+
+    if(type === 'week') {
+        startDate = today;
+        endDate = new Date(today.getTime() + 7 * 86400000);
+    }
+
+    if(type === 'month') {
+        startDate = today;
+        endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    }
+
+    window.quickRange = {
+        start: startDate.toISOString().substring(0,10),
+        end: endDate.toISOString().substring(0,10)
+    };
+
+    osveziPodatke();
+}
             
     const today = new Date();
     let startDate;
