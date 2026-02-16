@@ -45,6 +45,15 @@
         #daily-bell {
     color: #2DFF7A;
 }
+        @keyframes bellPulse {
+    0%   { transform: scale(1); opacity: 1; }
+    50%  { transform: scale(1.25); opacity: 0.7; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.bell-pulse {
+    animation: bellPulse 0.8s ease-in-out 3;
+}
         .briefing-content h2 { margin: 0; font-size: 1.2rem; font-weight: 800; }
         .briefing-content p { margin: 5px 0 0 0; color: #94a3b8; font-size: 0.9rem; }
         
@@ -540,6 +549,11 @@
 
             if (todayApps.length > 0) {
                 bell.style.display = 'block';
+                bell.classList.add('bell-pulse');
+
+setTimeout(() => {
+    bell.classList.remove('bell-pulse');
+}, 2500);
                 briefingDiv.style.display = 'flex';
                 const count = todayApps.length;
                 
