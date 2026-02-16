@@ -42,6 +42,9 @@
         }
         .briefing-header { display: flex; align-items: center; gap: 20px; }
         .briefing-icon { font-size: 2.5rem; }
+        #daily-bell {
+    color: #2DFF7A;
+}
         .briefing-content h2 { margin: 0; font-size: 1.2rem; font-weight: 800; }
         .briefing-content p { margin: 5px 0 0 0; color: #94a3b8; font-size: 0.9rem; }
         
@@ -223,7 +226,7 @@
 
         <div class="briefing-container" id="daily-briefing" style="display:none;">
             <div class="briefing-header">
-                <div class="briefing-icon">☕</div>
+                <div class="briefing-icon" id="daily-bell">🔔</div>
                 <div class="briefing-content">
                     <h2 id="briefing-title">Dobro jutro!</h2>
                     <p id="briefing-text">Učitavanje današnjeg plana...</p>
@@ -526,6 +529,7 @@
         }
 
         function updateDailyBriefing(apps) {
+            const bell = document.getElementById('daily-bell');
             const briefingDiv = document.getElementById('daily-briefing');
             const briefingTitle = document.getElementById('briefing-title');
             const briefingText = document.getElementById('briefing-text');
@@ -535,6 +539,7 @@
             const todayApps = apps.filter(a => a.appointment_time && a.appointment_time.startsWith(today) && a.status === 'zakazano');
 
             if (todayApps.length > 0) {
+                bell.style.display = 'block';
                 briefingDiv.style.display = 'flex';
                 const count = todayApps.length;
                 
@@ -561,6 +566,7 @@
                 agendaList.innerHTML = agendaHtml;
 
             } else {
+                bell.style.display = 'none';
                 briefingDiv.style.display = 'none';
             }
         }
