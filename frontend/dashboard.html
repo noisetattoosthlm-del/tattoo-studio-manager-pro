@@ -248,6 +248,42 @@
     position: sticky;
     bottom: 10px;
     z-index: 10;
+}   
+.confirm-buttons {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.confirm-buttons button {
+    flex: 1;
+    padding: 16px 0;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.btn-cancel {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #94a3b8;
+}
+
+.btn-cancel:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.btn-confirm-delete {
+    background: rgba(239,68,68,0.1);
+    border: 1px solid #ef4444;
+    color: #ef4444;
+}
+
+.btn-confirm-delete:hover {
+    background: #ef4444;
+    color: white;
 }        
     </style>
 </head>
@@ -1113,6 +1149,16 @@ async function potvrdiBrisanje() {
     </script>
     <button class="fab-add" onclick="otvoriModalNovi()">+</button>
     <div id="confirmModal" class="modal">
+    <div class="modal-content" style="max-width:400px; text-align:center;">
+        <h3 style="margin-top:0;">Da li ste sigurni?</h3>
+        <p style="color:#64748b;">Ova akcija je nepovratna.</p>
+
+        <div class="confirm-buttons">
+            <button class="btn-cancel" onclick="zatvoriConfirm()">Otkaži</button>
+            <button class="btn-confirm-delete" onclick="potvrdiBrisanje()">Obriši</button>
+        </div>
+    </div>
+</div>
     <div class="modal-content" style="max-width:400px; text-align:center;">
         <h3 style="margin-top:0;">Da li ste sigurni?</h3>
         <p style="color:#64748b;">Ova akcija je nepovratna.</p>
