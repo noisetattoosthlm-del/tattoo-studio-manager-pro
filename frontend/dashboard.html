@@ -342,45 +342,6 @@ tr:active td {
 .section-troskovi {
     background: radial-gradient(circle at top right, rgba(239,68,68,0.22), transparent);
 }
-        .mobile-cards {
-    display: none;
-}
-
-.mobile-card {
-    background: var(--card);
-    border: 1px solid rgba(255,255,255,0.05);
-    border-radius: 20px;
-    padding: 15px;
-    margin-bottom: 12px;
-}
-
-.mobile-card-title {
-    font-weight: 800;
-    font-size: 1.1rem;
-}
-
-.mobile-card-row {
-    font-size: 0.8rem;
-    color: #94a3b8;
-    margin-top: 4px;
-}
-
-.mobile-card-actions {
-    display:flex;
-    gap:8px;
-    margin-top:12px;
-    flex-wrap:wrap;
-}
-
-@media (max-width:1024px) {
-    .section-dashboard table {
-        display:none;
-    }
-
-    .mobile-cards {
-        display:block;
-    }
-}
     </style>
 </head>
 <body>
@@ -430,12 +391,8 @@ tr:active td {
             <div class="stat-card owner-only" id="debt-card"><h3>Dug Artistima</h3><p id="debt-sum" style="color:#ef4444;">€0</p></div>
             <div class="stat-card"><h3>Depoziti</h3><p id="deposit-sum">€0</p></div>
         </div>
-       <button class="btn-add" onclick="otvoriModalNovi()">+ NOVI TERMIN</button>
-
-<div class="table-container">
-    <div id="tabela-div">Učitavanje...</div>
-    <div id="mobile-appointments" class="mobile-cards"></div>
-</div>
+        <button class="btn-add" onclick="otvoriModalNovi()">+ NOVI TERMIN</button>
+        <div class="table-container" id="tabela-div">Učitavanje...</div>
     </div>
 
     <div class="main section-kalendar" id="kalendar-section" style="display:none;">
@@ -1040,39 +997,6 @@ ${a.status === 'završeno' && !isPayed && userProfile.role === 'owner' ? `<butto
                     </div></td></tr>`;
             });
             document.getElementById('tabela-div').innerHTML = h + `</table>`;
-            let mobileHtml = '';
-
-filteredApps.forEach(a => {
-    const datum = `${a.appointment_time.substring(8,10)}.${a.appointment_time.substring(5,7)} ${a.appointment_time.substring(11,16)}`;
-    const cena = a.currency === '€' ? `€${a.total_price}` : `${a.total_price} din`;
-    const isPayed = a.payout_status === 'isplaćeno';
-
-    mobileHtml += `
-        <div class="mobile-card" onclick="otvoriModalEdit('${a.id}')">
-            <div class="mobile-card-title">${a.client_name}</div>
-            <div class="mobile-card-row">${datum}</div>
-            <div class="mobile-card-row">${cena}</div>
-
-            <div class="mobile-card-actions">
-                ${a.status === 'zakazano' ? `
-                    <button class="btn-action-done" onclick="event.stopPropagation(); updateStatus('${a.id}','završeno')">Završi</button>
-                    <button class="btn-action-noshow" onclick="event.stopPropagation(); updateStatus('${a.id}','no-show')">No-show</button>
-                ` : ''}
-
-                ${a.status === 'završeno' && !isPayed && userProfile.role === 'owner'
-                    ? `<button class="btn-action-pay" onclick="event.stopPropagation(); updatePayout('${a.id}')">Isplati</button>`
-                    : ''}
-
-                <button class="btn-action-delete" onclick="event.stopPropagation(); obrisiTermin('${a.id}')">Obriši</button>
-            </div>
-        </div>
-    `;
-});
-
-const mobileBox = document.getElementById('mobile-appointments');
-if (mobileBox) {
-    mobileBox.innerHTML = mobileHtml;
-}
         }
 
         async function saveData() {
