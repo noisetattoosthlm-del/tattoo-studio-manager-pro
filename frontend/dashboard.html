@@ -852,7 +852,6 @@ const isToday = a.appointment_time && a.appointment_time.startsWith(todayStr);
                     <td>${cenaPrikaz} <span title="${a.payment_type || 'Cash'}">${pIcon}</span></td>
                     <td style="text-align:right;"><div class="action-cell">
                         ${a.status === 'zakazano' ? `<button class="btn-action-done" onclick="event.stopPropagation(); updateStatus('${a.id}', 'završeno')">Završi</button><button class="btn-action-noshow" onclick="event.stopPropagation(); updateStatus('${a.id}', 'no-show')">No-Show</button>` : ''}
-<button class="btn-action-edit" onclick="event.stopPropagation(); otvoriModalEdit('${a.id}')">✏️</button>
 ${a.status === 'završeno' && !isPayed && userProfile.role === 'owner' ? `<button class="btn-action-pay" onclick="event.stopPropagation(); updatePayout('${a.id}')">Isplati</button>` : ''}
 <button class="btn-action-delete" onclick="event.stopPropagation(); obrisiTermin('${a.id}')">Obriši</button>
                     </div></td></tr>`;
