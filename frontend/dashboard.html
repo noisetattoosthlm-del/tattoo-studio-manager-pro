@@ -601,6 +601,10 @@ let deleteAction = null;
     document.getElementById('confirmModal').style.display = 'block';
 }
         function syncDateFilters(el) {
+            window.quickRange = null;
+
+document.querySelectorAll('.quick-filters button')
+    .forEach(b=>b.classList.remove('active'));
             const val = el.value;
             const isMonth = el.id.includes('month');
             
