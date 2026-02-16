@@ -464,6 +464,7 @@
         let editingId = null;
         let globalApps = [];
         let myChart = null;
+        let deleteId = null;
 
         function syncDateFilters(el) {
             const val = el.value;
@@ -1087,7 +1088,23 @@ ${a.status === 'završeno' && !isPayed && userProfile.role === 'owner' ? `<butto
 
         async function updateStatus(id, newStatus) { await supabaseClient.from('appointments').update({ status: newStatus }).eq('id', id); osveziPodatke(); }
         async function updatePayout(id) { if(confirm("Isplaćeno?")) { await supabaseClient.from('appointments').update({ payout_status: 'isplaćeno' }).eq('id', id); osveziPodatke(); } }
-        async function obrisiTermin(id) { if(confirm("Obriši?")) { await supabaseClient.from('appointments').delete().eq('id', id); osveziPodatke(); } }
+        function obrisiTermin(id) {
+    deleteId = id;
+    document.getElementById('confirmModal').style.display = 'block';
+}
+
+function zatvoriConfirm() {
+    deleteId = null;
+    document.getElementById('confirmModal').style.display = 'none';
+}
+
+async function potvrdiBrisanje() {
+    if (!deleteId) return;
+    await supabaseClient.from('appointments').delete().eq('id', deleteId);
+    deleteId = null;
+    document.getElementById('confirmModal').style.display = 'none';
+    osveziPodatke();
+}
         async function obrisiProfil(id) { if(confirm("Ukloniti artista?")) { await supabaseClient.from('profiles').delete().eq('id', id); ucitajArtiste(); } }
         function zatvoriModal() { document.getElementById('bookingModal').style.display = 'none'; editingId = null; }
         async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
@@ -1095,5 +1112,15 @@ ${a.status === 'završeno' && !isPayed && userProfile.role === 'owner' ? `<butto
         initDashboard();
     </script>
     <button class="fab-add" onclick="otvoriModalNovi()">+</button>
+    <div id="confirmModal" class="modal">
+    <div class="modal-content" style="max-width:400px; text-align:center;">
+        <h3 style="margin-top:0;">Da li ste sigurni?</h3>
+        <p style="color:#64748b;">Ova akcija je nepovratna.</p>
+        <div style="display:flex; gap:15px; margin-top:25px;">
+            <button class="btn-add" style="flex:1; background:#1e293b;" onclick="zatvoriConfirm()">Otkaži</button>
+            <button class="btn-action-delete" style="flex:1;" onclick="potvrdiBrisanje()">Obriši</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>
