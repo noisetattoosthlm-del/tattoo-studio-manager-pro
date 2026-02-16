@@ -1097,14 +1097,6 @@ ${a.status === 'završeno' && !isPayed && userProfile.role === 'owner' ? `<butto
         function obrisiKlijenta(clientName) {
     otvoriConfirmModal(clientName, 'client', 'Svi termini ovog klijenta biće obrisani.');
 }
-    await supabaseClient
-        .from('appointments')
-        .delete()
-        .eq('client_name', clientName)
-        .eq('studio_id', userProfile.studio_id);
-
-    ucitajKlijente();
-}
 
         function otvoriModalNoviSaKlijentom(name, phone, insta) {
             otvoriModalNovi(); document.getElementById('c_name').value = name;
@@ -1151,17 +1143,47 @@ function zatvoriConfirm() {
 }
 
 async function potvrdiBrisanje() {
-    if (!deleteId) return;
-    await supabaseClient.from('appointments').delete().eq('id', deleteId);
+
+    if (!deleteId || !deleteAction) return;
+
+    if (deleteAction === 'appointment') {
+        await supabaseClient.from('appointments').delete().eq('id', deleteId);
+        osveziPodatke();
+    }
+
+    if (deleteAction === 'expense') {
+        await supabaseClient.from('expenses').delete().eq('id', deleteId);
+        ucitajTroskove();
+        osveziPodatke();
+    }
+
+    if (deleteAction === 'inventory') {
+        await supabaseClient.from('inventory').delete().eq('id', deleteId);
+        renderujMagacin();
+    }
+
+    if (deleteAction === 'client') {
+        await supabaseClient
+            .from('appointments')
+            .delete()
+            .eq('client_name', deleteId)
+            .eq('studio_id', userProfile.studio_id);
+
+        ucitajKlijente();
+    }
+
+    if (deleteAction === 'artist') {
+        await supabaseClient.from('profiles').delete().eq('id', deleteId);
+        ucitajArtiste();
+    }
+
     deleteId = null;
+    deleteAction = null;
+
     document.getElementById('confirmModal').style.display = 'none';
-    osveziPodatke();
 }
         function obrisiProfil(id) {
     otvoriConfirmModal(id, 'artist', 'Artist će biti uklonjen iz sistema.');
-}
-    await supabaseClient.from('profiles').delete().eq('id', id);
-    ucitajArtiste();
 }
         function zatvoriModal() { document.getElementById('bookingModal').style.display = 'none'; editingId = null; }
         async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
