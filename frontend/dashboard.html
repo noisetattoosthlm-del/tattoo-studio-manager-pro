@@ -342,6 +342,28 @@ tr:active td {
 .section-troskovi {
     background: radial-gradient(circle at top right, rgba(239,68,68,0.22), transparent);
 }
+       .quick-filters {
+    display:flex;
+    gap:10px;
+    margin-bottom:25px;
+}
+
+.quick-filters button {
+    background: rgba(255,255,255,0.05);
+    border:1px solid rgba(255,255,255,0.1);
+    color:#94a3b8;
+    padding:10px 18px;
+    border-radius:14px;
+    cursor:pointer;
+    font-weight:700;
+    transition:.2s;
+}
+
+.quick-filters button.active {
+    background:#3b82f6;
+    color:white;
+    box-shadow:0 0 20px rgba(59,130,246,.5);
+} 
     </style>
 </head>
 <body>
@@ -391,6 +413,12 @@ tr:active td {
             <div class="stat-card owner-only" id="debt-card"><h3>Dug Artistima</h3><p id="debt-sum" style="color:#ef4444;">€0</p></div>
             <div class="stat-card"><h3>Depoziti</h3><p id="deposit-sum">€0</p></div>
         </div>
+           <div class="quick-filters">
+    <button onclick="setQuickRange('today')">Danas</button>
+    <button onclick="setQuickRange('tomorrow')">Sutra</button>
+    <button onclick="setQuickRange('week')">7 dana</button>
+    <button onclick="setQuickRange('month')">Mesec</button>
+</div>
         <button class="btn-add" onclick="otvoriModalNovi()">+ NOVI TERMIN</button>
         <div class="table-container" id="tabela-div">Učitavanje...</div>
     </div>
@@ -755,7 +783,19 @@ setTimeout(() => {
                     
                     updateDailyBriefing(allApps);
 
-                    let filteredApps = allApps.filter(a => a.appointment_time && a.appointment_time.startsWith(selectedMonthStr));
+                   let filteredApps = allApps;
+
+if(window.quickRange){
+    filteredApps = filteredApps.filter(a=>{
+        if(!a.appointment_time) return false;
+        const d = a.appointment_time.substring(0,10);
+        return d >= window.quickRange.start && d <= window.quickRange.end;
+    });
+} else {
+    filteredApps = filteredApps.filter(a =>
+        a.appointment_time && a.appointment_time.startsWith(selectedMonthStr)
+    );
+}
                     const troskovi = (allTroskovi && userProfile.role === 'owner' && (artistFilter === 'all' || artistFilter === '')) 
                         ? allTroskovi.filter(t => t.created_at.startsWith(selectedMonthStr)) 
                         : [];
@@ -1264,6 +1304,37 @@ async function potvrdiBrisanje() {
         async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
 
         initDashboard();
+        function setQuickRange(type) {
+
+    const today = new Date();
+    let startDate;
+    let endDate;
+
+    if(type === 'today') {
+        startDate = endDate = today;
+    }
+
+    if(type === 'tomorrow') {
+        startDate = endDate = new Date(today.getTime() + 86400000);
+    }
+
+    if(type === 'week') {
+        startDate = today;
+        endDate = new Date(today.getTime() + 7 * 86400000);
+    }
+
+    if(type === 'month') {
+        startDate = today;
+        endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+    }
+
+    window.quickRange = {
+        start: startDate.toISOString().substring(0,10),
+        end: endDate.toISOString().substring(0,10)
+    };
+
+    osveziPodatke();
+}
     </script>
     <button class="fab-add" onclick="otvoriModalNovi()">+</button>
     <div id="confirmModal" class="modal">
