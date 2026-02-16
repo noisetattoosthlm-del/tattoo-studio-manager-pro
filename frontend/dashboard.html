@@ -472,7 +472,11 @@ tr:active td {
             <label class="modal-label">Mobilni telefon</label><input type="text" id="c_phone" placeholder="Unesite broj telefona">
             <label class="modal-label">Email klijenta (opciono)</label><input type="email" id="c_email">
             <label class="modal-label">Instagram (@)</label><input type="text" id="c_insta">
-            <label class="modal-label">Datum i vreme</label><input type="datetime-local" id="app_time">
+            <label class="modal-label">Datum</label>
+<input type="date" id="app_date">
+
+<label class="modal-label">Vreme</label>
+<input type="time" id="app_time">
             <div style="display: flex; gap: 10px;">
                 <div style="flex:2"><label class="modal-label">Cena</label><input type="number" id="total_price"></div>
                 <div style="flex:1"><label class="modal-label">Valuta</label><select id="currency_choice"><option value="€">EUR (€)</option><option value="din">RSD (din)</option></select></div>
@@ -949,7 +953,12 @@ ${a.status === 'završeno' && !isPayed && userProfile.role === 'owner' ? `<butto
 
         async function saveData() {
             const saveBtn = document.getElementById('save-btn'); const originalText = saveBtn.innerText;
-            const name = document.getElementById('c_name').value; const time = document.getElementById('app_time').value;
+            const name = document.getElementById('c_name').value;
+
+const date = document.getElementById('app_date').value;
+const timeOnly = document.getElementById('app_time').value;
+
+const time = `${date}T${timeOnly}`;
             let chosenArtistId = (userProfile.role === 'owner') ? document.getElementById('app_artist_id').value : userProfile.id;
             if(!name || !time || !chosenArtistId) { alert("Ime, datum i artist su obavezni!"); return; }
             saveBtn.disabled = true; saveBtn.innerText = "ČUVANJE...";
@@ -982,6 +991,8 @@ ${a.status === 'završeno' && !isPayed && userProfile.role === 'owner' ? `<butto
             setTimeout(() => {
     document.getElementById('c_name').focus();
 }, 300);
+            const today = new Date().toISOString().substring(0,10);
+document.getElementById('app_date').value = today;
         }
 
         function otvoriModalEdit(id) {
@@ -989,7 +1000,10 @@ ${a.status === 'završeno' && !isPayed && userProfile.role === 'owner' ? `<butto
             editingId = id; document.getElementById('modal-title').innerText = "Izmeni Termin";
             if(document.getElementById('app_artist_id')) document.getElementById('app_artist_id').value = a.artist_id || "";
             document.getElementById('c_name').value = a.client_name || ""; document.getElementById('c_phone').value = a.client_phone || "";
-            document.getElementById('c_insta').value = a.client_instagram || ""; document.getElementById('app_time').value = a.appointment_time ? a.appointment_time.substring(0, 16) : "";
+            document.getElementById('c_insta').value = a.client_instagram || ""; if(a.appointment_time){
+    document.getElementById('app_date').value = a.appointment_time.substring(0,10);
+    document.getElementById('app_time').value = a.appointment_time.substring(11,16);
+}
             document.getElementById('total_price').value = a.total_price || 0; document.getElementById('currency_choice').value = a.currency || "€";
             document.getElementById('deposit_amt').value = a.deposit || 0; document.getElementById('artist_percent').value = a.artist_percentage !== undefined ? a.artist_percentage : 0;
             document.getElementById('payment_type').value = a.payment_type || 'Cash'; document.getElementById('bookingModal').style.display = 'block';
