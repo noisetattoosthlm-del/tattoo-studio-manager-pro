@@ -1341,36 +1341,7 @@ async function potvrdiBrisanje() {
 
     osveziPodatke();
 }
-            
-    const today = new Date();
-    let startDate;
-    let endDate;
-
-    if(type === 'today') {
-        startDate = endDate = today;
-    }
-
-    if(type === 'tomorrow') {
-        startDate = endDate = new Date(today.getTime() + 86400000);
-    }
-
-    if(type === 'week') {
-        startDate = today;
-        endDate = new Date(today.getTime() + 7 * 86400000);
-    }
-
-    if(type === 'month') {
-        startDate = today;
-        endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-    }
-
-    window.quickRange = {
-        start: startDate.toISOString().substring(0,10),
-        end: endDate.toISOString().substring(0,10)
-    };
-
-    osveziPodatke();
-}
+   
     </script>
     <button class="fab-add" onclick="otvoriModalNovi()">+</button>
     <div id="confirmModal" class="modal">
