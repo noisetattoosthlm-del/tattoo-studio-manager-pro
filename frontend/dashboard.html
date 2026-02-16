@@ -1329,10 +1329,10 @@ async function potvrdiBrisanje() {
         endDate = new Date(today.getTime() + 7 * 86400000);
     }
 
-    if(type === 'month') {
-        startDate = today;
-        endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-    }
+   if(type === 'month') {
+    startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+    endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+}
 
     window.quickRange = {
         start: startDate.toISOString().substring(0,10),
