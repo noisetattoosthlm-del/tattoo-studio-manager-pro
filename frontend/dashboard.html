@@ -817,11 +817,10 @@ setTimeout(() => {
             }
         }
 
-        async function obrisiIzMagacina(id) {
-            if(confirm("Obrisati artikal iz baze?")) {
-                await supabaseClient.from('inventory').delete().eq('id', id);
-                renderujMagacin();
-            }
+       async function obrisiIzMagacina(id) {
+    await supabaseClient.from('inventory').delete().eq('id', id);
+    renderujMagacin();
+}
         }
         /* ------------------------------- */
 
@@ -1037,7 +1036,11 @@ ${a.status === 'završeno' && !isPayed && userProfile.role === 'owner' ? `<butto
             document.getElementById('total-expenses-sum').innerHTML = `€${sumaEur} / ${sumaRsd} RSD`;
         }
 
-        async function obrisiTrosak(id) { if(confirm("Obriši trošak?")) { await supabaseClient.from('expenses').delete().eq('id', id); ucitajTroskove(); osveziPodatke(); } }
+        async function obrisiTrosak(id) {
+    await supabaseClient.from('expenses').delete().eq('id', id);
+    ucitajTroskove();
+    osveziPodatke();
+} }
 
         function prikaziSekciju(sekcija) {
             const sekcije = ['dashboard', 'kalendar', 'klijenti', 'artisti', 'troskovi', 'magacin'];
@@ -1088,11 +1091,14 @@ ${a.status === 'završeno' && !isPayed && userProfile.role === 'owner' ? `<butto
         }
 
         async function obrisiKlijenta(clientName) {
-            if(confirm(`Da i ste sigurni da želite da obrišete klijenta "${clientName}" i sve njegove zapise iz baze?`)) {
-                const { error } = await supabaseClient.from('appointments').delete().eq('client_name', clientName).eq('studio_id', userProfile.studio_id);
-                if(error) alert("Greška pri brisanju: " + error.message);
-                else ucitajKlijente();
-            }
+    await supabaseClient
+        .from('appointments')
+        .delete()
+        .eq('client_name', clientName)
+        .eq('studio_id', userProfile.studio_id);
+
+    ucitajKlijente();
+}
         }
 
         function otvoriModalNoviSaKlijentom(name, phone, insta) {
@@ -1123,7 +1129,13 @@ ${a.status === 'završeno' && !isPayed && userProfile.role === 'owner' ? `<butto
         }
 
         async function updateStatus(id, newStatus) { await supabaseClient.from('appointments').update({ status: newStatus }).eq('id', id); osveziPodatke(); }
-        async function updatePayout(id) { if(confirm("Isplaćeno?")) { await supabaseClient.from('appointments').update({ payout_status: 'isplaćeno' }).eq('id', id); osveziPodatke(); } }
+        async function updatePayout(id) {
+    await supabaseClient.from('appointments')
+        .update({ payout_status: 'isplaćeno' })
+        .eq('id', id);
+
+    osveziPodatke();
+} }
         function obrisiTermin(id) {
     deleteId = id;
     document.getElementById('confirmModal').style.display = 'block';
@@ -1141,7 +1153,10 @@ async function potvrdiBrisanje() {
     document.getElementById('confirmModal').style.display = 'none';
     osveziPodatke();
 }
-        async function obrisiProfil(id) { if(confirm("Ukloniti artista?")) { await supabaseClient.from('profiles').delete().eq('id', id); ucitajArtiste(); } }
+        async function obrisiProfil(id) {
+    await supabaseClient.from('profiles').delete().eq('id', id);
+    ucitajArtiste();
+} }
         function zatvoriModal() { document.getElementById('bookingModal').style.display = 'none'; editingId = null; }
         async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
 
