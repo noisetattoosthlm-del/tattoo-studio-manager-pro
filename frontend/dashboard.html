@@ -1036,6 +1036,36 @@ ${a.status === 'završeno' && !isPayed && userProfile.role === 'owner' ? `<butto
                     </div></td></tr>`;
             });
             document.getElementById('tabela-div').innerHTML = h + `</table>`;
+            let mobileHtml = '';
+
+filteredApps.forEach(a => {
+    const datum = `${a.appointment_time.substring(8,10)}.${a.appointment_time.substring(5,7)} ${a.appointment_time.substring(11,16)}`;
+    const cena = a.currency === '€' ? `€${a.total_price}` : `${a.total_price} din`;
+    const isPayed = a.payout_status === 'isplaćeno';
+
+    mobileHtml += `
+        <div class="mobile-card" onclick="otvoriModalEdit('${a.id}')">
+            <div class="mobile-card-title">${a.client_name}</div>
+            <div class="mobile-card-row">${datum}</div>
+            <div class="mobile-card-row">${cena}</div>
+
+            <div class="mobile-card-actions">
+                ${a.status === 'zakazano' ? `
+                    <button class="btn-action-done" onclick="event.stopPropagation(); updateStatus('${a.id}','završeno')">Završi</button>
+                    <button class="btn-action-noshow" onclick="event.stopPropagation(); updateStatus('${a.id}','no-show')">No-show</button>
+                ` : ''}
+
+                ${a.status === 'završeno' && !isPayed && userProfile.role === 'owner'
+                    ? `<button class="btn-action-pay" onclick="event.stopPropagation(); updatePayout('${a.id}')">Isplati</button>`
+                    : ''}
+
+                <button class="btn-action-delete" onclick="event.stopPropagation(); obrisiTermin('${a.id}')">Obriši</button>
+            </div>
+        </div>
+    `;
+});
+
+document.getElementById('mobile-appointments').innerHTML = mobileHtml;
         }
 
         async function saveData() {
