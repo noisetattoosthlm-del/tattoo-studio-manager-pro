@@ -1304,7 +1304,7 @@ async function potvrdiBrisanje() {
         async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
 
         initDashboard();
-        
+        setQuickRange(null,'today');
        function setQuickRange(e,type) {
 
     document.querySelectorAll('.quick-filters button')
