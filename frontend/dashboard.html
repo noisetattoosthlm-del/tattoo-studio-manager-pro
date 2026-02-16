@@ -927,6 +927,9 @@ ${a.status === 'završeno' && !isPayed && userProfile.role === 'owner' ? `<butto
             document.getElementById('currency_choice').value = "€";
             if(document.getElementById('app_artist_id')) document.getElementById('app_artist_id').value = userProfile.id;
             document.getElementById('bookingModal').style.display = 'block';
+            setTimeout(() => {
+    document.getElementById('c_name').focus();
+}, 300);
         }
 
         function otvoriModalEdit(id) {
@@ -938,6 +941,9 @@ ${a.status === 'završeno' && !isPayed && userProfile.role === 'owner' ? `<butto
             document.getElementById('total_price').value = a.total_price || 0; document.getElementById('currency_choice').value = a.currency || "€";
             document.getElementById('deposit_amt').value = a.deposit || 0; document.getElementById('artist_percent').value = a.artist_percentage !== undefined ? a.artist_percentage : 0;
             document.getElementById('payment_type').value = a.payment_type || 'Cash'; document.getElementById('bookingModal').style.display = 'block';
+            setTimeout(() => {
+    document.getElementById('c_name').focus();
+}, 300);
         }
 
         async function dodajTrosak() {
