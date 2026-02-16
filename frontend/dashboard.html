@@ -960,7 +960,10 @@ const timeOnly = document.getElementById('app_time').value;
 
 const time = `${date}T${timeOnly}`;
             let chosenArtistId = (userProfile.role === 'owner') ? document.getElementById('app_artist_id').value : userProfile.id;
-            if(!name || !time || !chosenArtistId) { alert("Ime, datum i artist su obavezni!"); return; }
+            if(!name || !date || !timeOnly || !chosenArtistId) { 
+    alert("Ime, datum, vreme i artist su obavezni!"); 
+    return; 
+}
             saveBtn.disabled = true; saveBtn.innerText = "ČUVANJE...";
             try {
                 const cena = parseFloat(document.getElementById('total_price').value) || 0;
