@@ -1065,7 +1065,10 @@ filteredApps.forEach(a => {
     `;
 });
 
-document.getElementById('mobile-appointments').innerHTML = mobileHtml;
+const mobileBox = document.getElementById('mobile-appointments');
+if (mobileBox) {
+    mobileBox.innerHTML = mobileHtml;
+}
         }
 
         async function saveData() {
