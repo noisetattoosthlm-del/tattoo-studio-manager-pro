@@ -821,7 +821,6 @@ setTimeout(() => {
     await supabaseClient.from('inventory').delete().eq('id', id);
     renderujMagacin();
 }
-        }
         /* ------------------------------- */
 
         async function renderujKalendarTab() {
@@ -1040,7 +1039,7 @@ ${a.status === 'završeno' && !isPayed && userProfile.role === 'owner' ? `<butto
     await supabaseClient.from('expenses').delete().eq('id', id);
     ucitajTroskove();
     osveziPodatke();
-} }
+}
 
         function prikaziSekciju(sekcija) {
             const sekcije = ['dashboard', 'kalendar', 'klijenti', 'artisti', 'troskovi', 'magacin'];
@@ -1099,7 +1098,6 @@ ${a.status === 'završeno' && !isPayed && userProfile.role === 'owner' ? `<butto
 
     ucitajKlijente();
 }
-        }
 
         function otvoriModalNoviSaKlijentom(name, phone, insta) {
             otvoriModalNovi(); document.getElementById('c_name').value = name;
@@ -1135,7 +1133,7 @@ ${a.status === 'završeno' && !isPayed && userProfile.role === 'owner' ? `<butto
         .eq('id', id);
 
     osveziPodatke();
-} }
+}
         function obrisiTermin(id) {
     deleteId = id;
     document.getElementById('confirmModal').style.display = 'block';
@@ -1156,7 +1154,7 @@ async function potvrdiBrisanje() {
         async function obrisiProfil(id) {
     await supabaseClient.from('profiles').delete().eq('id', id);
     ucitajArtiste();
-} }
+}
         function zatvoriModal() { document.getElementById('bookingModal').style.display = 'none'; editingId = null; }
         async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
 
