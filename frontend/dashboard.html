@@ -829,6 +829,8 @@ setTimeout(() => {
         function renderujTabelu(filteredApps) {
             let h = `<table><tr><th>Klijent</th><th style="text-align: center;">Status</th><th>Datum</th><th>Cena</th><th style="text-align:right;">Akcije</th></tr>`;
             filteredApps.forEach(a => {
+                const todayStr = new Date().toISOString().split('T')[0];
+const isToday = a.appointment_time && a.appointment_time.startsWith(todayStr);
                 const datum = new Date(a.appointment_time).toLocaleString('sr-RS', {day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'});
                 const isPayed = a.payout_status === 'isplaćeno';
                 const pIcon = a.payment_type === 'Card' ? '💳' : '💵';
@@ -836,7 +838,7 @@ setTimeout(() => {
                 const cenaPrikaz = valuta === '€' ? `€${a.total_price}` : `${a.total_price} din`;
                 let statusBadge = (a.status === 'završeno') ? '<div class="check-badge">✓</div>' : (a.status === 'no-show') ? '<span class="status-noshow">NO-SHOW</span>' : '<span class="status-zakazano">ZAKAZANO</span>';
 
-                h += `<tr>
+                h += `<tr class="${isToday ? 'today-highlight' : ''}">
                     <td><div style="font-weight:800;">${a.client_name}</div><div style="font-size:0.65rem; color:#64748b;">${a.client_instagram || '-'}</div></td>
                     <td style="text-align:center;">${statusBadge}${isPayed ? '<div class="pay-badge" title="Isplaćeno">💸</div>' : ''}</td>
                     <td>${datum}h</td>
