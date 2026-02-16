@@ -309,7 +309,7 @@ tr:active td {
         <div class="nav-item" style="margin-top: auto;" onclick="logout()">Odjavi se</div>
     </div>
 
-    <div class="main" id="dashboard-section">
+    <div class="main section-dashboard" id="dashboard-section">
         <h1 id="main-greeting">Statistika Studija</h1>
         
         <div class="filter-group">
@@ -347,7 +347,7 @@ tr:active td {
         <div class="table-container" id="tabela-div">Učitavanje...</div>
     </div>
 
-    <div class="main" id="kalendar-section" style="display:none;">
+    <div class="main section-kalendar" id="kalendar-section" style="display:none;">
         <h1>Kalendar Termina</h1>
         <div class="filter-group">
             <select id="cal-month-select" class="filter-select" onchange="syncDateFilters(this)"></select>
@@ -371,7 +371,7 @@ tr:active td {
         </div>
     </div>
 
-    <div class="main" id="klijenti-section" style="display:none;">
+    <div class="main section-klijenti" id="klijenti-section" style="display:none;">
         <h1>Baza Klijenata</h1>
         <div class="table-container">
             <table>
@@ -383,7 +383,7 @@ tr:active td {
         </div>
     </div>
 
-    <div class="main" id="magacin-section" style="display:none;">
+    <div class="main section-magacin" id="magacin-section" style="display:none;">
         <h1>Magacin Opreme</h1>
         <div style="background: var(--card); padding: 30px; border-radius: 24px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.05);">
             <h3 style="margin-top:0; font-size: 1rem; color: var(--accent);">DODAJ NOVI ARTIKAL</h3>
@@ -399,7 +399,7 @@ tr:active td {
             </div>
     </div>
 
-    <div class="main" id="artisti-section" style="display:none;">
+    <div class="main section-artisti" id="artisti-section" style="display:none;">
         <h1>Upravljanje Artisti</h1>
         <div style="background: var(--card); padding: 30px; border-radius: 24px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.05);">
             <h3 style="margin-top:0; font-size: 1rem; color: var(--accent);">DODAJ NOVOG ARTISTA</h3>
@@ -424,7 +424,7 @@ tr:active td {
         </div>
     </div>
 
-    <div class="main" id="troskovi-section" style="display:none;">
+    <div class="main section-troskovi" id="troskovi-section" style="display:none;">
         <div style="display: flex; align-items: center; margin-bottom: 40px;">
             <h1>Troškovi Studija</h1>
             <button class="btn-export" onclick="window.print()" style="margin-left: auto;">📄 IZVEŠTAJ TROŠKOVA (PDF)</button>
