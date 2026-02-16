@@ -784,8 +784,6 @@ setTimeout(() => {
 
                 if (allApps) {
                     globalApps = allApps;
-                    
-                    updateDailyBriefing(allApps);
 
                    let filteredApps = allApps;
 
@@ -851,6 +849,7 @@ if(window.quickRange){
                     }
                     
                     inicijalizujGrafikon(filteredApps, y, m);
+                    updateDailyBriefing(filteredApps);
                     renderujTabelu(filteredApps);
                 }
             } catch (err) { console.error(err); }
