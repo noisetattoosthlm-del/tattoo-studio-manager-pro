@@ -849,7 +849,7 @@ if(window.quickRange){
                     }
                     
                     inicijalizujGrafikon(filteredApps, y, m);
-                    updateDailyBriefing(filteredApps);
+                  updateDailyBriefing(allApps);
                     renderujTabelu(filteredApps);
                 }
             } catch (err) { console.error(err); }
@@ -1307,7 +1307,6 @@ async function potvrdiBrisanje() {
         async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
 
         initDashboard();
-        setQuickRange(null,'today');
        function setQuickRange(e,type) {
 
     document.querySelectorAll('.quick-filters button')
