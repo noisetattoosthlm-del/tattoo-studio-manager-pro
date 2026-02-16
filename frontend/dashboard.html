@@ -189,7 +189,7 @@
             th:last-child, td:last-child { display: none; }
         }
 
-        @media (max-width: 900px) {
+        @media (max-width: 1024px) {
             body { flex-direction: column; }
             .sidebar { 
                 width: 100%; padding: 15px; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.05);
@@ -239,6 +239,10 @@
     .btn-add {
         display: none;
     }
+}
+        .modal-content {
+    max-height: 90vh;
+    overflow-y: auto;
 }
     </style>
 </head>
