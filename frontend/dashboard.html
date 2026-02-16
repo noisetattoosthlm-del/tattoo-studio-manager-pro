@@ -694,8 +694,19 @@ let deleteAction = null;
             const briefingText = document.getElementById('briefing-text');
             const agendaList = document.getElementById('briefing-agenda-list');
             
-            const today = new Date().toISOString().split('T')[0];
-            const todayApps = apps.filter(a => a.appointment_time && a.appointment_time.startsWith(today) && a.status === 'zakazano');
+            const selectedMonth = document.getElementById('month-select').value;
+const selectedYear = document.getElementById('year-select').value;
+
+const today = new Date();
+const todayDay = String(today.getDate()).padStart(2, '0');
+
+const selectedDateStr = `${selectedYear}-${selectedMonth}-${todayDay}`;
+
+const todayApps = apps.filter(a => 
+    a.appointment_time &&
+    a.appointment_time.startsWith(selectedDateStr) &&
+    a.status === 'zakazano'
+);
 
             if (todayApps.length > 0) {
                 bell.style.display = 'block';
