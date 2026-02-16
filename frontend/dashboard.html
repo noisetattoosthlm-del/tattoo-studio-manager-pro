@@ -213,6 +213,33 @@
        tr {
     cursor: pointer;
 } 
+        .fab-add {
+    position: fixed;
+    bottom: 22px;
+    right: 22px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    font-size: 32px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 10px 25px rgba(59,130,246,0.5);
+    z-index: 3000;
+    display: none;
+}
+
+@media (max-width: 900px) {
+    .fab-add {
+        display: block;
+    }
+
+    .btn-add {
+        display: none;
+    }
+}
     </style>
 </head>
 <body>
@@ -1052,5 +1079,6 @@ ${a.status === 'završeno' && !isPayed && userProfile.role === 'owner' ? `<butto
 
         initDashboard();
     </script>
+    <button class="fab-add" onclick="otvoriModalNovi()">+</button>
 </body>
 </html>
