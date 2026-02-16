@@ -948,7 +948,7 @@ setTimeout(() => {
             document.getElementById('day-details').style.display = 'none';
 
             for (let i = 0; i < startOffset; i++) {
-                daysContainer.innerHTML += `<div class="cal-day-box" style="opacity:0; pointer-events:none;"></div>`;
+                daysContainer.innerHTML += `<div></div>`;
             }
 
             for (let d = 1; d <= daysInMonth; d++) {
