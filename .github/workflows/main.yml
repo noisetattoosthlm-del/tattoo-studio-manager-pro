@@ -2,7 +2,7 @@ name: Weekly Supabase Backup
 
 on:
   schedule:
-    - cron: '0 3 * * 0'   # Nedelja 03:00
+    - cron: '0 3 * * 0'
   workflow_dispatch:
 
 jobs:
@@ -12,4 +12,4 @@ jobs:
       - name: Call Supabase Weekly Backup
         run: |
           curl -X POST https://yunuwkjydqzgkqtbgwup.supabase.co/functions/v1/hyper-function \
-  -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl1bnV3a2p5ZHF6Z2txdGJnd3VwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzAyMzk1NjksImV4cCI6MjA4NTgxNTU2OX0.ogZt8LVk8i15_-eutFTVir9rX4Kt7iU5yeDs3WCH2uA
+          -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_KEY }}"
