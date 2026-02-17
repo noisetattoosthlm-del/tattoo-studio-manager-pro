@@ -1379,6 +1379,7 @@ document.getElementById('app_date').value = today;
     if(sekcija === 'troskovi') ucitajTroskove();
     if(sekcija === 'kalendar') renderujKalendarTab();
     if(sekcija === 'dashboard') osveziPodatke();
+    if(sekcija === 'studio') ucitajStudioSettings();        
     if(sekcija === 'magacin') renderujMagacin();
 }
 
@@ -1596,9 +1597,14 @@ function toggleTheme() {
         btn.innerText = "Sačuvaj";
     }, 2000);
 }
-        initDashboard();
-prikaziSekciju('dashboard');
-        async function saveStudioSettings(){
+        function ucitajStudioSettings(){
+
+document.getElementById('studio-name-input').value = userProfile.studio_name || "";
+document.getElementById('studio-instagram-input').value = userProfile.studio_instagram || "";
+document.getElementById('studio-email-input').value = userProfile.studio_email || "";
+
+}
+            async function saveStudioSettings(){
 
 const name = document.getElementById('studio-name-input').value;
 const instagram = document.getElementById('studio-instagram-input').value;
@@ -1618,7 +1624,10 @@ studio_email: email
 document.getElementById('studio-name-display').innerText = name;
 
 alert("Studio sačuvan ✔");
-}
+} 
+        initDashboard();
+prikaziSekciju('dashboard');
+   
     </script>
     <button class="fab-add" onclick="otvoriModalNovi()">+</button>
     <div id="confirmModal" class="modal">
