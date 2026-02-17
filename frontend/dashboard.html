@@ -1555,20 +1555,38 @@ function toggleTheme() {
 
     reader.readAsText(file);
 }
-        async function saveStudioName(){
+     async function saveStudioName() {
 
-    const name = document.getElementById('studio-name-input').value;
+    const input = document.getElementById('studio-name-input');
+    const btn = event.target;
 
-    if(!name) return alert("Unesi ime studija");
+    const name = input.value.trim();
+    if (!name) return alert("Unesi ime studija");
 
-    await supabaseClient
-        .from('profiles')
-        .update({ studio_name: name })
-        .eq('studio_id', userProfile.studio_id);
+    btn.disabled = true;
+    const oldText = btn.innerText;
+    btn.innerText = "Čuvanje...";
 
-    document.getElementById('studio-name-display').innerText = name;
+    const { error } = await supabaseClient
+        .from('studios')
+        .update({ name })
+        .eq('id', userProfile.studio_id);
 
-    alert("Sačuvano.");
+    if (error) {
+        alert(error.message);
+        btn.disabled = false;
+        btn.innerText = oldText;
+        return;
+    }
+
+    document.getElementById('main-greeting').innerText = name;
+
+    btn.innerText = "Sačuvano ✔";
+
+    setTimeout(() => {
+        btn.disabled = false;
+        btn.innerText = "Sačuvaj";
+    }, 2000);
 }
         initDashboard();
 prikaziSekciju('dashboard');
