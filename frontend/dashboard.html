@@ -9,6 +9,12 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --bg: #0a0e17; --card: rgba(255, 255, 255, 0.03); --accent: #3b82f6; --text: #ffffff; }
+        body.light {
+    --bg: #f8fafc;
+    --card: rgba(0,0,0,0.04);
+    --accent: #2563eb;
+    --text: #020617;
+}
         [class*="vercel"], vercel-live-feedback { display: none !important; }
 
         body { background: var(--bg); color: var(--text); font-family: 'Poppins', sans-serif; margin: 0; display: flex; min-height: 100vh; }
@@ -452,6 +458,7 @@ tr:active td {
         <div class="nav-item" id="nav-magacin" onclick="prikaziSekciju('magacin')">Magacin</div>
         <div class="nav-item owner-only" id="nav-artisti" onclick="prikaziSekciju('artisti')">Artisti</div>
         <div class="nav-item owner-only" id="nav-troskovi" onclick="prikaziSekciju('troskovi')">Troškovi</div>
+        <div class="nav-item" onclick="toggleTheme()">🌓 Tema</div>
         <div class="nav-item" style="margin-top: auto;" onclick="logout()">Odjavi se</div>
     </div>
 
@@ -1408,7 +1415,13 @@ async function potvrdiBrisanje() {
         async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
 
         initDashboard();
+        const savedTheme = localStorage.getItem('theme');
+if(savedTheme === 'light') document.body.classList.add('light');
         document.getElementById('dashboard-section').classList.add('active-section');
+        function toggleTheme() {
+    document.body.classList.toggle('light');
+    localStorage.setItem('theme', document.body.classList.contains('light') ? 'light' : 'dark');
+}
     </script>
     <button class="fab-add" onclick="otvoriModalNovi()">+</button>
     <div id="confirmModal" class="modal">
