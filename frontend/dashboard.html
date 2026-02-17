@@ -1408,6 +1408,7 @@ async function potvrdiBrisanje() {
         async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
 
         initDashboard();
+        document.getElementById('dashboard-section').classList.add('active-section');
     </script>
     <button class="fab-add" onclick="otvoriModalNovi()">+</button>
     <div id="confirmModal" class="modal">
