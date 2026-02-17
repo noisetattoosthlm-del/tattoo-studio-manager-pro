@@ -403,6 +403,28 @@ tr:active td {
 
 #confirmModal .modal-content {
     margin: 0 !important;
+}   
+ /* ACTIVE SIDEBAR INDICATOR */
+
+.nav-item {
+    position: relative;
+}
+
+.nav-item::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 8px;
+    bottom: 8px;
+    width: 3px;
+    background: #3b82f6;
+    border-radius: 4px;
+    opacity: 0;
+    transition: 0.25s ease;
+}
+
+.nav-item.active::before {
+    opacity: 1;
 }       
     </style>
 </head>
