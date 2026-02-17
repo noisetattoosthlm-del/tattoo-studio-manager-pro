@@ -9,12 +9,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --bg: #0a0e17; --card: rgba(255, 255, 255, 0.03); --accent: #3b82f6; --text: #ffffff; }
-        body.light {
-    --bg: #f8fafc;
-    --card: rgba(0,0,0,0.04);
-    --accent: #2563eb;
-    --text: #020617;
-}
         [class*="vercel"], vercel-live-feedback { display: none !important; }
 
         body { background: var(--bg); color: var(--text); font-family: 'Poppins', sans-serif; margin: 0; display: flex; min-height: 100vh; }
@@ -454,7 +448,21 @@ body.light-mode {
     --text: #0f172a;
     --accent: #3b82f6;
 }
+        
+body.light-mode .nav-item {
+    color: #0f172a;
+    font-weight: 600;
+}
 
+body.light-mode .nav-item:hover {
+    background: rgba(59,130,246,0.08);
+}
+
+body.light-mode .nav-item.active {
+    background: rgba(59,130,246,0.18);
+    color: #2563eb;
+    box-shadow: 0 0 12px rgba(59,130,246,.35);
+}
 body.light-mode .sidebar {
     background: #ffffff;
     border-right: 1px solid rgba(0,0,0,0.08);
@@ -1466,13 +1474,6 @@ function toggleTheme() {
     }
 })();
         initDashboard();
-        const savedTheme = localStorage.getItem('theme');
-if(savedTheme === 'light') document.body.classList.add('light');
-        document.getElementById('dashboard-section').classList.add('active-section');
-        function toggleTheme() {
-    document.body.classList.toggle('light');
-    localStorage.setItem('theme', document.body.classList.contains('light') ? 'light' : 'dark');
-}
     </script>
     <button class="fab-add" onclick="otvoriModalNovi()">+</button>
     <div id="confirmModal" class="modal">
