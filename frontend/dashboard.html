@@ -49,7 +49,21 @@
 
         .owner-only { display: none; }
 
-        .main { flex: 1; padding: 20px; overflow-y: auto; background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.05), transparent); }
+        .main { 
+    flex: 1; 
+    padding: 20px; 
+    overflow-y: auto; 
+    background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.05), transparent);
+
+    opacity: 0;
+    transform: translateY(6px);
+    transition: opacity .25s ease, transform .25s ease;
+}
+
+.main.active-section {
+    opacity: 1;
+    transform: translateY(0);
+}}
         h1 { font-weight: 800; font-size: 2.8rem; margin-bottom: 20px; letter-spacing: -1px; }
 
         /* NOVI STIL ZA DAILY BRIEFING */
@@ -1238,22 +1252,35 @@ document.getElementById('app_date').value = today;
     otvoriConfirmModal(id, 'expense', 'Ovaj trošak će biti trajno obrisan.');
 }
         function prikaziSekciju(sekcija) {
-            const sekcije = ['dashboard', 'kalendar', 'klijenti', 'artisti', 'troskovi', 'magacin'];
-            sekcije.forEach(s => {
-                const el = document.getElementById(s + '-section');
-                if(el) el.style.display = (s === sekcija ? 'block' : 'none');
-            });
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            const navId = 'nav-' + (sekcija === 'magacin' ? 'magacin' : sekcija);
-            if(document.getElementById(navId)) document.getElementById(navId).classList.add('active');
-            
-            if(sekcija === 'klijenti') ucitajKlijente(); 
-            if(sekcija === 'artisti') ucitajArtiste(); 
-            if(sekcija === 'troskovi') ucitajTroskove();
-            if(sekcija === 'kalendar') renderujKalendarTab();
-            if(sekcija === 'dashboard') osveziPodatke();
-            if(sekcija === 'magacin') renderujMagacin();
+
+    const sekcije = ['dashboard', 'kalendar', 'klijenti', 'artisti', 'troskovi', 'magacin'];
+
+    sekcije.forEach(s => {
+        const el = document.getElementById(s + '-section');
+        if(el) {
+            el.classList.remove('active-section');
+            el.style.display = 'none';
         }
+    });
+
+    const active = document.getElementById(sekcija + '-section');
+    if(active) {
+        active.style.display = 'block';
+        setTimeout(() => active.classList.add('active-section'), 20);
+    }
+
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+    const navId = 'nav-' + sekcija;
+    if(document.getElementById(navId)) document.getElementById(navId).classList.add('active');
+
+    if(sekcija === 'klijenti') ucitajKlijente();
+    if(sekcija === 'artisti') ucitajArtiste();
+    if(sekcija === 'troskovi') ucitajTroskove();
+    if(sekcija === 'kalendar') renderujKalendarTab();
+    if(sekcija === 'dashboard') osveziPodatke();
+    if(sekcija === 'magacin') renderujMagacin();
+}
 
         async function ucitajArtiste() {
             const { data: artisti } = await supabaseClient.from('profiles').select('*').eq('studio_id', userProfile.studio_id);
