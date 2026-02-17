@@ -445,6 +445,36 @@ tr:active td {
 
 .nav-item.active::before {
     opacity: 1;
+}  
+ /* LIGHT MODE */
+
+body.light-mode {
+    --bg: #f1f5f9;
+    --card: rgba(0,0,0,0.04);
+    --text: #0f172a;
+    --accent: #3b82f6;
+}
+
+body.light-mode .sidebar {
+    background: #ffffff;
+    border-right: 1px solid rgba(0,0,0,0.08);
+}
+
+body.light-mode .nav-item {
+    color: #475569;
+}
+
+body.light-mode .nav-item.active {
+    background: rgba(59,130,246,0.12);
+    color: #1e293b;
+}
+
+body.light-mode .stat-card,
+body.light-mode .chart-container,
+body.light-mode .table-container,
+body.light-mode .modal-content {
+    background: #ffffff;
+    border: 1px solid rgba(0,0,0,0.06);
 }       
     </style>
 </head>
@@ -1413,7 +1443,28 @@ async function potvrdiBrisanje() {
 }
         function zatvoriModal() { document.getElementById('bookingModal').style.display = 'none'; editingId = null; }
         async function logout() { await supabaseClient.auth.signOut(); window.location.href = 'index.html'; }
+/* DARK / LIGHT TOGGLE */
 
+function toggleTheme() {
+    const body = document.body;
+
+    if (body.classList.contains('light-mode')) {
+        body.classList.remove('light-mode');
+        localStorage.setItem('theme', 'dark');
+    } else {
+        body.classList.add('light-mode');
+        localStorage.setItem('theme', 'light');
+    }
+}
+
+/* Učitaj sačuvanu temu pri pokretanju */
+
+(function loadTheme() {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'light') {
+        document.body.classList.add('light-mode');
+    }
+})();
         initDashboard();
         const savedTheme = localStorage.getItem('theme');
 if(savedTheme === 'light') document.body.classList.add('light');
