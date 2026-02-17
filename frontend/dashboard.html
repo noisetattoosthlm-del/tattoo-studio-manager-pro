@@ -827,6 +827,9 @@ function animateNumber(el, start, end, duration = 600) {
             const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', user.id).single();
             if (profile) {
                 userProfile = profile;
+                if(profile.studio_name){
+    document.getElementById('studio-name-display').innerText = profile.studio_name;
+}
                 if (profile.role === 'owner') {
                     document.querySelectorAll('.owner-only').forEach(el => {
                         if(el.classList.contains('stat-card')) el.style.display = 'block';
