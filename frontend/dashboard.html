@@ -369,6 +369,11 @@ tr:active td {
         .main.section-kalendar {
     padding-top: 5px !important;
 }
+  .cal-day-box.today {
+    border: 2px solid #22c55e;
+    background: rgba(34,197,94,0.08);
+    box-shadow: 0 0 14px rgba(34,197,94,.45);
+}      
     </style>
 </head>
 <body>
@@ -953,6 +958,8 @@ setTimeout(() => {
 
             for (let d = 1; d <= daysInMonth; d++) {
                 const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+                const todayStr = new Date().toISOString().substring(0,10);
+const isToday = dateStr === todayStr;
                 const dailyApps = globalApps.filter(a => a.appointment_time && a.appointment_time.startsWith(dateStr));
                 const filteredApps = artistFilter === 'all' ? dailyApps : dailyApps.filter(a => a.artist_id === artistFilter);
 
@@ -964,10 +971,10 @@ setTimeout(() => {
                 if(filteredApps.length > 3) eventsHtml += `<div style="font-size:0.55rem; color:#64748b; font-weight:800;">+ još ${filteredApps.length - 3}</div>`;
 
                 daysContainer.innerHTML += `
-                    <div class="cal-day-box ${filteredApps.length > 0 ? 'has-apps' : ''}" onclick="prikaziDetaljeDana('${dateStr}', '${artistFilter}')">
-                        <span class="cal-day-num">${d}</span>
-                        ${eventsHtml}
-                    </div>`;
+    <div class="cal-day-box ${filteredApps.length > 0 ? 'has-apps' : ''} ${isToday ? 'today' : ''}" onclick="prikaziDetaljeDana('${dateStr}', '${artistFilter}')">
+        <span class="cal-day-num">${d}</span>
+        ${eventsHtml}
+    </div>`;
             }
         }
 
