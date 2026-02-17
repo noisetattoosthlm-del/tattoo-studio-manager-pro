@@ -497,6 +497,8 @@ body.light-mode .modal-content {
         <div class="nav-item owner-only" id="nav-artisti" onclick="prikaziSekciju('artisti')">Artisti</div>
         <div class="nav-item owner-only" id="nav-troskovi" onclick="prikaziSekciju('troskovi')">Troškovi</div>
         <div class="nav-item" onclick="toggleTheme()">🌓 Tema</div>
+        <div class="nav-item owner-only" onclick="document.getElementById('backupInput').click()">📥 Import backup</div>
+<input type="file" id="backupInput" accept=".json" style="display:none" onchange="importBackup(this.files[0])">
         <div class="nav-item" style="margin-top: auto;" onclick="logout()">Odjavi se</div>
     </div>
 
@@ -1504,6 +1506,41 @@ function toggleTheme() {
         document.body.classList.add('light-mode');
     }
 })();
+        async function importBackup(file) {
+    if (!file) return;
+
+    if (!confirm("Ovo će PREPISATI sve podatke studija. Nastaviti?")) return;
+
+    const reader = new FileReader();
+
+    reader.onload = async e => {
+        try {
+            const data = JSON.parse(e.target.result);
+
+            await supabaseClient.from('appointments').delete().eq('studio_id', userProfile.studio_id);
+            await supabaseClient.from('expenses').delete().eq('studio_id', userProfile.studio_id);
+            await supabaseClient.from('inventory').delete().eq('studio_id', userProfile.studio_id);
+
+            if (data.appointments?.length)
+                await supabaseClient.from('appointments').insert(data.appointments);
+
+            if (data.expenses?.length)
+                await supabaseClient.from('expenses').insert(data.expenses);
+
+            if (data.inventory?.length)
+                await supabaseClient.from('inventory').insert(data.inventory);
+
+            alert("Backup uspešno vraćen.");
+            location.reload();
+
+        } catch(err) {
+            alert("Neispravan backup fajl.");
+            console.error(err);
+        }
+    };
+
+    reader.readAsText(file);
+}
         initDashboard();
 prikaziSekciju('dashboard');
     </script>
