@@ -657,14 +657,22 @@ body.light-mode .modal-content {
         </div>
     </div>
 <div class="main section-studio" id="studio-section" style="display:none;">
-    <h1>Podešavanja Studija</h1>
+<h1>Podešavanja Studija</h1>
 
-    <div style="background:var(--card);padding:30px;border-radius:24px;border:1px solid rgba(255,255,255,.05);max-width:500px;">
-        <label class="modal-label">Ime studija</label>
-        <input id="studio-name-input" placeholder="Ime studija">
+<div style="background:var(--card);padding:30px;border-radius:24px;border:1px solid rgba(255,255,255,.05);max-width:500px;">
 
-        <button class="btn-add" style="width:100%" onclick="saveStudioName()">Sačuvaj</button>
-    </div>
+<label class="modal-label">Ime studija</label>
+<input id="studio-name-input" placeholder="Ime studija">
+
+<label class="modal-label">Instagram</label>
+<input id="studio-instagram-input" placeholder="@instagram">
+
+<label class="modal-label">Kontakt email</label>
+<input id="studio-email-input" placeholder="studio@email.com">
+
+<button class="btn-add" style="width:100%;margin-top:15px" onclick="saveStudioSettings()">Sačuvaj</button>
+
+</div>
 </div>
     <div id="bookingModal" class="modal">
         <div class="modal-content">
@@ -1590,6 +1598,27 @@ function toggleTheme() {
 }
         initDashboard();
 prikaziSekciju('dashboard');
+        async function saveStudioSettings(){
+
+const name = document.getElementById('studio-name-input').value;
+const instagram = document.getElementById('studio-instagram-input').value;
+const email = document.getElementById('studio-email-input').value;
+
+if(!name) return alert("Unesi ime studija");
+
+await supabaseClient
+.from('profiles')
+.update({
+studio_name: name,
+studio_instagram: instagram,
+studio_email: email
+})
+.eq('studio_id', userProfile.studio_id);
+
+document.getElementById('studio-name-display').innerText = name;
+
+alert("Studio sačuvan ✔");
+}
     </script>
     <button class="fab-add" onclick="otvoriModalNovi()">+</button>
     <div id="confirmModal" class="modal">
