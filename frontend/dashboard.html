@@ -374,29 +374,22 @@ tr:active td {
     background: rgba(34,197,94,0.08);
     box-shadow: 0 0 14px rgba(34,197,94,.45);
 }   
-/* IDEJA A – kartice hover */
+/* IDEJA A – TOUCH PRESS EFFECT */
 
 .stat-card,
 .cal-day-box,
 .agenda-item,
 .item-card {
-    transition: transform .25s ease, box-shadow .25s ease;
+    transition: transform .18s ease, box-shadow .18s ease;
 }
 
-.stat-card:hover,
-.cal-day-box:hover,
-.agenda-item:hover,
-.item-card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 14px 30px rgba(0,0,0,.55);
-}
- .stat-card,
-.cal-day-box,
-.agenda-item,
-.item-card {
-    position: relative;
-    z-index: 5;
-}       
+.stat-card:active,
+.cal-day-box:active,
+.agenda-item:active,
+.item-card:active {
+    transform: scale(0.97);
+    box-shadow: 0 10px 22px rgba(0,0,0,.55);
+}      
     </style>
 </head>
 <body>
