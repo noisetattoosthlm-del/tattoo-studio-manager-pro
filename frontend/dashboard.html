@@ -497,7 +497,6 @@ body.light-mode .modal-content {
         <div class="nav-item owner-only" id="nav-artisti" onclick="prikaziSekciju('artisti')">Artisti</div>
         <div class="nav-item owner-only" id="nav-troskovi" onclick="prikaziSekciju('troskovi')">Troškovi</div>
         <div class="nav-item" onclick="toggleTheme()">🌓 Tema</div>
-        <div class="nav-item owner-only" onclick="document.getElementById('backupInput').click()">📥 Import backup</div>
 <input type="file" id="backupInput" accept=".json" style="display:none" onchange="importBackup(this.files[0])">
         <div class="nav-item" style="margin-top: auto;" onclick="logout()">Odjavi se</div>
     </div>
@@ -512,6 +511,7 @@ body.light-mode .modal-content {
                 <option value="all">Svi Artisti</option>
             </select>
             <button class="btn-export" onclick="window.print()">📄 IZVEŠTAJ (PDF)</button>
+            <button class="btn-export owner-only" onclick="exportStudio()">💾 BACKUP</button>
         </div>
 
         <div class="briefing-container" id="daily-briefing" style="display:none;">
