@@ -1,0 +1,14 @@
+name: Weekly Supabase Backup
+
+on:
+  schedule:
+    - cron: '0 3 * * 0'   # Nedelja 03:00
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Supabase Weekly Backup
+        run: |
+          curl -X POST https://yunuwkjydqzgkqtbgwup.supabase.co/functions/v1/hyper-function
