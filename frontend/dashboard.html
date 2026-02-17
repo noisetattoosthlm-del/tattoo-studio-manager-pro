@@ -1396,7 +1396,10 @@ document.getElementById('app_date').value = today;
     if(sekcija === 'troskovi') ucitajTroskove();
     if(sekcija === 'kalendar') renderujKalendarTab();
     if(sekcija === 'dashboard') osveziPodatke();
-    if(sekcija === 'studio') ucitajStudioSettings();        
+    if(sekcija === 'studio'){
+    ucitajStudioSettings();
+    ucitajArtiste();
+}        
     if(sekcija === 'magacin') renderujMagacin();
 }
 
