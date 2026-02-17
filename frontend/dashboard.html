@@ -654,7 +654,6 @@ body.light-mode .modal-content {
             </table>
         </div>
     </div>
-
     <div id="bookingModal" class="modal">
         <div class="modal-content">
             <h2 id="modal-title" style="margin:0 0 25px 0;">Novi Termin</h2>
@@ -672,7 +671,7 @@ body.light-mode .modal-content {
 <label class="modal-label">Vreme</label>
 <input type="time" id="app_time">
             <div style="display: flex; gap: 10px;">
-                <div style="flex:2"><label class="modal-label">Cena</label><input type="number" id="total_price"></div>
+                <div class="owner-only" style="flex:2"><label class="modal-label">Cena</label><input type="number" id="total_price"></div>
                 <div style="flex:1"><label class="modal-label">Valuta</label><select id="currency_choice"><option value="€">EUR (€)</option><option value="din">RSD (din)</option></select></div>
             </div>
             <div style="display: flex; gap: 10px;">
