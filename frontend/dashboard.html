@@ -1352,7 +1352,7 @@ document.getElementById('app_date').value = today;
 }
         function prikaziSekciju(sekcija) {
 
-    const sekcije = ['dashboard','kalendar','klijenti','artisti','troskovi','magacin','studio'];
+    const sekcije = ['dashboard', 'kalendar', 'klijenti', 'troskovi', 'magacin', 'studio'];
 
     sekcije.forEach(s => {
         const el = document.getElementById(s + '-section');
@@ -1374,7 +1374,6 @@ document.getElementById('app_date').value = today;
     if(document.getElementById(navId)) document.getElementById(navId).classList.add('active');
 
     if(sekcija === 'klijenti') ucitajKlijente();
-    if(sekcija === 'artisti') ucitajArtiste();
     if(sekcija === 'troskovi') ucitajTroskove();
     if(sekcija === 'kalendar') renderujKalendarTab();
     if(sekcija === 'dashboard') osveziPodatke();
