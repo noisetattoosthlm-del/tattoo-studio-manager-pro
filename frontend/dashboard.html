@@ -1612,19 +1612,27 @@ const email = document.getElementById('studio-email-input').value;
 
 if(!name) return alert("Unesi ime studija");
 
-await supabaseClient
+const { error } = await supabaseClient
 .from('profiles')
 .update({
 studio_name: name,
 studio_instagram: instagram,
 studio_email: email
 })
-.eq('studio_id', userProfile.studio_id);
+.eq('id', userProfile.id);   // <-- VAŽNO: id USERA, ne studio_id
 
-document.getElementById('studio-name-display').innerText = name;
+if(error){
+console.error(error);
+alert(error.message);
+return;
+}
+
+userProfile.studio_name = name;
+userProfile.studio_instagram = instagram;
+userProfile.studio_email = email;
 
 alert("Studio sačuvan ✔");
-} 
+}
         initDashboard();
 prikaziSekciju('dashboard');
    
