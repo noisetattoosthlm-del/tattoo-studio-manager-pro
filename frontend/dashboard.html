@@ -656,7 +656,16 @@ body.light-mode .modal-content {
             </table>
         </div>
     </div>
+<div class="main section-studio" id="studio-section" style="display:none;">
+    <h1>Podešavanja Studija</h1>
 
+    <div style="background:var(--card);padding:30px;border-radius:24px;border:1px solid rgba(255,255,255,.05);max-width:500px;">
+        <label class="modal-label">Ime studija</label>
+        <input id="studio-name-input" placeholder="Ime studija">
+
+        <button class="btn-add" style="width:100%" onclick="saveStudioName()">Sačuvaj</button>
+    </div>
+</div>
     <div id="bookingModal" class="modal">
         <div class="modal-content">
             <h2 id="modal-title" style="margin:0 0 25px 0;">Novi Termin</h2>
@@ -1545,6 +1554,21 @@ function toggleTheme() {
     };
 
     reader.readAsText(file);
+}
+        async function saveStudioName(){
+
+    const name = document.getElementById('studio-name-input').value;
+
+    if(!name) return alert("Unesi ime studija");
+
+    await supabaseClient
+        .from('profiles')
+        .update({ studio_name: name })
+        .eq('studio_id', userProfile.studio_id);
+
+    document.getElementById('studio-name-display').innerText = name;
+
+    alert("Sačuvano.");
 }
         initDashboard();
 prikaziSekciju('dashboard');
