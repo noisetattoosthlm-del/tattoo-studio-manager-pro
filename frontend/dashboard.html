@@ -856,7 +856,7 @@ let deleteAction = null;
     a.download = `studio_backup_${new Date().toISOString().slice(0,10)}.json`;
     a.click();
 
-    const now = new Date().toLocaleString("sr-RS");
+    const now = new Date().toISOString();
 URL.revokeObjectURL(url);
 await supabaseClient
   .from('profiles')
