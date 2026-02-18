@@ -1713,6 +1713,10 @@ userProfile.studio_name = name;
 userProfile.studio_instagram = instagram;
 userProfile.studio_email = email;
 
+// odmah update UI
+const dashName = document.getElementById("studio-name-display");
+if(dashName) dashName.innerText = name;
+
 alert("Studio sačuvan ✔");
 }        initDashboard();
 prikaziSekciju('dashboard');
