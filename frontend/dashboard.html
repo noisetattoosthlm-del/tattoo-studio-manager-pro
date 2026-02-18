@@ -856,37 +856,7 @@ let deleteAction = null;
     a.click();
     URL.revokeObjectURL(url);
 
-    const nowIso = new Date().toISOString().replace('Z','');
-
-    // ********** DEBUG: pokusaj update i ispiši ceo response **********
-    const { data: updatedProfile, error: updateErr } = await supabaseClient
-  .from('profiles')
-  .update({ last_backup_at: nowIso })
-  .eq('id', userProfile.id)
-  .select()
-  .single();
-
-if(updateErr){
-  console.error(updateErr);
-  alert("Greška pri čuvanju backup timestampa");
-  return;
-}
-
-if(updatedProfile){
-  userProfile = updatedProfile;
-}
-
-    const label = document.getElementById("last-backup-label");
-    if (label) {
-      try {
-        label.innerText = "Poslednji backup: " + new Date(userProfile.last_backup_at).toLocaleString("sr-RS");
-      } catch (e) {
-        label.innerText = "Poslednji backup: " + String(userProfile.last_backup_at);
-      }
-    }
-
-    console.log(">>> exportStudio done, last_backup_at:", userProfile.last_backup_at);
-    alert("Backup sačuvan ✔ (debug mode)");
+   alert("Backup sačuvan ✔");
   } catch (err) {
     console.error("EXPORT unexpected error:", err);
     alert("Neočekivana greška, pogledaj konzolu.");
