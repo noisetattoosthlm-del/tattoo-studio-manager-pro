@@ -859,37 +859,25 @@ let deleteAction = null;
     a.click();
     URL.revokeObjectURL(url);
 
-    const nowIso = new Date().toISOString();
+    const nowIso = new Date().toISOString().replace('Z','');
 
     // ********** DEBUG: pokusaj update i ispiši ceo response **********
-    const updateRes = await supabaseClient
-      .from('profiles')
-      .update({ last_backup_at: nowIso })
-      .eq('id', userProfile.id);
+    const { data: updatedProfile, error: updateErr } = await supabaseClient
+  .from('profiles')
+  .update({ last_backup_at: nowIso })
+  .eq('id', userProfile.id)
+  .select()
+  .single();
 
-    console.log("DEBUG: updateRes:", updateRes);
+if(updateErr){
+  console.error(updateErr);
+  alert("Greška pri čuvanju backup timestampa");
+  return;
+}
 
-    if (updateRes.error) {
-      // detaljan ispis greške u konzolu
-      console.error("DEBUG: update error object:", updateRes.error);
-      alert("Greška pri čuvanju backup timestampa. Proveri konzolu (F12).");
-      return;
-    }
-
-    // osveži profil iz baze
-    const { data: refreshed, error: refErr } = await supabaseClient
-      .from('profiles')
-      .select('*')
-      .eq('id', userProfile.id)
-      .single();
-
-    console.log("DEBUG: refreshed:", refreshed, "refErr:", refErr);
-
-    if (refErr) {
-      console.warn("DEBUG: refresh error:", refErr);
-    } else if (refreshed) {
-      userProfile = refreshed;
-    }
+if(updatedProfile){
+  userProfile = updatedProfile;
+}
 
     const label = document.getElementById("last-backup-label");
     if (label) {
