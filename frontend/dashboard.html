@@ -630,24 +630,75 @@ body.light-mode .modal-content {
             </table>
         </div>
     </div>
-<div class="main section-studio" id="studio-section" style="display:none;">    
+<div class="main section-studio" id="studio-section" style="display:none;">
+
 <h1>Podešavanja Studija</h1>
-<h3 style="margin-top:40px;color:var(--accent)">Artisti Studija</h3>
 
-<div style="background: var(--card); padding: 30px; border-radius: 24px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.05);">
+<!-- STUDIO INFO PRVO -->
+<div style="background:var(--card);padding:30px;border-radius:24px;border:1px solid rgba(255,255,255,.05);max-width:520px;margin-bottom:40px;">
 
-    <h3 style="margin-top:0; font-size: 1rem; color: var(--accent);">DODAJ NOVOG ARTISTA</h3>
+<label class="modal-label">Ime studija</label>
+<input id="studio-name-input" placeholder="Ime studija">
 
-    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-        <input type="text" id="new-artist-name" placeholder="Ime artista" style="flex:1;">
-        <input type="email" id="new-artist-email" placeholder="Email" style="flex:1;">
-        <input type="password" id="new-artist-pass" placeholder="Lozinka" style="flex:1;">
-        <div style="display:flex; align-items:center; gap:10px;">
-            <label style="font-size:0.7rem; color:#64748b;">BOJA:</label>
-            <input type="color" id="new-artist-color" value="#3b82f6" style="width:50px; height:50px; padding:2px; margin:0;">
-        </div>
-        <button class="btn-add" id="btn-create-artist" style="margin:0; width: 100%;" onclick="napraviArtista()">KREIRAJ NALOG</button>
-    </div>
+<label class="modal-label">Instagram</label>
+<input id="studio-instagram-input" placeholder="@instagram">
+
+<label class="modal-label">Kontakt email</label>
+<input id="studio-email-input" placeholder="studio@email.com">
+
+<button class="btn-add" style="width:100%;margin-top:15px" onclick="saveStudioSettings()">Sačuvaj</button>
+
+</div>
+
+<!-- ARTISTI NASLOV -->
+<h2 style="
+color:var(--accent);
+background:rgba(59,130,246,.08);
+display:inline-block;
+padding:10px 18px;
+border-radius:14px;
+font-weight:800;
+margin-bottom:20px;
+">
+Artisti Studija
+</h2>
+
+<!-- DODAJ ARTISTA -->
+<div style="background: var(--card); padding: 30px; border-radius: 24px; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.05);">
+
+<h3 style="margin-top:0; font-size: .8rem; color:#94a3b8;">DODAJ NOVOG ARTISTA</h3>
+
+<div style="display: flex; gap: 15px; flex-wrap: wrap;">
+<input type="text" id="new-artist-name" placeholder="Ime artista" style="flex:1;">
+<input type="email" id="new-artist-email" placeholder="Email" style="flex:1;">
+<input type="password" id="new-artist-pass" placeholder="Lozinka" style="flex:1;">
+
+<div style="display:flex; align-items:center; gap:10px;">
+<label style="font-size:0.7rem; color:#64748b;">BOJA:</label>
+<input type="color" id="new-artist-color" value="#3b82f6" style="width:44px;height:44px;margin:0;">
+</div>
+
+<button class="btn-add" id="btn-create-artist" style="margin:0;width:100%;" onclick="napraviArtista()">KREIRAJ NALOG</button>
+</div>
+
+</div>
+
+<!-- TABELA ARTISTA -->
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th>Artist</th>
+<th>Boja</th>
+<th>Uloga</th>
+<th>Termini</th>
+<th>Ukupan Promet</th>
+<th style="text-align:right;">Akcije</th>
+</tr>
+</thead>
+<tbody id="artists-list-body"></tbody>
+</table>
+</div>
 
 </div>
 
