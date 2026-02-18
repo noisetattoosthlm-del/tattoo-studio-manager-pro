@@ -594,31 +594,6 @@ body.light-mode .modal-content {
             </div>
     </div>
 
-    <div class="main section-artisti" id="artisti-section" style="display:none;">
-        <h1>Upravljanje Artisti</h1>
-        <div style="background: var(--card); padding: 30px; border-radius: 24px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.05);">
-            <h3 style="margin-top:0; font-size: 1rem; color: var(--accent);">DODAJ NOVOG ARTISTA</h3>
-            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                <input type="text" id="new-artist-name" placeholder="Ime artista" style="flex:1;">
-                <input type="email" id="new-artist-email" placeholder="Email" style="flex:1;">
-                <input type="password" id="new-artist-pass" placeholder="Lozinka" style="flex:1;">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <label style="font-size:0.7rem; color:#64748b;">BOJA:</label>
-                    <input type="color" id="new-artist-color" value="#3b82f6" style="width:50px; height:50px; padding:2px; margin:0;">
-                </div>
-                <button class="btn-add" id="btn-create-artist" style="margin:0; width: 100%;" onclick="napraviArtista()">KREIRAJ NALOG</button>
-            </div>
-        </div>
-        <div class="table-container">
-            <table id="artists-table">
-                <thead>
-                    <tr><th>Artist</th><th>Boja</th><th>Uloga</th><th>Termini</th><th>Ukupan Promet</th><th style="text-align:right;">Akcije</th></tr>
-                </thead>
-                <tbody id="artists-list-body"></tbody>
-            </table>
-        </div>
-    </div>
-
     <div class="main section-troskovi" id="troskovi-section" style="display:none;">
         <div style="display: flex; align-items: center; margin-bottom: 40px;">
             <h1>Troškovi Studija</h1>
@@ -656,6 +631,31 @@ body.light-mode .modal-content {
         </div>
     </div>
 <div class="main section-studio" id="studio-section" style="display:none;">
+    <div class="main section-artisti" id="artisti-section" style="display:none;">
+        <h1>Upravljanje Artisti</h1>
+        <div style="background: var(--card); padding: 30px; border-radius: 24px; margin-bottom: 30px; border: 1px solid rgba(255,255,255,0.05);">
+            <h3 style="margin-top:0; font-size: 1rem; color: var(--accent);">DODAJ NOVOG ARTISTA</h3>
+            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <input type="text" id="new-artist-name" placeholder="Ime artista" style="flex:1;">
+                <input type="email" id="new-artist-email" placeholder="Email" style="flex:1;">
+                <input type="password" id="new-artist-pass" placeholder="Lozinka" style="flex:1;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <label style="font-size:0.7rem; color:#64748b;">BOJA:</label>
+                    <input type="color" id="new-artist-color" value="#3b82f6" style="width:50px; height:50px; padding:2px; margin:0;">
+                </div>
+                <button class="btn-add" id="btn-create-artist" style="margin:0; width: 100%;" onclick="napraviArtista()">KREIRAJ NALOG</button>
+            </div>
+        </div>
+        <div class="table-container">
+            <table id="artists-table">
+                <thead>
+                    <tr><th>Artist</th><th>Boja</th><th>Uloga</th><th>Termini</th><th>Ukupan Promet</th><th style="text-align:right;">Akcije</th></tr>
+                </thead>
+                <tbody id="artists-list-body"></tbody>
+            </table>
+        </div>
+    </div>
+
 <h1>Podešavanja Studija</h1>
 <h3 style="margin-top:40px;color:var(--accent)">Artisti Studija</h3>
 
