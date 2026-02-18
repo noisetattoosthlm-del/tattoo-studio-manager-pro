@@ -1694,12 +1694,18 @@ alert("Vraćam backup... sačekaj par sekundi ⏳");
 document.getElementById('studio-name-input').value = userProfile.studio_name || "";
 document.getElementById('studio-instagram-input').value = userProfile.studio_instagram || "";
 document.getElementById('studio-email-input').value = userProfile.studio_email || "";
+
 const last = localStorage.getItem("lastBackup");
 if(last){
   const label = document.getElementById("last-backup-label");
   if(label) label.innerText = "Poslednji backup: " + last;
 }
-            async function saveStudioSettings(){
+
+}   // <<< OVDE SE ZATVARA ucitajStudioSettings
+
+
+
+async function saveStudioSettings(){
 
 const name = document.getElementById('studio-name-input').value;
 const instagram = document.getElementById('studio-instagram-input').value;
@@ -1714,7 +1720,7 @@ studio_name: name,
 studio_instagram: instagram,
 studio_email: email
 })
-.eq('id', userProfile.id);   // <-- VAŽNO: id USERA, ne studio_id
+.eq('id', userProfile.id);
 
 if(error){
 console.error(error);
@@ -1727,8 +1733,7 @@ userProfile.studio_instagram = instagram;
 userProfile.studio_email = email;
 
 alert("Studio sačuvan ✔");
-}
-        initDashboard();
+}        initDashboard();
 prikaziSekciju('dashboard');
    
     </script>
