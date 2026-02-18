@@ -577,7 +577,6 @@ body.light-mode .modal-content {
         <div class="nav-item owner-only" id="nav-troskovi" onclick="prikaziSekciju('troskovi')">Troškovi</div>
         <div class="nav-item owner-only" id="nav-studio" onclick="prikaziSekciju('studio')">Studio</div>
         <div class="nav-item" onclick="toggleTheme()">🌓 Tema</div>
-        <div class="nav-item owner-only" onclick="document.getElementById('backupInput').click()">📥 Import backup</div>
 <input type="file" id="backupInput" accept=".json" style="display:none" onchange="importBackup(this.files[0])">
         <div class="nav-item" style="margin-top: auto;" onclick="logout()">Odjavi se</div>
     </div>
@@ -593,7 +592,6 @@ body.light-mode .modal-content {
                 <option value="all">Svi Artisti</option>
             </select>
             <button class="btn-export" onclick="window.print()">📄 IZVEŠTAJ (PDF)</button>
-            <button class="btn-export owner-only" onclick="exportStudio()">💾 BACKUP</button>
         </div>
 
         <div class="briefing-container" id="daily-briefing" style="display:none;">
@@ -727,26 +725,56 @@ body.light-mode .modal-content {
 
     <button class="btn-add" style="width:100%;margin-top:15px" onclick="saveStudioSettings()">Sačuvaj</button>
   </div>
+<!-- BACKUP / IMPORT - brzi tasteri -->
+<div class="studio-info-card" style="display:flex; gap:10px; align-items:center; margin-top:12px; max-width:520px;">
+  <button class="btn-export owner-only" onclick="exportStudio()">💾 Kreiraj backup sada</button>
+  <button class="btn-export owner-only" onclick="document.getElementById('backupInput').click()">📥 Uvezi backup</button>
+  <span id="last-backup-label"
+style="color:#64748b; font-size:0.85rem; margin-left:auto;">
+</span>
+</div>
 
-  <!-- NASLOV ZA ARTISTE (istaknut) -->
-  <h2 class="section-title-pill" style="margin-bottom:20px;">Artisti Studija</h2>
+<input type="file" id="backupInput" accept=".json" style="display:none" onchange="importBackup(this.files[0])">
+  <!-- ARTISTI BLOK -->
+<div style="margin-top:40px;">
 
-  <!-- DODAJ ARTISTA -->
-  <div style="background: var(--card); padding: 30px; border-radius: 24px; margin-bottom: 25px; border: 1px solid rgba(255,255,255,0.05);">
-    <h3 style="margin-top:0; font-size: .8rem; color:#94a3b8;">DODAJ NOVOG ARTISTA</h3>
+<h2 class="section-title-pill">Artisti Studija</h2>
 
-    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-      <input type="text" id="new-artist-name" placeholder="Ime artista" style="flex:1;">
-      <input type="email" id="new-artist-email" placeholder="Email" style="flex:1;">
-      <input type="password" id="new-artist-pass" placeholder="Lozinka" style="flex:1;">
-      <div style="display:flex; align-items:center; gap:10px;">
-        <label style="font-size:0.7rem; color:#64748b;">BOJA:</label>
-        <input type="color" id="new-artist-color" value="#3b82f6" style="width:44px;height:44px;margin:0;">
-      </div>
-      <button class="btn-add" id="btn-create-artist" style="margin:0;width:100%;" onclick="napraviArtista()">KREIRAJ NALOG</button>
-    </div>
-  </div>
+<div style="background:var(--card);padding:30px;border-radius:24px;border:1px solid rgba(255,255,255,.05);margin-top:15px;">
 
+<h3 style="margin-top:0;font-size:.8rem;color:#94a3b8;">DODAJ NOVOG ARTISTA</h3>
+
+<div style="display:flex;gap:15px;flex-wrap:wrap;">
+<input type="text" id="new-artist-name" placeholder="Ime artista" style="flex:1;">
+<input type="email" id="new-artist-email" placeholder="Email" style="flex:1;">
+<input type="password" id="new-artist-pass" placeholder="Lozinka" style="flex:1;">
+
+<div style="display:flex;align-items:center;gap:10px;">
+<label style="font-size:.7rem;color:#64748b;">BOJA:</label>
+<input type="color" id="new-artist-color" value="#3b82f6" style="width:44px;height:44px;margin:0;">
+</div>
+
+<button class="btn-add" style="margin:0;width:100%;" onclick="napraviArtista()">KREIRAJ NALOG</button>
+</div>
+
+<div class="table-container" style="margin-top:25px;">
+<table>
+<thead>
+<tr>
+<th>Artist</th>
+<th>Boja</th>
+<th>Uloga</th>
+<th>Termini</th>
+<th>Ukupan Promet</th>
+<th style="text-align:right;">Akcije</th>
+</tr>
+</thead>
+<tbody id="artists-list-body"></tbody>
+</table>
+</div>
+
+</div>
+</div>
   <!-- TABELA ARTISTA (SAMO JEDAN PUT) -->
   <div class="table-container">
     <table>
@@ -847,7 +875,10 @@ let deleteAction = null;
     a.download = `studio_backup_${new Date().toISOString().slice(0,10)}.json`;
     a.click();
 
-    URL.revokeObjectURL(url);
+    const now = new Date().toLocaleString("sr-RS");
+URL.revokeObjectURL(url);
+localStorage.setItem("lastBackup", now);
+alert("Backup sačuvan ✔");
 }
         /* IDEJA C – animated counters */
 
@@ -1626,7 +1657,7 @@ function toggleTheme() {
     if (!file) return;
 
     if (!confirm("Ovo će PREPISATI sve podatke studija. Nastaviti?")) return;
-
+alert("Vraćam backup... sačekaj par sekundi ⏳");
     const reader = new FileReader();
 
     reader.onload = async e => {
@@ -1663,7 +1694,10 @@ function toggleTheme() {
 document.getElementById('studio-name-input').value = userProfile.studio_name || "";
 document.getElementById('studio-instagram-input').value = userProfile.studio_instagram || "";
 document.getElementById('studio-email-input').value = userProfile.studio_email || "";
-
+const last = localStorage.getItem("lastBackup");
+if(last){
+  const label = document.getElementById("last-backup-label");
+  if(label) label.innerText = "Poslednji backup: " + last;
 }
             async function saveStudioSettings(){
 
