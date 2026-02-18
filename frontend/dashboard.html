@@ -858,7 +858,11 @@ let deleteAction = null;
 
     const now = new Date().toLocaleString("sr-RS");
 URL.revokeObjectURL(url);
-localStorage.setItem("lastBackup", now);
+await supabaseClient
+  .from('profiles')
+  .update({ last_backup_at: now })
+  .eq('id', userProfile.id);
+
 alert("Backup sačuvan ✔");
 }
         /* IDEJA C – animated counters */
