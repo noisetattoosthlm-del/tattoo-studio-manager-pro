@@ -729,9 +729,6 @@ body.light-mode .modal-content {
 <div class="studio-info-card" style="display:flex; gap:10px; align-items:center; margin-top:12px; max-width:520px;">
   <button class="btn-export owner-only" onclick="exportStudio()">💾 Kreiraj backup sada</button>
   <button class="btn-export owner-only" onclick="document.getElementById('backupInput').click()">📥 Uvezi backup</button>
-  <span id="last-backup-label"
-style="color:#64748b; font-size:0.85rem; margin-left:auto;">
-</span>
 </div>
 
 <input type="file" id="backupInput" accept=".json" style="display:none" onchange="importBackup(this.files[0])">
