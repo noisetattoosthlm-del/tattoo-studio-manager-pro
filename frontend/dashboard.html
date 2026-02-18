@@ -1726,20 +1726,6 @@ alert("Vraćam backup... sačekaj par sekundi ⏳");
   document.getElementById('studio-instagram-input').value = userProfile?.studio_instagram || "";
   document.getElementById('studio-email-input').value = userProfile?.studio_email || "";
 
-  // prikaz poslednjeg backupa u lepom formatu
-  const label = document.getElementById("last-backup-label");
-  if (label) {
-    if (userProfile?.last_backup_at) {
-      try {
-        label.innerText = "Poslednji backup: " + new Date(userProfile.last_backup_at).toLocaleString("sr-RS");
-      } catch (e) {
-        label.innerText = "Poslednji backup: " + String(userProfile.last_backup_at);
-      }
-    } else {
-      label.innerText = "";
-    }
-  }
-
   // osvezi naziv studija na dashboardu
   const dashName = document.getElementById("studio-name-display");
   if (dashName) dashName.innerText = userProfile?.studio_name || "";
