@@ -863,6 +863,23 @@ await supabaseClient
   .update({ last_backup_at: now })
   .eq('id', userProfile.id);
 
+// REFRESH PROFILA IZ BAZE
+const { data: refreshed } = await supabaseClient
+  .from('profiles')
+  .select('*')
+  .eq('id', userProfile.id)
+  .single();
+
+if(refreshed){
+  userProfile = refreshed;
+}
+
+// odmah update label
+const label = document.getElementById("last-backup-label");
+if(label){
+  label.innerText = "Poslednji backup: " + now;
+}
+
 alert("Backup sačuvan ✔");
 }
         /* IDEJA C – animated counters */
