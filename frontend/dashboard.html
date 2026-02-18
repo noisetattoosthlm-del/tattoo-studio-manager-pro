@@ -500,7 +500,70 @@ body.light-mode .table-container,
 body.light-mode .modal-content {
     background: #ffffff;
     border: 1px solid rgba(0,0,0,0.06);
-}       
+}   
+/* Compact layout tweaks for very large screens (iMac) */
+@media (min-width: 1600px) {
+  /* manje vertikalnih razmaka u glavnom kontejneru */
+  .main {
+    padding: 16px 80px;
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+
+  /* smanjimo visinu grafa da ne zauzima previše vertikale */
+  .chart-container {
+    height: 180px !important;
+    padding: 18px !important;
+    margin-bottom: 18px;
+  }
+
+  /* više kartica u jednom redu, manje paddinga u karticama */
+  .stats-grid {
+    grid-template-columns: repeat(4, minmax(180px, 1fr));
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+  .stat-card {
+    padding: 14px;
+  }
+  .stat-card p { font-size: 1.6rem; }
+
+  /* briefing manji i bočno skrolovanje unutra ako zatreba */
+  .briefing-container {
+    padding: 12px;
+    margin-bottom: 12px;
+    max-height: 160px;
+    overflow: auto;
+  }
+
+  /* Tabela se sada ograničava visinom i skroluje sama — ne tera celu stranicu da skroluje */
+  .table-container {
+    max-height: calc(100vh - 380px); /* promeni broj ako želiš manje/više */
+    overflow-y: auto;
+    padding: 12px;
+  }
+
+  /* Kalendarske kutije manji min-height (više dana vidljivo bez skrola) */
+  .cal-day-box {
+    min-height: 90px;
+    padding: 8px;
+  }
+
+  /* Magacin kartice i ostalo manji padding */
+  .item-card { padding: 14px; }
+  .item-stock-area { padding: 10px; }
+
+  /* Fab button i modal manje margin-e */
+  .modal-content { max-height: 86vh; padding: 22px; }
+  .fab-add { right: 32px; bottom: 28px; }
+
+  /* Po potrebi suzi naslov */
+  h1 { font-size: 2.2rem; margin-bottom: 10px; }
+
+  /* Ako želiš da dashboard komponentu pokažeš sa strane: (opciono) */
+  /* .section-dashboard .chart-container { width: 65%; display:inline-block; vertical-align:top; }
+     .section-dashboard .stats-grid { width: 33%; display:inline-block; vertical-align:top; } */
+}        
     </style>
 </head>
 <body>
