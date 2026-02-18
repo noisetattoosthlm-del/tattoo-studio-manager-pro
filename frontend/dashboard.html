@@ -828,59 +828,76 @@ style="color:#64748b; font-size:0.85rem; margin-left:auto;">
         let myChart = null;
         let deleteId = null;
 let deleteAction = null;
-        async function exportStudio() {
+      async function exportStudio() {
+  if (userProfile.role !== 'owner') return;
 
-    if(userProfile.role !== 'owner') return;
+  const studioId = userProfile.studio_id;
 
-    const studioId = userProfile.studio_id;
+  const appointments = await supabaseClient.from('appointments').select('*').eq('studio_id', studioId);
+  const expenses = await supabaseClient.from('expenses').select('*').eq('studio_id', studioId);
+  const inventory = await supabaseClient.from('inventory').select('*').eq('studio_id', studioId);
+  const profiles = await supabaseClient.from('profiles').select('*').eq('studio_id', studioId);
 
-    const appointments = await supabaseClient.from('appointments').select('*').eq('studio_id', studioId);
-    const expenses = await supabaseClient.from('expenses').select('*').eq('studio_id', studioId);
-    const inventory = await supabaseClient.from('inventory').select('*').eq('studio_id', studioId);
-    const profiles = await supabaseClient.from('profiles').select('*').eq('studio_id', studioId);
+  const backup = {
+    exported_at: new Date().toISOString(),
+    studio_id: studioId,
+    appointments: appointments.data || [],
+    expenses: expenses.data || [],
+    inventory: inventory.data || [],
+    profiles: profiles.data || []
+  };
 
-    const backup = {
-        exported_at: new Date().toISOString(),
-        studio_id: studioId,
-        appointments: appointments.data || [],
-        expenses: expenses.data || [],
-        inventory: inventory.data || [],
-        profiles: profiles.data || []
-    };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
 
-    const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `studio_backup_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
 
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `studio_backup_${new Date().toISOString().slice(0,10)}.json`;
-    a.click();
+  // canonical ISO time (radi konzistentno na svim uređajima)
+  const nowIso = new Date().toISOString();
 
-    const now = new Date().toISOString();
-URL.revokeObjectURL(url);
-await supabaseClient
-  .from('profiles')
-  .update({ last_backup_at: now })
-  .eq('id', userProfile.id);
+  // revoke object
+  URL.revokeObjectURL(url);
 
-// REFRESH PROFILA IZ BAZE
-const { data: refreshed } = await supabaseClient
-  .from('profiles')
-  .select('*')
-  .eq('id', userProfile.id)
-  .single();
+  // updejtuj profil u Supabase (last_backup_at kao ISO)
+  const { error: updateErr } = await supabaseClient
+    .from('profiles')
+    .update({ last_backup_at: nowIso })
+    .eq('id', userProfile.id);
 
-if(refreshed){
-  userProfile = refreshed;
-}
+  if (updateErr) {
+    console.error("Greška pri update last_backup_at:", updateErr);
+    alert("Greška pri čuvanju backup timestampa. Proveri konzolu.");
+    return;
+  }
 
-// odmah update label
-const label = document.getElementById("last-backup-label");
-if(label){
-  label.innerText = "Poslednji backup: " + now;
-}
+  // odmah osveži profil iz baze da bi userProfile bio ažuran na ovom uređaju
+  const { data: refreshed, error: refErr } = await supabaseClient
+    .from('profiles')
+    .select('*')
+    .eq('id', userProfile.id)
+    .single();
 
-alert("Backup sačuvan ✔");
+  if (refErr) {
+    console.warn("Refresh profil error:", refErr);
+  } else if (refreshed) {
+    userProfile = refreshed;
+  }
+
+  // update label sa lepšim formatom (sr-RS)
+  const label = document.getElementById("last-backup-label");
+  if (label) {
+    try {
+      label.innerText = "Poslednji backup: " + new Date(userProfile.last_backup_at).toLocaleString("sr-RS");
+    } catch (e) {
+      label.innerText = "Poslednji backup: " + String(userProfile.last_backup_at);
+    }
+  }
+
+  console.log(">>> exportStudio done, last_backup_at:", userProfile.last_backup_at, "refErr:", refErr);
+  alert("Backup sačuvan ✔");
 }
         /* IDEJA C – animated counters */
 
