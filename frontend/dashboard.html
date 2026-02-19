@@ -266,7 +266,7 @@ tr:active td {
   td {
     transition: background 0.15s ease;
 }      
-        .fab-add {
+      .fab-add {
     position: fixed;
     bottom: 22px;
     right: 22px;
@@ -280,8 +280,18 @@ tr:active td {
     font-weight: 800;
     cursor: pointer;
     box-shadow: 0 10px 25px rgba(59,130,246,0.5);
-    z-index: 99999;
-    display: block;
+    z-index: 3000;
+    display: none;
+}
+
+@media (max-width: 1024px) {
+    .fab-add {
+        display: block;
+    }
+
+    .main > .btn-add {
+        display: none;
+    }
 }
 
         .modal-content {
@@ -1763,8 +1773,6 @@ prikaziSekciju('dashboard');
 <button onclick="potvrdiBrisanje()">Obriši</button>
 </div>
 </div>
-
 <button class="fab-add" onclick="otvoriModalNovi()">+</button>
-
 </body>
 </html>
