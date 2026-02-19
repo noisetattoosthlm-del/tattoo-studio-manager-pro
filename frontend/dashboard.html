@@ -1724,46 +1724,73 @@ prikaziSekciju('dashboard');
    </script>
 
 <div id="bookingModal" class="modal">
-<div class="modal-content">
+  <div class="modal-content">
 
-<h2 id="modal-title">Novi Termin</h2>
+    <h2 id="modal-title" style="margin:0 0 25px 0;">Novi Termin</h2>
 
-<div class="owner-only" id="artist-select-container">
-<label>Dodeli artistu</label>
-<select id="app_artist_id"></select>
-</div>
+    <div class="owner-only" id="artist-select-container" style="flex-direction:column; width:100%;">
+      <label class="modal-label">Dodeli artistu</label>
+      <select id="app_artist_id"></select>
+    </div>
 
-<label>Ime klijenta</label>
-<input id="c_name">
+    <label class="modal-label">Ime klijenta</label>
+    <input type="text" id="c_name">
 
-<label>Telefon</label>
-<input id="c_phone">
+    <label class="modal-label">Mobilni telefon</label>
+    <input type="text" id="c_phone">
 
-<input id="c_email" type="hidden">
-<input id="c_insta" type="hidden">
+    <label class="modal-label">Email klijenta (opciono)</label>
+    <input type="email" id="c_email">
 
-<label>Datum</label>
-<input type="date" id="app_date">
+    <label class="modal-label">Instagram (@)</label>
+    <input type="text" id="c_insta">
 
-<label>Vreme</label>
-<input type="time" id="app_time">
+    <label class="modal-label">Datum</label>
+    <input type="date" id="app_date">
 
-<input id="total_price" type="hidden" value="0">
-<input id="deposit_amt" type="hidden" value="0">
-<input id="artist_percent" type="hidden" value="0">
+    <label class="modal-label">Vreme</label>
+    <input type="time" id="app_time">
 
-<select id="currency_choice" style="display:none">
-<option value="€">€</option>
-</select>
+    <div style="display:flex; gap:10px;">
+      <div style="flex:2">
+        <label class="modal-label">Cena</label>
+        <input type="number" id="total_price">
+      </div>
 
-<select id="payment_type" style="display:none">
-<option value="Cash">Cash</option>
-</select>
+      <div style="flex:1">
+        <label class="modal-label">Valuta</label>
+        <select id="currency_choice">
+          <option value="€">EUR (€)</option>
+          <option value="din">RSD (din)</option>
+        </select>
+      </div>
+    </div>
 
-<button id="save-btn" class="btn-add" onclick="saveData()">SAČUVAJ</button>
-<button onclick="zatvoriModal()">Otkaži</button>
+    <div style="display:flex; gap:10px;">
+      <div style="flex:1">
+        <label class="modal-label">Depozit</label>
+        <input type="number" id="deposit_amt" value="0">
+      </div>
 
-</div>
+      <div style="flex:1">
+        <label class="modal-label">Artist %</label>
+        <input type="number" id="artist_percent" min="0" max="100">
+      </div>
+    </div>
+
+    <label class="modal-label">Plaćanje</label>
+    <select id="payment_type">
+      <option value="Cash">Cash 💵</option>
+      <option value="Card">Card 💳</option>
+    </select>
+
+    <button id="save-btn" class="btn-add" style="width:100%; margin-top:10px;" onclick="saveData()">SAČUVAJ</button>
+
+    <button onclick="zatvoriModal()" style="background:none;border:none;color:#64748b;width:100%;margin-top:10px;font-weight:600;">
+      Otkaži
+    </button>
+
+  </div>
 </div>
 
 <div id="confirmModal" class="modal">
