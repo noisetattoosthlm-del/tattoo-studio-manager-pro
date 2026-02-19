@@ -272,19 +272,10 @@ tr:active td {
     font-weight: 800;
     cursor: pointer;
     box-shadow: 0 10px 25px rgba(59,130,246,0.5);
-    z-index: 3000;
-    display: none;
+    z-index: 99999;
+    display: block;
 }
 
-@media (max-width: 1024px) {
-    .fab-add {
-        display: block;
-    }
-
-    .main > .btn-add {
-        display: none;
-    }
-}
         .modal-content {
     max-height: 90vh;
     overflow-y: auto;
@@ -1733,7 +1724,6 @@ alert("Studio sačuvan ✔");
 prikaziSekciju('dashboard');
    
     </script>
-    <button class="fab-add" onclick="otvoriModalNovi()">+</button>
     <div id="confirmModal" class="modal">
     <div class="modal-content" style="max-width:400px; text-align:center;">
         <h3 style="margin-top:0;">Da li ste sigurni?</h3>
@@ -1746,4 +1736,5 @@ prikaziSekciju('dashboard');
     </div>
 </div>
 </body>
+<button class="fab-add" onclick="otvoriModalNovi()">+</button>
 </html>
