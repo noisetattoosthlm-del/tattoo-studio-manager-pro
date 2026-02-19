@@ -55,7 +55,7 @@
     overflow-y: auto; 
     background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.05), transparent);
 
-    opacity: 0;
+    opacity: 1;
 }
 
 .main.active-section {
@@ -141,7 +141,18 @@
 
         .action-cell { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
 
-        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(15px); overflow-y: auto; }
+        .modal {
+    display: none;
+    position: fixed;
+    z-index: 999999;   /* BITNO */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(15px);
+    overflow-y: auto;
+}
         .modal-content { background: #0f172a; margin: 5% auto; padding: 30px; border-radius: 30px; width: 90%; max-width: 500px; border: 1px solid rgba(255,255,255,0.1); }
         .modal-label { display: block; margin-bottom: 8px; font-size: 0.75rem; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
 
