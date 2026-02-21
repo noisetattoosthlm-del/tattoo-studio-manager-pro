@@ -17,7 +17,10 @@
             padding: 40px 20px; display: flex; flex-direction: column; backdrop-filter: blur(20px); flex-shrink: 0;
             transition: all 0.3s ease; z-index: 1000;
         }
-        
+        .brand {
+    display: flex;
+    flex-direction: column;
+}
         .logo { 
     font-weight: 800; 
     font-size: 1.1rem; 
@@ -35,13 +38,17 @@
     letter-spacing: 0.5px;
 }
         @media (max-width: 1024px) {
+    .brand {
+        margin-right: 15px;
+    }
+
     .byline {
-        margin: 0;
-        margin-left: 8px;
+        margin-top: 2px;
+        margin-bottom: 0;
         font-size: 0.5rem;
-        white-space: nowrap;
     }
 }
+  
         .nav-item { 
     padding: 16px 20px;
     margin: 8px 0;
@@ -722,8 +729,10 @@ body.light-mode .modal-content {
 <body>
 
     <div class="sidebar">
-        <div class="logo">Tattoo Studio Management Pro</div>
-        <div class="byline">by Djape Noise</div>
+        <div class="brand">
+    <div class="logo">Tattoo Studio Management Pro</div>
+    <div class="byline">by Djape Noise</div>
+</div>
         <div class="nav-item active" id="nav-dashboard" onclick="prikaziSekciju('dashboard')">Dashboard</div>
         <div class="nav-item" id="nav-kalendar" onclick="prikaziSekciju('kalendar')">Kalendar</div>
         <div class="nav-item" id="nav-klijenti" onclick="prikaziSekciju('klijenti')">Klijenti</div>
