@@ -445,13 +445,38 @@ tr:active td {
 
 #confirmModal {
     display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.75);
+    backdrop-filter: blur(12px);
     align-items: center;
     justify-content: center;
+    z-index: 999999;
 }
 
 #confirmModal .modal-content {
-    margin: 0 !important;
-}   
+    margin: 0;
+    background: #0f172a;
+    padding: 30px;
+    border-radius: 22px;
+    width: 90%;
+    max-width: 380px;
+    text-align: center;
+    border: 1px solid rgba(255,255,255,.1);
+    box-shadow: 0 0 35px rgba(239,68,68,.25);
+}
+
+#confirmModal h3 {
+    margin: 0;
+    font-weight: 800;
+    font-size: 1.1rem;
+}
+
+#confirmModal p {
+    margin: 12px 0 25px;
+    color: #94a3b8;
+    font-size: .85rem;
+} 
  /* ACTIVE SIDEBAR INDICATOR */
 
 .nav-item {
@@ -1905,8 +1930,10 @@ prikaziSekciju('dashboard');
 <div class="modal-content">
 <h3>Da li ste sigurni?</h3>
 <p style="color:#64748b;margin:10px 0;"></p>
-<button onclick="zatvoriConfirm()">Otkaži</button>
-<button onclick="potvrdiBrisanje()">Obriši</button>
+<div class="confirm-buttons">
+    <button class="btn-cancel" onclick="zatvoriConfirm()">Otkaži</button>
+    <button class="btn-confirm-delete" onclick="potvrdiBrisanje()">Obriši</button>
+</div>
 </div>
 </div>
 <button class="fab-add" onclick="otvoriModalNovi()">+</button>
