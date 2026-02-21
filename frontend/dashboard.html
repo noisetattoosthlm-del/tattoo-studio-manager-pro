@@ -962,6 +962,7 @@ let deleteAction = null;
     URL.revokeObjectURL(url);
 
    alert("Backup sačuvan ✔");
+    localStorage.setItem('lastBackup', new Date().toISOString());
   } catch (err) {
     console.error("EXPORT unexpected error:", err);
     alert("Neočekivana greška, pogledaj konzolu.");
@@ -1792,7 +1793,21 @@ alert("Vraćam backup... sačekaj par sekundi ⏳");
 
     reader.readAsText(file);
 }
-    
+function checkBackupReminder() {
+    const last = localStorage.getItem('lastBackup');
+    if (!last) return;
+
+    const lastDate = new Date(last);
+    const now = new Date();
+
+    const diffDays = (now - lastDate) / (1000 * 60 * 60 * 24);
+
+    if (diffDays > 7) {
+        setTimeout(() => {
+            alert("⚠️ Nisi napravio backup više od 7 dana.\nPreporučujemo da ga uradiš sada.");
+        }, 1500);
+    }
+}  
        async function ucitajStudioSettings(){
   try {
     // osveži profil iz Supabase da uvek imamo najnovije podatke sa servera
@@ -1853,7 +1868,7 @@ if(dashName) dashName.innerText = name;
 alert("Studio sačuvan ✔");
 }        initDashboard();
 prikaziSekciju('dashboard');
-   
+checkBackupReminder();   
    </script>
 
 <div id="bookingModal" class="modal">
