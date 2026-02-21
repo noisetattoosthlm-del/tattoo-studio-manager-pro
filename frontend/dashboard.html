@@ -632,6 +632,10 @@ body.light-mode .modal-content {
 
         <div class="stats-grid">
             <div class="stat-card"><h3>Ugovoreno</h3><p id="total-sum">€0</p></div>
+            <div class="stat-card">
+  <h3>Realizovana Zarada</h3>
+  <p id="realized-sum">€0</p>
+</div>
             <div class="stat-card"><h3><span id="profit-label">Čist Profit</span></h3><p id="studio-sum">€0</p></div>
             <div class="stat-card owner-only" id="debt-card"><h3>Dug Artistima</h3><p id="debt-sum" style="color:#ef4444;">€0</p></div>
             <div class="stat-card"><h3>Depoziti</h3><p id="deposit-sum">€0</p></div>
@@ -1086,6 +1090,8 @@ setTimeout(() => {
                     let profitEur = 0; let profitRsd = 0;
                     let depozitEur = 0; let depozitRsd = 0;
                     let dugEur = 0; let dugRsd = 0;
+                    let realizovanoEur = 0;
+let realizovanoRsd = 0;
 
                     filteredApps.forEach(a => {
                         if(a.status !== 'no-show') {
@@ -1105,7 +1111,13 @@ setTimeout(() => {
                             udeo = (userProfile.role === 'owner') ? a.deposit : 0;
                         }
                         
-                        if(a.currency === 'din') profitRsd += udeo; else profitEur += udeo;
+                        if(a.currency === 'din') {
+    profitRsd += udeo;
+    if(a.status === 'završeno') realizovanoRsd += udeo;
+} else {
+    profitEur += udeo;
+    if(a.status === 'završeno') realizovanoEur += udeo;
+}
                         
                         if(a.status === 'zakazano') {
                             if(a.currency === 'din') depozitRsd += (Number(a.deposit) || 0);
@@ -1123,6 +1135,9 @@ setTimeout(() => {
                     document.getElementById('total-sum').innerHTML =
     `€${Math.round(ugovorenoEur)} <span class="currency-sub">/ ${Math.round(ugovorenoRsd)} RSD</span>`;
 
+                    document.getElementById('realized-sum').innerHTML =
+    `€${Math.round(realizovanoEur)} <span class="currency-sub">/ ${Math.round(realizovanoRsd)} RSD</span>`;
+                    
 document.getElementById('studio-sum').innerHTML =
     `€${Math.round(profitEur)} <span class="currency-sub">/ ${Math.round(profitRsd)} RSD</span>`;
 
