@@ -1120,12 +1120,18 @@ setTimeout(() => {
                         });
                     }
 
-                    animateNumber(document.getElementById('total-sum'), 0, ugovorenoEur);
-animateNumber(document.getElementById('studio-sum'), 0, profitEur.toFixed(0));
-animateNumber(document.getElementById('deposit-sum'), 0, depozitEur);
+                    document.getElementById('total-sum').innerHTML =
+    `€${Math.round(ugovorenoEur)} <span class="currency-sub">/ ${Math.round(ugovorenoRsd)} RSD</span>`;
+
+document.getElementById('studio-sum').innerHTML =
+    `€${Math.round(profitEur)} <span class="currency-sub">/ ${Math.round(profitRsd)} RSD</span>`;
+
+document.getElementById('deposit-sum').innerHTML =
+    `€${Math.round(depozitEur)} <span class="currency-sub">/ ${Math.round(depozitRsd)} RSD</span>`;
 
 if(document.getElementById('debt-sum')) {
-    animateNumber(document.getElementById('debt-sum'), 0, dugEur.toFixed(0));
+    document.getElementById('debt-sum').innerHTML =
+        `€${Math.round(dugEur)} <span class="currency-sub">/ ${Math.round(dugRsd)} RSD</span>`;
 }
                     
                     inicijalizujGrafikon(filteredApps, y, m);
