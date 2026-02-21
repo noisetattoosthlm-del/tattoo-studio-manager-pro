@@ -6,7 +6,6 @@
     <title>Tattoo Studio Management Pro</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --bg: #0a0e17; --card: rgba(255, 255, 255, 0.03); --accent: #3b82f6; --text: #ffffff; }
         [class*="vercel"], vercel-live-feedback { display: none !important; }
@@ -666,10 +665,6 @@ body.light-mode .modal-content {
                 </div>
         </div>
 
-        <div class="chart-container">
-            <canvas id="revenueChart"></canvas>
-        </div>
-
     <div class="stats-grid">
 
 <div class="stat-card stat-booked">
@@ -1212,7 +1207,7 @@ if(document.getElementById('debt-sum')) {
         `€${Math.round(dugEur)} <span class="currency-sub">/ ${Math.round(dugRsd)} RSD</span>`;
 }
                     
-                    inicijalizujGrafikon(filteredApps, y, m);
+                    //inicijalizujGrafikon(filteredApps, y, m);
                     renderujTabelu(filteredApps);
                 }
             } catch (err) { console.error(err); }
