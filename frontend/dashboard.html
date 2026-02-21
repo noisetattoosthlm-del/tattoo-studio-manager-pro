@@ -593,7 +593,17 @@ body.light-mode .modal-content {
     color: #64748b;
     font-weight: 500;
 }
+/* GLOW AKCENTI */
 
+.stat-profit {
+  box-shadow: 0 0 18px rgba(250, 204, 21, 0.35);
+  border: 1px solid rgba(250, 204, 21, 0.35);
+}
+
+.stat-deposit {
+  box-shadow: 0 0 18px rgba(59,130,246,0.35);
+  border: 1px solid rgba(59,130,246,0.35);
+}
 </style>
 </head>
 <body>
@@ -654,7 +664,7 @@ body.light-mode .modal-content {
 <span class="stat-hint">samo završeni termini</span>
 </div>
 
-<div class="stat-card">
+<div class="stat-card stat-profit">
 <h3><span id="profit-label">Čist Profit</span></h3>
 <p id="studio-sum">€0</p>
 <span class="stat-hint">posle troškova i isplata</span>
@@ -666,7 +676,7 @@ body.light-mode .modal-content {
 <span class="stat-hint">neisplaćeni završeni termini</span>
 </div>
 
-<div class="stat-card">
+<div class="stat-card stat-deposit">
 <h3>Depoziti</h3>
 <p id="deposit-sum">€0</p>
 <span class="stat-hint">aktivni depoziti</span>
