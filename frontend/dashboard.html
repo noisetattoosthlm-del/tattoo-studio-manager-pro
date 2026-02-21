@@ -18,12 +18,19 @@
             transition: all 0.3s ease; z-index: 1000;
         }
         
-        .logo { font-weight: 800; font-size: 1.1rem; margin-bottom: 60px; text-transform: uppercase; color: var(--accent); letter-spacing: 1px; }
-        .byline {
+        .logo { 
+    font-weight: 800; 
+    font-size: 1.1rem; 
+    margin-bottom: 0;   /* bilo je 60px */
+    text-transform: uppercase; 
+    color: var(--accent); 
+    letter-spacing: 1px; 
+}
+        ..byline {
     font-size: 0.65rem;
     color: #64748b;
-    margin-top: -45px;
-    margin-bottom: 45px;
+    margin-top: 4px;      /* blizu naziva */
+    margin-bottom: 40px;  /* razmak do menija */
     letter-spacing: 0.5px;
 }
         .nav-item { 
