@@ -583,8 +583,18 @@ body.light-mode .modal-content {
 
 .fab-add {
     pointer-events: auto !important;
-}        
-    </style>
+}
+
+/* MINI LABEL ISPOD STAT KARTICA */
+.stat-hint {
+    display: block;
+    margin-top: 6px;
+    font-size: 0.65rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+</style>
 </head>
 <body>
 
@@ -630,16 +640,39 @@ body.light-mode .modal-content {
             <canvas id="revenueChart"></canvas>
         </div>
 
-        <div class="stats-grid">
-            <div class="stat-card"><h3>Ugovoreno</h3><p id="total-sum">€0</p></div>
-            <div class="stat-card">
-  <h3>Realizovana Zarada</h3>
-  <p id="realized-sum">€0</p>
+    <div class="stats-grid">
+
+<div class="stat-card">
+<h3>Ugovoreno</h3>
+<p id="total-sum">€0</p>
+<span class="stat-hint">svi termini u izabranom mesecu</span>
 </div>
-            <div class="stat-card"><h3><span id="profit-label">Čist Profit</span></h3><p id="studio-sum">€0</p></div>
-            <div class="stat-card owner-only" id="debt-card"><h3>Dug Artistima</h3><p id="debt-sum" style="color:#ef4444;">€0</p></div>
-            <div class="stat-card"><h3>Depoziti</h3><p id="deposit-sum">€0</p></div>
-        </div>
+
+<div class="stat-card">
+<h3>Realizovana Zarada</h3>
+<p id="realized-sum">€0</p>
+<span class="stat-hint">samo završeni termini</span>
+</div>
+
+<div class="stat-card">
+<h3><span id="profit-label">Čist Profit</span></h3>
+<p id="studio-sum">€0</p>
+<span class="stat-hint">posle troškova i isplata</span>
+</div>
+
+<div class="stat-card owner-only" id="debt-card">
+<h3>Dug Artistima</h3>
+<p id="debt-sum">€0</p>
+<span class="stat-hint">neisplaćeni završeni termini</span>
+</div>
+
+<div class="stat-card">
+<h3>Depoziti</h3>
+<p id="deposit-sum">€0</p>
+<span class="stat-hint">aktivni depoziti</span>
+</div>
+
+</div>
         <button class="btn-add" onclick="otvoriModalNovi()">+ NOVI TERMIN</button>
         <div class="table-container" id="tabela-div">Učitavanje...</div>
     </div>
