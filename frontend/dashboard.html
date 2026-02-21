@@ -1417,7 +1417,7 @@ const isToday = a.appointment_time && a.appointment_time.startsWith(todayStr);
                 const cenaPrikaz = valuta === '€' ? `€${a.total_price}` : `${a.total_price} din`;
                 let statusBadge = (a.status === 'završeno') ? '<div class="check-badge">✓</div>' : (a.status === 'no-show') ? '<span class="status-noshow">NO-SHOW</span>' : '<span class="status-zakazano">ZAKAZANO</span>';
 
-                h += `<tr class="${isToday ? 'today-highlight' : ''}" onclick="otvoriModalEdit('${a.id}')">
+                h += `<tr class="${isToday ? 'today-highlight' : ''}" onclick="event.target.closest('button') ? null : otvoriModalEdit('${a.id}')">
                     <td><div style="font-weight:800;">${a.client_name}</div><div style="font-size:0.65rem; color:#64748b;">${a.client_instagram || '-'}</div></td>
                     <td style="text-align:center;">${statusBadge}${isPayed ? '<div class="pay-badge" title="Isplaćeno">💸</div>' : ''}</td>
                     <td>${datum}h</td>
