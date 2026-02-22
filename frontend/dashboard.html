@@ -2007,11 +2007,16 @@ async function showDocs(){
                 .getPublicUrl(d.file_url || d.file_path);
 
             html += `
-            <div style="margin-bottom:10px">
-              <a href="${url.publicUrl}" target="_blank">
-                📄 ${d.file_url?.split('/').pop() || d.file_path.split('/').pop()}
-              </a>
-            </div>`;
+<div style="margin-bottom:10px;display:flex;align-items:center;gap:10px">
+  <a href="${url.publicUrl}" target="_blank" style="flex:1">
+    📄 ${d.file_url?.split('/').pop() || d.file_path.split('/').pop()}
+  </a>
+
+  <button class="btn-action-delete"
+    onclick="obrisiDokument('${d.id}','${d.file_url || d.file_path}')">
+    X
+  </button>
+</div>`;
         }
     }
 
