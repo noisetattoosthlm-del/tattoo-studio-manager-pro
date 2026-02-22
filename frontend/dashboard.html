@@ -1965,11 +1965,19 @@ async function uploadDokument(){
         return;
     }
 
-    await supabaseClient.from('client_documents').insert([{
-        studio_id: userProfile.studio_id,
-        client_name: activeClientDocs,
-        file_path: path
-    }]);
+    const { error: insertError } = await supabaseClient
+.from('client_documents')
+.insert([{
+    studio_id: userProfile.studio_id,
+    client_name: activeClientDocs,
+    file_url: path
+}]);
+
+if(insertError){
+    alert("DB error: " + insertError.message);
+    console.log(insertError);
+    return;
+}
 
     document.getElementById('docFile').value = "";
     showDocs();
