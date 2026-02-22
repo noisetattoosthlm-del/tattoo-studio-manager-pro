@@ -2013,7 +2013,7 @@ async function showDocs(){
   </a>
 
   <button class="btn-action-delete"
-    onclick="obrisiDokument('${d.id}','${d.file_url || d.file_path}')">
+    onclick="obrisiDokument('${d.id}','${d.file_url}')"
     X
   </button>
 </div>`;
@@ -2022,20 +2022,33 @@ async function showDocs(){
 
     document.getElementById('docsList').innerHTML = html || "Nema dokumenata.";
 }
-        async function obrisiDokument(id, path){
+        async function obrisiDokument(id, fileUrl){
 
     if(!confirm("Obrisati ovaj dokument?")) return;
 
-    // 1. obriši iz storage
-    await supabaseClient.storage
-        .from('documents')
-        .remove([path]);
+    console.log("Brišem:", fileUrl);
 
-    // 2. obriši red iz baze
-    await supabaseClient
+    // 1. STORAGE DELETE
+    const { error: storageErr } = await supabaseClient
+        .storage
+        .from('documents')
+        .remove([fileUrl]);
+
+    if(storageErr){
+        alert("Storage error: " + storageErr.message);
+        return;
+    }
+
+    // 2. DATABASE DELETE
+    const { error: dbErr } = await supabaseClient
         .from('client_documents')
         .delete()
         .eq('id', id);
+
+    if(dbErr){
+        alert("DB error: " + dbErr.message);
+        return;
+    }
 
     showDocs();
 }
