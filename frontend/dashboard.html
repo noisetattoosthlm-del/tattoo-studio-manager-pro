@@ -1982,36 +1982,36 @@ if(insertError){
     document.getElementById('docFile').value = "";
     showDocs();
 }
-
 async function showDocs(){
 
-    console.log("ACTIVE CLIENT:", activeClientDocs);
+    const cleanName = activeClientDocs.trim();
 
-    const { data: allDocs } = await supabaseClient
-        .from('client_documents')
-        .select('*')
-        .eq('studio_id', userProfile.studio_id);
-
-    console.log("ALL DOCS FOR STUDIO:", allDocs);
-
-    const { data } = await supabaseClient
+    const { data, error } = await supabaseClient
         .from('client_documents')
         .select('*')
         .eq('studio_id', userProfile.studio_id)
-        .eq('client_name', activeClientDocs)
+        .ilike('client_name', cleanName)
         .order('created_at',{ascending:false});
+
+    if(error){
+        alert(error.message);
+        return;
+    }
 
     let html = '';
 
-    if(data){
+    if(data && data.length){
         for(const d of data){
             const { data:url } = supabaseClient.storage
                 .from('documents')
-                .getPublicUrl(d.file_path);
+                .getPublicUrl(d.file_url || d.file_path);
 
-            html += `<div style="margin-bottom:10px">
-<a href="${url.publicUrl}" target="_blank">📄 ${d.file_path.split('/').pop()}</a>
-</div>`;
+            html += `
+            <div style="margin-bottom:10px">
+              <a href="${url.publicUrl}" target="_blank">
+                📄 ${d.file_url?.split('/').pop() || d.file_path.split('/').pop()}
+              </a>
+            </div>`;
         }
     }
 
