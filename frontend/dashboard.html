@@ -1984,6 +1984,16 @@ if(insertError){
 }
 
 async function showDocs(){
+
+    console.log("ACTIVE CLIENT:", activeClientDocs);
+
+    const { data: allDocs } = await supabaseClient
+        .from('client_documents')
+        .select('*')
+        .eq('studio_id', userProfile.studio_id);
+
+    console.log("ALL DOCS FOR STUDIO:", allDocs);
+
     const { data } = await supabaseClient
         .from('client_documents')
         .select('*')
