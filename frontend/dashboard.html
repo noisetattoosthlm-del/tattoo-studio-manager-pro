@@ -1984,13 +1984,11 @@ if(insertError){
 }
 async function showDocs(){
 
-    const cleanName = activeClientDocs.trim();
-
     const { data, error } = await supabaseClient
         .from('client_documents')
         .select('*')
         .eq('studio_id', userProfile.studio_id)
-        .ilike('client_name', cleanName)
+        .eq('client_name', activeClientDocs)
         .order('created_at',{ascending:false});
 
     if(error){
@@ -2001,26 +1999,34 @@ async function showDocs(){
     let html = '';
 
     if(data && data.length){
-        for(const d of data){
-            const { data:url } = supabaseClient.storage
+
+        data.forEach(d => {
+
+            const { data:url } = supabaseClient
+                .storage
                 .from('documents')
-                .getPublicUrl(d.file_url || d.file_path);
+                .getPublicUrl(d.file_path)(d.file_url);
 
             html += `
-<div style="margin-bottom:10px;display:flex;align-items:center;gap:10px">
-  <a href="${url.publicUrl}" target="_blank" style="flex:1">
-    📄 ${d.file_url?.split('/').pop() || d.file_path.split('/').pop()}
-  </a>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;background:#020617;padding:10px;border-radius:10px">
 
-  <button class="btn-action-delete"
-    onclick="obrisiDokument('${d.id}','${d.file_url}')"
-    X
-  </button>
-</div>`;
-        }
+                <a href="${url.publicUrl}" target="_blank" style="color:white;font-size:.8rem">
+                    📄 ${d.file_path.split('/').pop()}
+                </a>
+
+                <button class="btn-action-delete"
+                    onclick="obrisiDokument('${d.id}','${d.file_path}')">
+                    X
+                </button>
+
+            </div>`;
+        });
+
+    } else {
+        html = "Nema dokumenata.";
     }
 
-    document.getElementById('docsList').innerHTML = html || "Nema dokumenata.";
+    document.getElementById('docsList').innerHTML = html;
 }
         async function obrisiDokument(id, fileUrl){
 
