@@ -2030,24 +2030,29 @@ async function showDocs(){
 
     document.getElementById('docsList').innerHTML = html;
 }
-        async function obrisiDokument(id, fileUrl){
+        async function obrisiDokument(id, filePath){
 
     if(!confirm("Obrisati ovaj dokument?")) return;
 
-    console.log("Brišem:", fileUrl);
+    console.log("RAW PATH:", filePath);
 
-    // 1. STORAGE DELETE
+    // skini studio_id jer je bucket već documents
+    const cleanPath = filePath.replace(userProfile.studio_id + "/", "");
+
+    console.log("CLEAN PATH:", cleanPath);
+
+    // STORAGE DELETE
     const { error: storageErr } = await supabaseClient
         .storage
         .from('documents')
-        .remove([fileUrl]);
+        .remove([cleanPath]);
 
     if(storageErr){
         alert("Storage error: " + storageErr.message);
         return;
     }
 
-    // 2. DATABASE DELETE
+    // DATABASE DELETE
     const { error: dbErr } = await supabaseClient
         .from('client_documents')
         .delete()
