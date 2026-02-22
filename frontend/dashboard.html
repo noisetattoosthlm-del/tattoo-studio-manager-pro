@@ -2002,20 +2002,22 @@ async function showDocs(){
 
         data.forEach(d => {
 
+            const path = d.file_path || d.file_url;
+
             const { data:url } = supabaseClient
                 .storage
                 .from('documents')
-                .getPublicUrl(d.file_path)(d.file_url);
+                .getPublicUrl(path);
 
             html += `
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;background:#020617;padding:10px;border-radius:10px">
 
                 <a href="${url.publicUrl}" target="_blank" style="color:white;font-size:.8rem">
-                    📄 ${d.file_path.split('/').pop()}
+                    📄 ${path.split('/').pop()}
                 </a>
 
                 <button class="btn-action-delete"
-                    onclick="obrisiDokument('${d.id}','${d.file_path}')">
+                    onclick="obrisiDokument('${d.id}','${path}')">
                     X
                 </button>
 
