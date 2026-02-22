@@ -2022,6 +2022,23 @@ async function showDocs(){
 
     document.getElementById('docsList').innerHTML = html || "Nema dokumenata.";
 }
+        async function obrisiDokument(id, path){
+
+    if(!confirm("Obrisati ovaj dokument?")) return;
+
+    // 1. obriši iz storage
+    await supabaseClient.storage
+        .from('documents')
+        .remove([path]);
+
+    // 2. obriši red iz baze
+    await supabaseClient
+        .from('client_documents')
+        .delete()
+        .eq('id', id);
+
+    showDocs();
+}
         initDashboard();
 prikaziSekciju('dashboard');
 checkBackupReminder();   
