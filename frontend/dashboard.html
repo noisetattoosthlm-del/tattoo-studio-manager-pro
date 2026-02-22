@@ -1685,7 +1685,24 @@ document.getElementById('app_date').value = today;
                 let html = '';
                 Object.keys(map).forEach(n => {
                     const c = map[n]; 
-                    html += `<tr><td><strong>${n}</strong></td><td>${c.phone}</td><td>${c.insta}</td><td>${new Date(c.last).toLocaleDateString('sr-RS')}</td><td style="text-align:right; white-space:nowrap;"><button class="btn-action-done" onclick="otvoriModalNoviSaKlijentom('${n}', '${c.phone}', '${c.insta}')">+ NOVI</button><button class="btn-action-delete" onclick="obrisiKlijenta('${n}')" style="margin-left:5px;">X</button></td></tr>`;
+                    html += `<tr>
+<td><strong>${n}</strong></td>
+<td>${c.phone}</td>
+<td>${c.insta}</td>
+<td>${new Date(c.last).toLocaleDateString('sr-RS')}</td>
+<td style="text-align:right; white-space:nowrap;">
+
+<button class="btn-action-done"
+onclick="otvoriModalNoviSaKlijentom('${n}', '${c.phone}', '${c.insta}')">+ NOVI</button>
+
+<button class="btn-action-edit"
+onclick="otvoriDokumenta('${n}')">📄 Dokumenta</button>
+
+<button class="btn-action-delete"
+onclick="obrisiKlijenta('${n}')"
+style="margin-left:5px;">X</button>
+
+</td></tr>`;
                 });
                 document.getElementById('clients-list-body').innerHTML = html;
             }
@@ -1915,7 +1932,69 @@ const dashName = document.getElementById("studio-name-display");
 if(dashName) dashName.innerText = name;
 
 alert("Studio sačuvan ✔");
-}        initDashboard();
+}        
+        let activeClientDocs = null;
+
+function otvoriDokumenta(clientName){
+    activeClientDocs = clientName;
+    document.getElementById('docsModal').style.display = 'block';
+    showDocs();
+}
+
+function zatvoriDocs(){
+    document.getElementById('docsModal').style.display = 'none';
+}
+
+async function uploadDokument(){
+    const file = document.getElementById('docFile').files[0];
+    if(!file) return alert("Izaberi fajl");
+
+    const path = `${userProfile.studio_id}/${activeClientDocs}/${Date.now()}_${file.name}`;
+
+    const { error } = await supabaseClient.storage
+        .from('documents')
+        .upload(path, file);
+
+    if(error){
+        alert(error.message);
+        return;
+    }
+
+    await supabaseClient.from('client_documents').insert([{
+        studio_id: userProfile.studio_id,
+        client_name: activeClientDocs,
+        file_path: path
+    }]);
+
+    document.getElementById('docFile').value = "";
+    showDocs();
+}
+
+async function showDocs(){
+    const { data } = await supabaseClient
+        .from('client_documents')
+        .select('*')
+        .eq('studio_id', userProfile.studio_id)
+        .eq('client_name', activeClientDocs)
+        .order('created_at',{ascending:false});
+
+    let html = '';
+
+    if(data){
+        for(const d of data){
+            const { data:url } = supabaseClient.storage
+                .from('documents')
+                .getPublicUrl(d.file_path);
+
+            html += `<div style="margin-bottom:10px">
+<a href="${url.publicUrl}" target="_blank">📄 ${d.file_path.split('/').pop()}</a>
+</div>`;
+        }
+    }
+
+    document.getElementById('docsList').innerHTML = html || "Nema dokumenata.";
+}
+        initDashboard();
 prikaziSekciju('dashboard');
 checkBackupReminder();   
    </script>
@@ -1999,6 +2078,21 @@ checkBackupReminder();
     <button class="btn-confirm-delete" onclick="potvrdiBrisanje()">Obriši</button>
 </div>
 </div>
+</div>
+    <div id="docsModal" class="modal">
+  <div class="modal-content">
+    <h3 style="margin-top:0">Dokumenta klijenta</h3>
+
+    <input type="file" id="docFile" />
+
+    <button class="btn-add" style="width:100%;margin-top:10px" onclick="uploadDokument()">Upload dokument</button>
+
+    <div id="docsList" style="margin-top:20px;"></div>
+
+    <button onclick="zatvoriDocs()" style="background:none;border:none;color:#64748b;width:100%;margin-top:15px;font-weight:600;">
+      Zatvori
+    </button>
+  </div>
 </div>
 <button class="fab-add" onclick="otvoriModalNovi()">+</button>
 </body>
