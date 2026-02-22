@@ -1937,6 +1937,11 @@ alert("Studio sačuvan ✔");
 
 function otvoriDokumenta(clientName){
     activeClientDocs = clientName;
+
+    // reset file input + lista (da se ne lepi dokument na druge klijente)
+    document.getElementById('docFile').value = "";
+    document.getElementById('docsList').innerHTML = "";
+
     document.getElementById('docsModal').style.display = 'block';
     showDocs();
 }
